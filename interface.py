@@ -1,0 +1,124 @@
+import tkinter as tk
+import easy_menu as ezm
+import easy_button as ezb
+import custom_object
+import nest
+import resource
+
+class Interface:
+
+    @property
+    def root(self):
+        return self._root
+
+    @property
+    def canvas(self):
+        return self._canvas
+
+    @property
+    def current_object_type(self):
+        return self._current_object_type
+    @current_object_type.setter
+    def current_object_type(self, new_object_type):
+        self._current_object_type = new_object_type
+    
+
+    def __init__(self, width, height):
+        self._root = tk.Tk()
+
+        self._canvas = tk.Canvas(self._root, width=width, height=height)
+        self._canvas.pack(side=tk.BOTTOM)
+
+
+        # Menus déroulants
+
+        self._menu_frame = tk.Frame(self._root, bg='red') # COULEUR À ENLEVER
+        self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
+        
+        self._menu_file = ezm.EasyMenu(self._menu_frame, "File",
+                                      [("Save", self.fonction_bidon),
+                                       ("Load", self.fonction_bidon),
+                                       None,
+                                       ("Disconnect", self.fonction_bidon)])
+
+        self._menu_edit = ezm.EasyMenu(self._menu_frame, "Edit",
+                                      [("Reset yours", self.fonction_bidon),
+                                       ("Undo (Ctrl+Z)", self.fonction_bidon)])
+
+
+        # Barre de sélection de l'objet
+        
+        self._objects_frame = tk.Frame(self._root, bg='blue') # COULEUR À ENLEVER
+        self._objects_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
+
+        self._objects_buttons = {
+            'nest': ezb.EasyButton(self, self._objects_frame, 50, 50, icon_type=nest.Nest),
+            'resource': ezb.EasyButton(self, self._objects_frame, 50, 50, icon_type=resource.Resource),
+            'mur': ezb.EasyButton(self, self._objects_frame, 100, 50, text='mur de ses morts')
+        }
+
+
+        # Évènements
+        
+        self._canvas.bind("<Button-1>", self.on_click)
+        self._canvas.bind("<Button-3>", self.on_right_click)
+        self._root.bind("<Control-z>", self.fonction_bidon)
+        self._root.bind("<Escape>", self.deselect_buttons)
+
+        #
+        # Demander au serveur la couleur
+        #
+        self._local_color = 'red'
+        
+        self._current_object_type = None
+
+
+        self._root.mainloop()
+
+
+    ## Gestion d'évènements ##
+
+    def on_click(self, event):
+        print("click ; current :", self._current_object_type)
+        # Normalement c'est la bonne manière de tester, mais faut voir
+        if self._current_object_type is nest.Nest:
+            self.create_nest(event.x, event.y)
+        elif self._current_object_type is resource.Resource:
+            self.create_resource(event.x, event.y)
+
+
+    def on_right_click(self, event):
+        self.create_nest(event.x, event.y, 25)
+
+
+    def deselect_buttons(self, event=None):
+        """Désélectionne tous les boutons des objets, pour libérer le clic"""
+        for button_name in self._objects_buttons:
+            self._objects_buttons[button_name].deselect() # seulement visuel
+        self._current_object_type = None
+        print("deselected all")
+
+
+    ## Création d'objets ##
+    def create_nest(self, x, y, size=20):
+        """La couleur est obligatoirement la couleur locale"""
+        #
+        # À remplacer par l'interaction avec le serveur
+        #
+        nest.Nest(self._canvas, (x, y), size, color=self._local_color)
+
+    def create_resource(self, x, y, size=20):
+        #
+        # À remplacer par l'interaction avec le serveur
+        #
+        resource.Resource(self._canvas, (x, y), size)
+    
+
+
+
+    def fonction_bidon(self):
+        print("fonction bidon au rapport")
+
+
+if __name__ == '__main__':
+    interface = Interface(1050, 750)
