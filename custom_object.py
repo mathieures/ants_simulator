@@ -15,11 +15,10 @@ class CustomObject:
         return self.get_centre_coords(self._coords)
     
 
-    def __init__(self, canvas, coords, size=10, color=''):
+    def __init__(self, canvas, coords, size=10, color='', width=0):
         """L'objet calcule son centre et se place au bon endroit tout seul"""
         self._canvas = canvas
         self._color = color
-
         
         offset_coords = (coords[0],
                          coords[1],

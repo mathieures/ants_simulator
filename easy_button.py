@@ -6,7 +6,7 @@ class EasyButton:
     (en réalité un objet comme nid ou ressource par exemple)
     qui sera instancié à l'endroit du bouton
     """
-    def __init__(self, interface, parent, width, height, text=None, object_type=None, no_icon=False):
+    def __init__(self, interface, parent, width, height, text=None, object_type=None, no_icon=False, large=False):
         self._interface = interface # utile pour changer l'objet courant
         self._canvas = tk.Canvas(parent, width=width, height=height)
         self._default_bg_color = self._canvas['bg'] # on sauvegarde la couleur par défaut
@@ -25,7 +25,6 @@ class EasyButton:
 
         self._canvas.pack(side=tk.LEFT)
         self._canvas.bind("<Button-1>", self.select)
-
 
 
     def select(self, event=None):
