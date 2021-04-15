@@ -4,6 +4,7 @@ import easy_button as ezb
 import custom_object
 import nest
 import resource
+import wall
 
 class Interface:
 
@@ -52,9 +53,10 @@ class Interface:
         self._objects_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
         self._objects_buttons = {
-            'nest': ezb.EasyButton(self, self._objects_frame, 50, 50, icon_type=nest.Nest),
-            'resource': ezb.EasyButton(self, self._objects_frame, 50, 50, icon_type=resource.Resource),
-            'mur': ezb.EasyButton(self, self._objects_frame, 100, 50, text='mur de ses morts')
+            'nest': ezb.EasyButton(self, self._objects_frame, 50, 50, object_type=nest.Nest),
+            'resource': ezb.EasyButton(self, self._objects_frame, 50, 50, object_type=resource.Resource),
+            # 'wall': ezb.EasyButton(self, self._objects_frame, 100, 50, text='wall de ses morts', object_type=wall.Wall, no_icon=True)
+            'wall': ezb.EasyButton(self, self._objects_frame, 100, 50, text='wall de ses morts', object_type=wall.Wall)
         }
 
 
@@ -104,14 +106,23 @@ class Interface:
         """La couleur est obligatoirement la couleur locale"""
         #
         # À remplacer par l'interaction avec le serveur
+        # (demande de validation de la position par ex)
         #
         nest.Nest(self._canvas, (x, y), size, color=self._local_color)
 
     def create_resource(self, x, y, size=20):
         #
         # À remplacer par l'interaction avec le serveur
+        # (demande de validation de la position par ex)
         #
         resource.Resource(self._canvas, (x, y), size)
+
+    def create_wall(self, x, y, size=10):
+        #
+        # À remplacer par l'interaction avec le serveur
+        # (demande de validation de la position par ex)
+        #
+        wall.Wall(self._canvas, (x, y))
     
 
 

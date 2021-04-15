@@ -26,7 +26,7 @@ class CustomObject:
                          coords[0] + size,
                          coords[1] + size)
         
-        self._id = self.show(offset_coords)
+        self._id = self.draw(offset_coords)
         # self._id = self._canvas.create_oval(self.get_centre_coords(offset_coords)) # à enlever du coup
 
 
@@ -44,5 +44,5 @@ class CustomObject:
                          coords[3] - offset_y)
         return centre_coords
 
-    def show(self, centre_coords):
+    def draw(self, centre_coords):
         raise NotImplementedError
