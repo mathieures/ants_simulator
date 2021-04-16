@@ -28,12 +28,9 @@ class Interface:
     def current_object_type(self, new_object_type):
         self._current_object_type = new_object_type
 
-    def __init__(self, width, height):
+    def __init__(self, client, width, height):
         self._root = tk.Tk()
-        self._client = client.Client('127.0.0.1', 15555)
-
-        t1 = threading.Thread(target=self._client.connect)
-        t1.start()
+        self._client = client
 
         self._canvas = tk.Canvas(self._root, width=width, height=height)
         self._canvas.pack(side=tk.BOTTOM)
@@ -139,7 +136,7 @@ class Interface:
         # À modifier avec l'interaction avec le serveur
         # (demande de validation de la position par ex)
         #
-        self._client.send()
+        self._client.send("Resource", [x, y], size)
         Resource(self._canvas, (x, y), size)
 
     def create_wall(self, x, y, width=10):

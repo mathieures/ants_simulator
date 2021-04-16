@@ -27,10 +27,21 @@ class Client:
 
     def receive(self):
         while True:
-            recv_data = self._socket.recv(2048)
-            data = pickle.dumps(recv_data)
+            recv_data = self._socket.recv(1024)
+            data = pickle.loads(recv_data)
+            is_good, element, pos, size = data[0], data[1], data[2], data[3]
 
-            print(type(data))
+            if is_good:
+                print("OKAY GOOD")
+            else:
+                print("PAS GOOD")
 
-    def send(self, data):
-        pass
+    def send(self, element, pos, data):
+        """
+        Fonction d'envoit au serveur
+        element:  type de donnée
+        pos: liste de position [x, y]
+        data: taille de l'objet
+        """
+        all = pickle.dumps([element, pos, data])
+        self._socket.send(all)

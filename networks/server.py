@@ -11,6 +11,8 @@ class Server:
     """
     clients = []
 
+    ressources = {}
+
     def __init__(self, ip, port):
         try:
             assert isinstance(ip, str), "Erreur l'IP n'est pas une châine de caractère valide"
@@ -40,18 +42,30 @@ class Server:
         """
         client, address = self._socket.accept()
         Server.clients.append(client)
-        print("{} connecté.".format(client))
 
     def receive(self):
         for client in Server.clients:
             def under_receive():
                 recv_data = client.recv(1024)
                 data = pickle.loads(recv_data)
-                print(data)
+                element, pos, size = data[0], data[1], data[2]
+
+                self.process_data(element, pos, size)
 
             t1_2_1 = threading.Thread(target=under_receive)
             t1_2_1.start()
 
+    def process_data(self, element, pos, size):
+        if element == "Resource":
+            pos = tuple(pos)
+            print(pos in Server.ressources)
+            if pos in Server.ressources:
+                data = pickle.dumps([False, element, pos, size])
+                self.send(data)
+            else:
+                Server.ressources[pos] = size
+                data = [True, element, pos, size]
+                self.send(data)
     def condition(self):
         """
         Fonction 'principal' de la classe.
@@ -69,13 +83,13 @@ class Server:
             t1_2.start()
             t1_2.join(1)
 
-    def send(self, args):
+    def send(self, data):
         """
         Fonction renvoyant des informations au clients
         """
         try:
-            data = pickle.dumps(args)
             for client in Server.clients:
+                data = pickle.dumps(data)
                 client.sendall(data)
         except BrokenPipeError as e:
             print(e)
