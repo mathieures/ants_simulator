@@ -58,9 +58,8 @@ class Server:
     def process_data(self, element, pos, size):
         if element == "Resource":
             pos = tuple(pos)
-            print(pos in Server.ressources)
             if pos in Server.ressources:
-                data = pickle.dumps([False, element, pos, size])
+                data = [False, element, pos, size]
                 self.send(data)
             else:
                 Server.ressources[pos] = size

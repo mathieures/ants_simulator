@@ -30,7 +30,7 @@ class Client:
             recv_data = self._socket.recv(1024)
             data = pickle.loads(recv_data)
             is_good, element, pos, size = data[0], data[1], data[2], data[3]
-
+            print(is_good)
             if is_good:
                 print("OKAY GOOD")
             else:
