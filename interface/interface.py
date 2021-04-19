@@ -28,12 +28,10 @@ class Interface:
     def current_object_type(self, new_object_type):
         self._current_object_type = new_object_type
 
-    def __init__(self, width, height):
+    def __init__(self, client, width, height):
         self._root = tk.Tk()
-        self._client = client.Client('127.0.0.1', 15555)
-
-        t1 = threading.Thread(target=self._client.connect)
-        t1.start()
+        self._client = client
+        self._client._set_interface(self)
 
         self._canvas = tk.Canvas(self._root, width=width, height=height)
         self._canvas.pack(side=tk.BOTTOM)
@@ -68,8 +66,12 @@ class Interface:
                        object_type=Resource),
 
             EasyButton(self,
-                       self._objects_frame, 50, 50, text='',
-                       object_type=Wall, no_icon=False)
+                       self._objects_frame, 50, 50,
+                       object_type=Wall),
+
+            EasyButton(self,
+                       self._objects_frame, 50, 50, text='Ready',
+                       side=tk.RIGHT, command=self._client.set_ready)
         ]
 
         # Évènements
@@ -97,19 +99,21 @@ class Interface:
         print("click ; current :", self._current_object_type)
         # Normalement c'est la bonne manière de tester, mais faut voir
         if self._current_object_type is Nest:
-            self.create_nest(event.x, event.y)
+            self.ask_nest(event.x, event.y)
 
         elif self._current_object_type is Resource:
-            self.create_resource(event.x, event.y)
+            self.ask_resource(event.x, event.y)
 
         elif self._current_object_type is Wall:
             if self._current_wall is not None:
                 print("problème")
-            self.create_wall(event.x, event.y)
+            self.ask_wall(event.x, event.y)
+
 
     def on_release(self, event):
         if self._current_wall:
             self._current_wall = None
+            self._client
 
     def on_right_click(self, event):
         self.create_nest(event.x, event.y, 25)
@@ -125,29 +129,63 @@ class Interface:
         self._current_object_type = None
         print("deselected all")
 
-    ## Création d'objets ##
-    def create_nest(self, x, y, size=20):
-        """La couleur est obligatoirement la couleur locale"""
-        #
-        # À modifier avec l'interaction avec le serveur
-        # (demande de validation de la position par ex)
-        #
-        Nest(self._canvas, (x, y), size, color=self._local_color)
 
-    def create_resource(self, x, y, size=20):
+
+    ## Demandes pour créer les objets ##
+    def ask_nest(self, x, y, size=20):
+        """
+        Demande au serveur s'il peut créer un nid à l'endroit donné.
+        La couleur est obligatoirement la couleur locale
+        """
+        self._client.ask_object(Nest, (x, y), size, color=self._local_color)
+
+    def ask_resource(self, x, y, size=20):
+        self._client.ask_object(Resource, (x, y), size)
+    
+    def ask_wall(self, x, y, size=20):
+        self._client.ask_object(Wall, (x, y), size)
+    
+
+
+    ## Création d'objets ##
+    def _create_object(self, str_type, position, size=None, width=None, color=None):
+        """Instancie l'objet du type reçu par le Client"""
+        str_type = str_type.lower()
+        if str_type == "resource":
+            object_type = Resource
+        elif str_type == "nest":
+            object_type = Nest
+        elif str_type == "wall":
+            object_type = Wall
+        else:
+            print("mauvais type :", str_type)
+            return
+        object_type(self._canvas, position, size=size, width=width, color=color)
+
+
+    '''
+    def _create_nest(self, x, y, size, color):
         #
         # À modifier avec l'interaction avec le serveur
         # (demande de validation de la position par ex)
         #
-        self._client.send()
+        Nest(self._canvas, (x, y), size, color)
+
+    def _create_resource(self, x, y, size=20):
+        #
+        # À modifier avec l'interaction avec le serveur
+        # (demande de validation de la position par ex)
+        #
         Resource(self._canvas, (x, y), size)
 
-    def create_wall(self, x, y, width=10):
+    def _create_wall(self, x, y, width=10):
         #
         # À modifier avec l'interaction avec le serveur
         # (demande de validation de la position par ex)
         #
         self._current_wall = Wall(self._canvas, (x, y), width=width)
+    '''
+
 
     def fonction_bidon(self, event=None):
         print("fonction bidon au rapport")

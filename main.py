@@ -1,13 +1,18 @@
 import threading
 
 from interface.interface import Interface
+from networks.client import Client
 
 
 def main():
 
-    app = Interface(1050, 750)
-    t0 = threading.Thread(target=app.root.mainloop)
-    t0.run()
+    client = Client('127.0.0.1', 15555)
+    t0 = threading.Thread(target=client.connect)
+    t0.start()
+
+    app = Interface(client, 1050, 750)
+    t1 = threading.Thread(target=app.root.mainloop)
+    t1.run()
 
 
 main()
