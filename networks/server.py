@@ -67,7 +67,7 @@ class Server:
                 self.send(data)
     def condition(self):
         """
-        Fonction 'principal' de la classe.
+        Fonction 'principale' de la classe.
         Elle sert au serveur afin qu'il puisse accepter et recevoir en même temps
         Utilisé dans des threads
         """
@@ -84,7 +84,7 @@ class Server:
 
     def send(self, data):
         """
-        Fonction renvoyant des informations au clients
+        Fonction renvoyant des informations aux clients
         """
         try:
             for client in Server.clients:
