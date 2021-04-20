@@ -18,7 +18,24 @@ class Client:
         self._ip = ip
         self._port = port
 
+
+        self._resource_ok = False
+        self._nest_ok = False
+        self._wall_ok = False
+
         self._interface = None
+
+    @property
+    def ressource_ok(self):
+        return self._resource_ok
+
+    @property
+    def nest_ok(self):
+        return self._nest_ok
+
+    @property
+    def wall_ok(self):
+        return self._wall_ok
 
     def connect(self):
         try:
@@ -32,13 +49,16 @@ class Client:
         while True:
             recv_data = self._socket.recv(1024)
             data = pickle.loads(recv_data)
-            is_good, element, pos, size = data[0], data[1], data[2], data[3]
-            print(is_good)
+            is_good, element = data[0], data[1]
             if is_good:
-                print("OKAY GOOD")
+                if element == "Resource":
+                    self._resource_ok = True
+                elif element == "Wall":
+                    self._wall_ok = True
             else:
-                print("PAS GOOD")
-    '''
+                self._resource_ok = False
+                self._nest_ok = False
+                self._wall_ok = False
 
     '''
     def send(self, element, pos, data):
@@ -50,11 +70,12 @@ class Client:
         """
         all = pickle.dumps([element, pos, data])
         self._socket.send(all)
-    '''
+
 
     def set_ready(self):
         """Informe le serveur que ce client est prêt"""
-        pass
+        print("Ready envoyé")
+        self._socket.send("Ready".encode())
 
     def unset_ready(self):
         """Informe le serveur que ce client n'est plus prêt"""
@@ -76,19 +97,19 @@ class Client:
         """Reçoit les signaux envoyés par les clients pour les objets créés"""
         while True:
             recv_data = self._socket.recv(1024)
-            data = pickle.loads(recv_data)
-            # is_good, str_type, pos, size = data[0], data[1], data[2], data[3]
-            str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
+            try:
+                data = pickle.loads(recv_data)
+            except pickle.UnpicklingError:
+                data = recv_data
+            if type(data) == list:
+                # Si c'est une liste, on sait que la demande est éffectuée pour crée un élément
+                str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 
-            # Communique l'information d'un nouvel objet à l'interface
-            print("dit à interface de créer :", str_type, pos, size, width, color)
-            self._interface._create_object(str_type, pos, size=size, width=width, color=color)
-
-            # print(is_good)
-            # if is_good:
-            #     print("OKAY GOOD")
-            # else:
-            #     print("PAS GOOD")
+                # Communique l'information d'un nouvel objet à l'interface
+                print("dit à interface de créer :", str_type, pos, size, width, color)
+                self._interface._create_object(str_type, pos, size=size, width=width, color=color)
+            elif data.decode() == "GO":
+                self._interface.start_game()
 
 
     def _set_interface(self, interface):
