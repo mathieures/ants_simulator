@@ -11,11 +11,11 @@ class Server:
     """
     clients = []
 
-    elements = {}
+    objects = {}
 
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, max_clients):
         try:
-            assert isinstance(ip, str), "Erreur l'IP n'est pas une châine de caractère valide"
+            assert isinstance(ip, str), "Erreur l'IP n'est pas une chaîne de caractère valide"
             assert isinstance(port, int), "Erreur le port n'est pas un entier valide"
         except AssertionError as e:
             print(e)
@@ -24,6 +24,11 @@ class Server:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._ip = ip
         self._port = port
+        self._max_clients = max_clients
+
+        self._client_ready = 0
+
+        print("Server online")
 
     def connect(self):
         """
@@ -31,7 +36,7 @@ class Server:
         Utilisé dans un thread séparé
         """
         self._socket.bind((self._ip, self._port))
-        self._socket.listen(5)
+        self._socket.listen(self._max_clients)
 
         self.condition()
 
@@ -51,47 +56,62 @@ class Server:
         for client in Server.clients:
             def under_receive():
                 recv_data = client.recv(1024)
-                data = pickle.loads(recv_data)
-                element, pos, size = data[0], data[1], data[2]
-
-                self.process_data(element, pos, size)
+                try:
+                    data = pickle.loads(recv_data)
+                except pickle.UnpicklingError:
+                    data = recv_data
+                if type(data) == list:
+                    # Si c'est une liste, on sait que la demande est éffectuée pour crée un élément
+                    str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
+                    self.process_data(str_type, pos, size, width, color)
+                elif data.decode() == "Ready":
+                    self._client_ready += 1
+                    if self._client_ready == self._max_clients:
+                        client.send("GO".encode())
+                    else:
+                        print("Il manque encore {} clients".format(self._max_clients - self._client_ready))
 
             t1_2_1 = threading.Thread(target=under_receive)
             t1_2_1.start()
 
-    def process_data(self, element, pos, size):
-        """
-        Fonction qui sert à traiter les données
-        La classe server contient un attribut de classe 'elements' qui est un dictionnaire
-        dont les clés sont les positions des éléments de l'interface. Les valeurs sont
-        les types de données, la taille.
-        :element: type de données
-        :pos: liste position de l'élément
-        :size: taille de l'élément
-        """
-        aux_pos = pos
-        pos = tuple(pos)
-        if element == "Resource":
-            if pos in Server.elements:
-                data = [False, element, pos, size]
-                self.send(data)
-            else:
-                Server.elements[pos] = [element, size]
-                data = [True, element]
-                self.send(data)
-        elif element == "Wall":
-            if pos in Server.elements:
-                data = [False, element, pos, size]
-                self.send(data)
-            else:
-                Server.elements[pos] = [element, size]
-                data = [True, element]
-                self.send(data)
+    def process_data(self, str_type, coords, size, width, color):
+        print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
+        coords = tuple(coords) # normalement, déjà un tuple
+        str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
+
+        # Si l'endroit est libre
+        if self.is_good_spot(coords, size, width):
+            # Si c'est le premier objet de ce type que l'on voit, on init
+            if Server.objects.get(str_type) is None:
+                Server.objects[str_type] = []
+            # Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
+            Server.objects[str_type].append((coords, size, width, color))
+            print("ajouté côté serveur :", str_type, coords, size, width, color)
+
+            data = [str_type, coords, size, width, color]
+            self.send_to_clients(data)
+
+
+    def is_good_spot(self, coords, size, width):
+        for str_type in Server.objects:
+            for properties in Server.objects[str_type]:
+                pos_obj, size_obj, width_obj, color_obj = properties
+                offset = size_obj
+                # On teste un espace autour des coords
+                if (pos_obj[0] - offset <= coords[0] <= pos_obj[0] + offset) and (
+                    pos_obj[1] - offset <= coords[1] <= pos_obj[1] + offset):
+                    print("-> is not good spot")
+                    return False
+                    # peut-être que ça peut poser souci parce qu'on teste pas
+                    # le centre, mais la coords gardée en mémoire n'est pas
+                    # le centre non plus donc c'est pareil normalement
+        print("-> is good spot")
+        return True
 
     def condition(self):
         """
-        Fonction 'principal' de la classe.
-        Elle sert au serveur afin qu'il puisse accepter et recevoir en même temps
+        Fonction 'principale' de la classe.
+        Elle permet au serveur d'accepter et recevoir en même temps
         Utilisé dans des threads
         """
         while True:
@@ -105,9 +125,23 @@ class Server:
             t1_2.start()
             t1_2.join(1)
 
+
     def send(self, data):
         """
-        Fonction renvoyant des informations au clients
+        Fonction envoyant des informations aux clients
+        """
+        try:
+            for client in Server.clients:
+                data = pickle.dumps(data)
+                client.send_to_clientsall(data)
+        except BrokenPipeError as e:
+            print(e)
+            sys.exit(1)
+
+
+    def send_to_clients(self, data):
+        """
+        Fonction envoyant des informations aux clients
         """
         try:
             for client in Server.clients:
@@ -119,5 +153,5 @@ class Server:
 
 
 if __name__ == "__main__":
-    server = Server("127.0.0.1", 15556)
+    server = Server("127.0.0.1", 15555, 1)
     server.connect()
