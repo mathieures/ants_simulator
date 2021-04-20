@@ -6,7 +6,7 @@ from networks.client import Client
 
 def main():
 
-    client = Client('127.0.0.1', 15555)
+    client = Client('127.0.0.1', 15556)
     t0 = threading.Thread(target=client.connect)
     t0.start()
 

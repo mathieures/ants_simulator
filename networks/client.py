@@ -18,6 +18,23 @@ class Client:
         self._ip = ip
         self._port = port
 
+
+        self._resource_ok = False
+        self._nest_ok = False
+        self._wall_ok = False
+
+    @property
+    def ressource_ok(self):
+        return self._resource_ok
+
+    @property
+    def nest_ok(self):
+        return self._nest_ok
+
+    @property
+    def wall_ok(self):
+        return self._wall_ok
+
     def connect(self):
         try:
             self._socket.connect((self._ip, self._port))
@@ -29,12 +46,16 @@ class Client:
         while True:
             recv_data = self._socket.recv(1024)
             data = pickle.loads(recv_data)
-            is_good, element, pos, size = data[0], data[1], data[2], data[3]
-            print(is_good)
+            is_good, element = data[0], data[1]
             if is_good:
-                print("OKAY GOOD")
+                if element == "Resource":
+                    self._resource_ok = True
+                elif element == "Wall":
+                    self._wall_ok = True
             else:
-                print("PAS GOOD")
+                self._resource_ok = False
+                self._nest_ok = False
+                self._wall_ok = False
 
     def send(self, element, pos, data):
         """

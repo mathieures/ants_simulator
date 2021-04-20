@@ -11,7 +11,7 @@ class Server:
     """
     clients = []
 
-    ressources = {}
+    elements = {}
 
     def __init__(self, ip, port):
         try:
@@ -44,6 +44,10 @@ class Server:
         Server.clients.append(client)
 
     def receive(self):
+        """
+        Fonction qui sert à réceptionner les données envoyés depuis le client
+        Utilise une sous fonction 'under_receive' qui va manipuler dans un thread les données reçus
+        """
         for client in Server.clients:
             def under_receive():
                 recv_data = client.recv(1024)
@@ -56,15 +60,34 @@ class Server:
             t1_2_1.start()
 
     def process_data(self, element, pos, size):
+        """
+        Fonction qui sert à traiter les données
+        La classe server contient un attribut de classe 'elements' qui est un dictionnaire
+        dont les clés sont les positions des éléments de l'interface. Les valeurs sont
+        les types de données, la taille.
+        :element: type de données
+        :pos: liste position de l'élément
+        :size: taille de l'élément
+        """
+        aux_pos = pos
+        pos = tuple(pos)
         if element == "Resource":
-            pos = tuple(pos)
-            if pos in Server.ressources:
+            if pos in Server.elements:
                 data = [False, element, pos, size]
                 self.send(data)
             else:
-                Server.ressources[pos] = size
-                data = [True, element, pos, size]
+                Server.elements[pos] = [element, size]
+                data = [True, element]
                 self.send(data)
+        elif element == "Wall":
+            if pos in Server.elements:
+                data = [False, element, pos, size]
+                self.send(data)
+            else:
+                Server.elements[pos] = [element, size]
+                data = [True, element]
+                self.send(data)
+
     def condition(self):
         """
         Fonction 'principal' de la classe.
@@ -96,5 +119,5 @@ class Server:
 
 
 if __name__ == "__main__":
-    server = Server("127.0.0.1", 15555)
+    server = Server("127.0.0.1", 15556)
     server.connect()
