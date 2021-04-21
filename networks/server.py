@@ -11,10 +11,9 @@ class Server:
     """
     clients = []
 
-    # resources = {}
     objects = {}
 
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, max_clients):
         try:
             assert isinstance(ip, str), "Erreur l'IP n'est pas une chaîne de caractère valide"
             assert isinstance(port, int), "Erreur le port n'est pas un entier valide"
@@ -25,6 +24,9 @@ class Server:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._ip = ip
         self._port = port
+        self._max_clients = max_clients
+
+        self._client_ready = 0
 
         print("Server online")
 
@@ -34,7 +36,7 @@ class Server:
         Utilisé dans un thread séparé
         """
         self._socket.bind((self._ip, self._port))
-        self._socket.listen(5)
+        self._socket.listen(self._max_clients)
 
         self.condition()
 
@@ -165,7 +167,7 @@ class Server:
             t1_2.start()
             t1_2.join(1)
 
-    '''
+
     def send(self, data):
         """
         Fonction envoyant des informations aux clients
@@ -177,11 +179,11 @@ class Server:
         except BrokenPipeError as e:
             print(e)
             sys.exit(1)
-    '''
+
 
     def send_to_clients(self, data):
         """
-        Fonction envoyant des informations à tous les clients.
+        Fonction envoyant des informations aux clients
         """
         try:
             for client in Server.clients:
@@ -193,5 +195,5 @@ class Server:
 
 
 if __name__ == "__main__":
-    server = Server("127.0.0.1", 15555)
+    server = Server("127.0.0.1", 15555, 1)
     server.connect()
