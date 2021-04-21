@@ -49,64 +49,43 @@ class Server:
         Server.clients.append(client)
 
     def receive(self):
+        """
+        Fonction qui sert à réceptionner les données envoyés depuis le client
+        Utilise une sous fonction 'under_receive' qui va manipuler dans un thread les données reçus
+        """
         for client in Server.clients:
             def under_receive():
-                recv_data = client.recv(10000) # grand pour les coords des murs
-                data = pickle.loads(recv_data)
-                '''
-                print("data :", data)
-                # Si le 1er est None, c'est un signal pour dire qu'on veut juste une confirmation
-                if data[0] is None:
-                    print("serveur : data[0] is None => test des coords")
-                    # On teste, on agit en fonction et on envoie le résultat
-                    is_good = self.check_all_coords(data[1:-1], data[-1]) # coordonnées, width
-                    
-                    if not is_good:
-                        print("   -> is not good coords")
-                        data = pickle.dumps([None, is_good])
-                        client.sendall(data)
-                        continue
-                    # Si elles étaient correctes, on dit à tous les clients de créer l'objet
+                recv_data = client.recv(10240)
+                try:
+                    data = pickle.loads(recv_data)
+                except pickle.UnpicklingError:
+                    data = recv_data
+                # Si c'est une liste, on sait que la demande est éffectuée pour créer un élément
+                if type(data) == list:
+                    str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
+                    self.process_data(str_type, coords, size, width, color)
+                elif data.decode() == "Ready":
+                    self._client_ready += 1
+                    if self._client_ready == self._max_clients:
+                        client.send("GO".encode())
                     else:
-                        print("   -> is good coords")
-                        self._add_to_dict(str_type, coords, size, width, color)
-
-                        data = [str_type, coords, size, width, color]
-                        self.send_to_clients(data)
-
-                else:
-                '''
-                str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
-
-                self.process_data(str_type, coords, size, width, color)
+                        print(f"Il manque encore {self._max_clients - self._client_ready} clients")
 
             t1_2_1 = threading.Thread(target=under_receive)
             t1_2_1.start()
-
-    '''
-    def process_data(self, element, pos, size):
-        if element == "Resource":
-            pos = tuple(pos)
-            if pos in Server.resources:
-                data = [False, element, pos, size]
-                self.send(data)
-            else:
-                Server.resources[pos] = size
-                data = [True, element, pos, size]
-                self.send(data)
-    '''
 
     def process_data(self, str_type, coords, size, width, color):
         print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
         coords = tuple(coords) # normalement, déjà un tuple
         str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
-        
+
         # Si l'endroit est libre
         if self.check_all_coords(coords, size):
             self._add_to_dict(str_type, coords, size, width, color)
 
             data = [str_type, coords, size, width, color]
             self.send_to_clients(data)
+
 
     def _add_to_dict(self, str_type, coords, size, width, color):
         """Pour les objets 'wall', les coordonnées sont une liste"""

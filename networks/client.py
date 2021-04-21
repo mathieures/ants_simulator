@@ -44,23 +44,6 @@ class Client:
         except ConnectionRefusedError:
             print("Erreur serveur non connecté")
 
-    '''
-    def receive(self):
-        while True:
-            recv_data = self._socket.recv(1024)
-            data = pickle.loads(recv_data)
-            is_good, element = data[0], data[1]
-            if is_good:
-                if element == "Resource":
-                    self._resource_ok = True
-                elif element == "Wall":
-                    self._wall_ok = True
-            else:
-                self._resource_ok = False
-                self._nest_ok = False
-                self._wall_ok = False
-
-    '''
     def send(self, element, pos, data):
         """
         Fonction d'envoi au serveur
