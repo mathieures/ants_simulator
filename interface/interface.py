@@ -80,8 +80,6 @@ class Interface:
         self._canvas.bind("<ButtonRelease-1>", self.on_release)
         self._canvas.bind("<B1-Motion>", self.on_motion)
 
-        self._canvas.bind("<Button-3>", self.on_right_click)
-
         self._root.bind("<Control-z>", self.fonction_bidon)
         self._root.bind("<Escape>", self.deselect_buttons)
 
@@ -96,7 +94,7 @@ class Interface:
     ## Gestion d'évènements ##
 
     def on_click(self, event):
-        print("click ; current :", self._current_object_type)
+        # print("click ; current :", self._current_object_type)
         # Normalement c'est la bonne manière de tester, mais faut voir
         if self._current_object_type is Nest:
             self.ask_nest(event.x, event.y)
@@ -104,19 +102,18 @@ class Interface:
         elif self._current_object_type is Resource:
             self.ask_resource(event.x, event.y)
 
+        # je crois pas qu'on veuille demander un wall maintenant
         elif self._current_object_type is Wall:
-            if self._current_wall is not None:
-                print("problème")
-            self.ask_wall(event.x, event.y)
-
+            # On le crée directement, pour avoir un visuel
+            self._create_wall(event.x, event.y)
 
     def on_release(self, event):
-        if self._current_wall:
-            self._current_wall = None
-            self._client
-
-    def on_right_click(self, event):
-        self.create_nest(event.x, event.y, 25)
+        print("current wall :", self._current_wall)
+        if self._current_wall is not None:
+            wall_coords, wall_width = self._current_wall.coords, self._current_wall.width
+            self.ask_wall(wall_coords, wall_width)
+            self._delete_current_wall()
+            # self._client.ask_check_all_coords(wall_coords, )
 
     def on_motion(self, event):
         if self._current_wall is not None:
@@ -131,7 +128,7 @@ class Interface:
 
 
 
-    ## Demandes pour créer les objets ##
+    ## Demande de confirmation pour créer les objets ##
     def ask_nest(self, x, y, size=20):
         """
         Demande au serveur s'il peut créer un nid à l'endroit donné.
@@ -142,13 +139,15 @@ class Interface:
     def ask_resource(self, x, y, size=20):
         self._client.ask_object(Resource, (x, y), size)
     
-    def ask_wall(self, x, y, size=20):
-        self._client.ask_object(Wall, (x, y), size)
+    def ask_wall(self, coords_list, width=20):
+        # Appelé seulement à la fin du clic long
+        print("ON DEMANDE UN MUR")
+        self._client.ask_object(Wall, coords_list, width=width)
     
 
 
     ## Création d'objets ##
-    def _create_object(self, str_type, position, size=None, width=None, color=None):
+    def _create_object(self, str_type, coords, size=None, width=None, color=None):
         """Instancie l'objet du type reçu par le Client"""
         str_type = str_type.lower()
         if str_type == "resource":
@@ -156,11 +155,21 @@ class Interface:
         elif str_type == "nest":
             object_type = Nest
         elif str_type == "wall":
+            # les murs sont spéciaux car on veut que size soit width
+            size = width
             object_type = Wall
+            # Wall(self._canvas, coords, size=width, width=size)
+            # return
         else:
             print("mauvais type :", str_type)
             return
-        object_type(self._canvas, position, size=size, width=width, color=color)
+        object_type(self._canvas, coords, size=size, width=width, color=color)
+
+    def _delete_current_wall(self):
+        print("deleting current wall ;", self._current_wall, self._current_object_type)
+        self._canvas.delete(self._current_wall.id)
+        self._current_wall = None
+        print(" -> current wall :", self._current_wall)
 
 
     '''
@@ -177,14 +186,11 @@ class Interface:
         # (demande de validation de la position par ex)
         #
         Resource(self._canvas, (x, y), size)
+    '''
 
     def _create_wall(self, x, y, width=10):
-        #
-        # À modifier avec l'interaction avec le serveur
-        # (demande de validation de la position par ex)
-        #
+        """On crée un objet Wall, qu'on étendra"""
         self._current_wall = Wall(self._canvas, (x, y), width=width)
-    '''
 
 
     def fonction_bidon(self, event=None):

@@ -49,11 +49,34 @@ class Server:
     def receive(self):
         for client in Server.clients:
             def under_receive():
-                recv_data = client.recv(1024)
+                recv_data = client.recv(10000) # grand pour les coords des murs
                 data = pickle.loads(recv_data)
-                str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
+                '''
+                print("data :", data)
+                # Si le 1er est None, c'est un signal pour dire qu'on veut juste une confirmation
+                if data[0] is None:
+                    print("serveur : data[0] is None => test des coords")
+                    # On teste, on agit en fonction et on envoie le résultat
+                    is_good = self.check_all_coords(data[1:-1], data[-1]) # coordonnées, width
+                    
+                    if not is_good:
+                        print("   -> is not good coords")
+                        data = pickle.dumps([None, is_good])
+                        client.sendall(data)
+                        continue
+                    # Si elles étaient correctes, on dit à tous les clients de créer l'objet
+                    else:
+                        print("   -> is good coords")
+                        self._add_to_dict(str_type, coords, size, width, color)
 
-                self.process_data(str_type, pos, size, width, color)
+                        data = [str_type, coords, size, width, color]
+                        self.send_to_clients(data)
+
+                else:
+                '''
+                str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
+
+                self.process_data(str_type, coords, size, width, color)
 
             t1_2_1 = threading.Thread(target=under_receive)
             t1_2_1.start()
@@ -77,33 +100,53 @@ class Server:
         str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
         
         # Si l'endroit est libre
-        if self.is_good_spot(coords, size, width):
-            # Si c'est le premier objet de ce type que l'on voit, on init
-            if Server.objects.get(str_type) is None:
-                Server.objects[str_type] = []
-            # Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-            Server.objects[str_type].append((coords, size, width, color))
-            print("ajouté côté serveur :", str_type, coords, size, width, color)
+        if self.check_all_coords(coords, size):
+            self._add_to_dict(str_type, coords, size, width, color)
 
             data = [str_type, coords, size, width, color]
             self.send_to_clients(data)
 
+    def _add_to_dict(self, str_type, coords, size, width, color):
+        """Pour les objets 'wall', les coordonnées sont une liste"""
+        # Si c'est le premier objet de ce type que l'on voit, on init
+        if Server.objects.get(str_type) is None:
+            Server.objects[str_type] = []
+        if size is None:
+            size = width
+        # Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
+        Server.objects[str_type].append((coords, size, width, color))
+        print("ajouté côté serveur :", str_type, coords, size, width, color)
+
     
-    def is_good_spot(self, coords, size, width):
+    def is_good_spot(self, x, y, size):
+        """
+        Retourne True si les coordonnées données en paramètre sont
+        disponibles en fonction de la taille donnée, False sinon
+        """
         for str_type in Server.objects:
             for properties in Server.objects[str_type]:
-                pos_obj, size_obj, width_obj, color_obj = properties
+                coords_obj, size_obj, width_obj, color_obj = properties
                 offset = size_obj
                 # On teste un espace autour des coords
-                if (pos_obj[0] - offset <= coords[0] <= pos_obj[0] + offset) and (
-                    pos_obj[1] - offset <= coords[1] <= pos_obj[1] + offset):
-                    print("-> is not good spot")
-                    return False
-                    # peut-être que ça peut poser souci parce qu'on teste pas
-                    # le centre, mais la coords gardée en mémoire n'est pas
-                    # le centre non plus donc c'est pareil normalement
+                for i in range(0, len(coords_obj) - 1, 2):
+                    if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
+                        coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
+                        print("-> is not good spot")
+                        return False
         print("-> is good spot")
         return True
+
+    def check_all_coords(self, coords_list, size):
+        """Vérifie que toutes les coordonnées de la liste sont valides"""
+        # print("len coords :", len(coords_list))
+        for i in range(0, len(coords_list) - 1, 2):
+            if not self.is_good_spot(coords_list[i], coords_list[i+1], size):
+                # print("nope, coords", (coords_list[i], coords_list[i+1]), "size :", size, "pas bonnes")
+                return False
+        # print("toutes les coords sont ok")
+        return True
+
+
 
     def condition(self):
         """
@@ -138,7 +181,7 @@ class Server:
 
     def send_to_clients(self, data):
         """
-        Fonction envoyant des informations aux clients
+        Fonction envoyant des informations à tous les clients.
         """
         try:
             for client in Server.clients:
