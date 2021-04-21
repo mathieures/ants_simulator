@@ -81,17 +81,26 @@ class Client:
         """Informe le serveur que ce client n'est plus prêt"""
         pass
 
-    def ask_object(self, object_type, position, size, width=None, color=None):
+    def ask_object(self, object_type, coords, size=None, width=None, color=None):
         """
         Demande au serveur si on peut placer
-        un élément d'un type et d'une taille donnés
-        à la position donnée.
+        un élément d'un type et d'une taille donnés,
+        aux coordonnées données.
         """
         print("object_type :", object_type, "name :", object_type.__name__)
         str_type = object_type.__name__
-        print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
-        data = pickle.dumps([str_type, position, size, width, color])
+        print("objet demandé : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
+        data = pickle.dumps([str_type, coords, size, width, color])
         self._socket.send(data)
+
+    # def ask_check_all_coords(self, coords_list, width):
+    #     """
+    #     Demande au serveur si la liste de positions ne pose pas problème.
+    #     La première valeur, None, signale au serveur que ce n'est qu'un test.
+    #     """
+    #     print("demande pour les coords :", coords_list)
+    #     data = pickle.dumps([None, coords_list, width])
+    #     self._socket.send(data)
 
     def receive(self):
         """Reçoit les signaux envoyés par les clients pour les objets créés"""
