@@ -81,7 +81,7 @@ class Client:
         """Informe le serveur que ce client n'est plus prêt"""
         pass
 
-    def ask_object(self, object_type, position, size, width=None, color=None):
+    def ask_object(self, object_type, position, size=None, width=None, color=None):
         """
         Demande au serveur si on peut placer
         un élément d'un type et d'une taille donnés
