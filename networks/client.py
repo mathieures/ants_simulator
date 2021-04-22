@@ -90,7 +90,6 @@ class Client:
 					size = 3
 					width = None
 					for i in range(1, len(data)):
-						print("Dit a l'interface de creer fourmi")
 						self._interface._create_object(str_type, data[i][0], size=size, width=width, color=data[i][1])
 				else:
 					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]

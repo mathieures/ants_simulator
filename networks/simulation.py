@@ -12,6 +12,7 @@ class Simulation():
 		self.ants = [] # Liste d'instances de fourmi
 
 		self.init_ants()
+		time.sleep(0.1)
 		self.start_simulation()
 
 	def init_ants(self):
@@ -22,7 +23,6 @@ class Simulation():
 			x,y = nest[0]
 			color = nest[3]
 			for i in range(10):
-				print("Ajout d'une fourmi en {} {}".format(x,y))
 				curr_ant = ant.Ant(x,y,color, (x,y))
 				self.ants.append(curr_ant)
 				ants.append(((x,y), color))
@@ -37,6 +37,21 @@ class Simulation():
 					ant.search_resource()
 				else:
 					ant.go_to_nest()
-				ants.append(((ant.x,ant.y), ant.color))
+				x,y = ant.x, ant.y
+				# Si la fourmi touche un mur, elle prend une direction opposee
+				if self.touch_wall(x,y, 3):
+					ant.direction = (ant.direction + 180) % 360 
+				ants.append(((x,y), ant.color))
 			self.server.send_to_clients(ants)
 			time.sleep(0.1)
+
+	def touch_wall(self, x, y, size):
+		""" Fonction qui retourne True si la position touche un mur, False sinon """
+		for wall in self.objects["wall"]:
+			offset = wall[2]
+			coords_obj = wall[0]
+			for i in range(0,len(wall[0]), 2):
+				if (coords_obj[i] - offset <= x+size <= coords_obj[i] + offset) and (
+					coords_obj[i+1] - offset <= y+size <= coords_obj[i+1] + offset):
+					return True
+		return False
