@@ -6,97 +6,107 @@ import threading
 
 
 class Client:
-    def __init__(self, ip, port):
-        try:
-            assert isinstance(ip, str), "Erreur l'IP n'est pas une châine de caractère valide"
-            assert isinstance(port, int), "Erreur le port n'est pas un entier valide"
-        except AssertionError as e:
-            print(e)
-            sys.exit()
+	def __init__(self, ip, port):
+		try:
+			assert isinstance(ip, str), "Erreur l'IP n'est pas une châine de caractère valide"
+			assert isinstance(port, int), "Erreur le port n'est pas un entier valide"
+		except AssertionError as e:
+			print(e)
+			sys.exit()
 
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._ip = ip
-        self._port = port
-
-
-        self._resource_ok = False
-        self._nest_ok = False
-        self._wall_ok = False
-
-        self._interface = None
-
-    @property
-    def ressource_ok(self):
-        return self._resource_ok
-
-    @property
-    def nest_ok(self):
-        return self._nest_ok
-
-    @property
-    def wall_ok(self):
-        return self._wall_ok
-
-    def connect(self):
-        try:
-            self._socket.connect((self._ip, self._port))
-            self.receive()
-        except ConnectionRefusedError:
-            print("Erreur serveur non connecté")
-
-    def send(self, element, pos, data):
-        """
-        Fonction d'envoi au serveur
-        element:  type de donnée
-        pos: liste de position [x, y]
-        data: taille de l'objet
-        """
-        all = pickle.dumps([element, pos, data])
-        self._socket.send(all)
+		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self._ip = ip
+		self._port = port
 
 
-    def set_ready(self):
-        """Informe le serveur que ce client est prêt"""
-        print("Ready envoyé")
-        self._socket.send("Ready".encode())
+		self._resource_ok = False
+		self._nest_ok = False
+		self._wall_ok = False
 
-    def unset_ready(self):
-        """Informe le serveur que ce client n'est plus prêt"""
-        pass
+		self._interface = None
 
-    def ask_object(self, object_type, position, size=None, width=None, color=None):
-        """
-        Demande au serveur si on peut placer
-        un élément d'un type et d'une taille donnés
-        à la position donnée.
-        """
-        print("object_type :", object_type, "name :", object_type.__name__)
-        str_type = object_type.__name__
-        print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
-        data = pickle.dumps([str_type, position, size, width, color])
-        self._socket.send(data)
+	@property
+	def ressource_ok(self):
+		return self._resource_ok
 
-    def receive(self):
-        """Reçoit les signaux envoyés par les clients pour les objets créés"""
-        while True:
-            recv_data = self._socket.recv(10240)
-            try:
-                data = pickle.loads(recv_data)
-            except pickle.UnpicklingError:
-                data = recv_data
-            if type(data) == list or type(data) == tuple:
-                # Si c'est une liste, on sait que la demande est éffectuée pour crée un élément
-                str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
-                # Communique l'information d'un nouvel objet à l'interface
-                print("dit à interface de créer :", str_type, pos, size, width, color)
-                self._interface._create_object(str_type, pos, size=size, width=width, color=color)
-            elif data.decode() == "GO":
-                self._interface.countdown()
+	@property
+	def nest_ok(self):
+		return self._nest_ok
+
+	@property
+	def wall_ok(self):
+		return self._wall_ok
+
+	def connect(self):
+		try:
+			self._socket.connect((self._ip, self._port))
+			self.receive()
+		except ConnectionRefusedError:
+			print("Erreur serveur non connecté")
+
+	def send(self, element, pos, data):
+		"""
+		Fonction d'envoi au serveur
+		element:  type de donnée
+		pos: liste de position [x, y]
+		data: taille de l'objet
+		"""
+		all = pickle.dumps([element, pos, data])
+		self._socket.send(all)
 
 
-    def _set_interface(self, interface):
-        """
-        Garde en mémoire l'interface, pour
-        pouvoir lui envoyer des informations
-        """
-        self._interface = interface
+	def set_ready(self):
+		"""Informe le serveur que ce client est prêt"""
+		print("Ready envoyé")
+		self._socket.send("Ready".encode())
+
+	def unset_ready(self):
+		"""Informe le serveur que ce client n'est plus prêt"""
+		pass
+
+	def ask_object(self, object_type, position, size=None, width=None, color=None):
+		"""
+		Demande au serveur si on peut placer
+		un élément d'un type et d'une taille donnés
+		à la position donnée.
+		"""
+		print("object_type :", object_type, "name :", object_type.__name__)
+		str_type = object_type.__name__
+		print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
+		data = pickle.dumps([str_type, position, size, width, color])
+		self._socket.send(data)
+
+	def receive(self):
+		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
+		while True:
+			recv_data = self._socket.recv(10240)
+			try:
+				data = pickle.loads(recv_data)
+			except pickle.UnpicklingError:
+				data = recv_data
+			if type(data) == list or type(data) == tuple:
+				if data[0] == "ants":
+					str_type = "ant"
+					size = 3
+					width = None
+					for i in range(1, len(data)):
+						print("Dit a l'interface de creer fourmi")
+						self._interface._create_object(str_type, data[i][0], size=size, width=width, color=data[i][1])
+				else:
+					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
+					# Communique l'information d'un nouvel objet à l'interface
+					print("dit à interface de créer :", str_type, pos, size, width, color)
+					self._interface._create_object(str_type, pos, size=size, width=width, color=color)
+			else:
+				if data == "clear_ants":
+					self._interface.clear_ants()
+				elif data.decode() == "GO":
+					self._interface.countdown()
+
+
+	def _set_interface(self, interface):
+		"""
+		Garde en mémoire l'interface, pour
+		pouvoir lui envoyer des informations
+		"""
+		self._interface = interface

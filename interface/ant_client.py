@@ -8,7 +8,7 @@ class Ant(CustomObject):
 	def draw(self, offset_coords):
 		"""Override la méthode d'origine"""
 		return self._canvas.create_oval(self.get_centre_coords(offset_coords),
-										fill=self._color)
+										fill=self._color, tag="ant")
 
 	def move(self, deltax, deltay):
 		""" Fonction pour deplacer la fourmi dans le canvas """

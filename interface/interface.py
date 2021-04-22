@@ -163,6 +163,7 @@ class Interface:
             # Wall(self._canvas, coords, size=width, width=size)
             # return
         elif str_type == "ant":
+            print("Adding ant")
             object_type = Ant
         else:
             print("mauvais type :", str_type)
@@ -211,6 +212,10 @@ class Interface:
         self._canvas.itemconfig(text, text="C'est parti")
         time.sleep(1)
         self._canvas.delete(self._root,text)
+
+    def clear_ants(self):
+        print("Clearing ants")
+        self.canvas.delete("ant")
 
 
 
