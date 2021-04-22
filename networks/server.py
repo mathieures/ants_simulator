@@ -4,6 +4,7 @@ import socket
 import pickle
 import threading
 
+import time
 import simulation
 
 
@@ -70,6 +71,7 @@ class Server:
                     self._client_ready += 1
                     if self._client_ready == self._max_clients:
                         client.send("GO".encode())
+                        time.sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
                         # Lancement de la simulation
                         self.simulation = simulation.Simulation(Server.objects, self)
                     else:

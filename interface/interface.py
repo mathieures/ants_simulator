@@ -203,8 +203,6 @@ class Interface:
     def countdown(self):
         h = int(self._canvas["height"])//2
         w = int(self._canvas["width"])//2
-        print(self._canvas.winfo_height(), self._canvas.winfo_width())
-        print(h, w)
         text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Attention ça commence")
         time.sleep(1)
         for i in range(3, 0, -1):
