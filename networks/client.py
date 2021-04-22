@@ -87,7 +87,6 @@ class Client:
             if type(data) == list or type(data) == tuple:
                 # Si c'est une liste, on sait que la demande est éffectuée pour crée un élément
                 str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
-
                 # Communique l'information d'un nouvel objet à l'interface
                 print("dit à interface de créer :", str_type, pos, size, width, color)
                 self._interface._create_object(str_type, pos, size=size, width=width, color=color)
