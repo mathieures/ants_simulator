@@ -168,6 +168,7 @@ class Interface:
         print(" -> current wall :", self._current_wall)
 
 
+    '''
     def _create_nest(self, x, y, size, color):
         #
         # À modifier avec l'interaction avec le serveur
@@ -180,7 +181,6 @@ class Interface:
         # À modifier avec l'interaction avec le serveur
         # (demande de validation de la position par ex)
         #
-<<<<<<< HEAD
         self._client.send("Resource", [x, y], size)
         if self._client.ressource_ok:
             Resource(self._canvas, (x, y), size)
@@ -197,7 +197,6 @@ class Interface:
             self._current_wall = Wall(self._canvas, (x, y), width=width)
         else:
             self._current_wall = None
-=======
         Resource(self._canvas, (x, y), size)
     '''
 
@@ -205,10 +204,9 @@ class Interface:
         """On crée un objet Wall, qu'on étendra"""
         self._current_wall = Wall(self._canvas, (x, y), width=width)
 
->>>>>>> 13d8f8e6e707c2915ffb0b25abfed29a723d4d0c
-
     def fonction_bidon(self, event=None):
         print("fonction bidon au rapport")
 
-    def start_game(self):
-        print("C'est partis")
+
+if __name__ == '__main__':
+    interface = Interface(1050, 750)

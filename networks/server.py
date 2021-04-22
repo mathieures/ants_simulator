@@ -60,10 +60,10 @@ class Server:
                     data = pickle.loads(recv_data)
                 except pickle.UnpicklingError:
                     data = recv_data
+                # Si c'est une liste, on sait que la demande est éffectuée pour créer un élément
                 if type(data) == list:
-                    # Si c'est une liste, on sait que la demande est éffectuée pour crée un élément
-                    str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
-                    self.process_data(str_type, pos, size, width, color)
+                    str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
+                    self.process_data(str_type, coords, size, width, color)
                 elif data.decode() == "Ready":
                     self._client_ready += 1
                     if self._client_ready == self._max_clients:
@@ -145,7 +145,7 @@ class Server:
 
     def send_to_clients(self, data):
         """
-        Fonction envoyant des informations à tous les clients.
+        Fonction envoyant des informations aux clients
         """
         try:
             for client in Server.clients:

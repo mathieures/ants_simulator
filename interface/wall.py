@@ -32,7 +32,6 @@ class Wall(CustomObject):
 
         # Si on a plus de deux points, alors il faut créer une ligne plus complexe
         if len(coords) > 4:
-            # IL FAUT CREER LA LINGE AVEC TOUTES LES COORDONNEES, QUITTE À NE PAS DRAW AU CENTRE, DU TOUT
             self._id = self.draw(coords)
         else:
             offset_coords = (coords[0],
