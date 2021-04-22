@@ -79,12 +79,12 @@ class Client:
     def receive(self):
         """Reçoit les signaux envoyés par les clients pour les objets créés"""
         while True:
-            recv_data = self._socket.recv(1024)
+            recv_data = self._socket.recv(10240)
             try:
                 data = pickle.loads(recv_data)
             except pickle.UnpicklingError:
                 data = recv_data
-            if type(data) == list:
+            if type(data) == list or type(data) == tuple:
                 # Si c'est une liste, on sait que la demande est éffectuée pour crée un élément
                 str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 
@@ -92,7 +92,7 @@ class Client:
                 print("dit à interface de créer :", str_type, pos, size, width, color)
                 self._interface._create_object(str_type, pos, size=size, width=width, color=color)
             elif data.decode() == "GO":
-                self._interface.start_game()
+                self._interface.countdown()
 
 
     def _set_interface(self, interface):

@@ -4,8 +4,10 @@ from .easy_button import EasyButton
 from .nest import Nest
 from .resource import Resource
 from .wall import Wall
+from .ant_client import Ant
 
 import threading
+import time
 
 from networks import client
 
@@ -138,9 +140,13 @@ class Interface:
 
     def ask_resource(self, x, y, size=20):
         self._client.ask_object(Resource, (x, y), size)
+    
+    def ask_wall(self, coords_list, width=20):
+        # Appelé seulement à la fin du clic long
+        print("ON DEMANDE UN MUR")
+        self._client.ask_object(Wall, coords_list, width=width)
+    
 
-    def ask_wall(self, x, y, size=20):
-        self._client.ask_object(Wall, (x, y), size)
 
     ## Création d'objets ##
     def _create_object(self, str_type, coords, size=None, width=None, color=None):
@@ -156,6 +162,8 @@ class Interface:
             object_type = Wall
             # Wall(self._canvas, coords, size=width, width=size)
             # return
+        elif str_type == "ant":
+            object_type = Ant
         else:
             print("mauvais type :", str_type)
             return
@@ -181,22 +189,6 @@ class Interface:
         # À modifier avec l'interaction avec le serveur
         # (demande de validation de la position par ex)
         #
-        self._client.send("Resource", [x, y], size)
-        if self._client.ressource_ok:
-            Resource(self._canvas, (x, y), size)
-        else:
-            print("pas okay")
-
-    def _create_wall(self, x, y, width=10):
-        #
-        # À modifier avec l'interaction avec le serveur
-        # (demande de validation de la position par ex)
-        #
-        self._client.send("Wall", [x, y], width)
-        if self._client.wall_ok:
-            self._current_wall = Wall(self._canvas, (x, y), width=width)
-        else:
-            self._current_wall = None
         Resource(self._canvas, (x, y), size)
     '''
 
@@ -204,8 +196,24 @@ class Interface:
         """On crée un objet Wall, qu'on étendra"""
         self._current_wall = Wall(self._canvas, (x, y), width=width)
 
+
     def fonction_bidon(self, event=None):
         print("fonction bidon au rapport")
+
+    def countdown(self):
+        h = int(self._canvas["height"])//2
+        w = int(self._canvas["width"])//2
+        print(self._canvas.winfo_height(), self._canvas.winfo_width())
+        print(h, w)
+        text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Attention ça commence")
+        time.sleep(1)
+        for i in range(3, 0, -1):
+            self._canvas.itemconfig(text, text=i)
+            time.sleep(1)
+        self._canvas.itemconfig(text, text="C'est parti")
+        time.sleep(1)
+        self._canvas.delete(self._root,text)
+
 
 
 if __name__ == '__main__':

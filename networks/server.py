@@ -4,6 +4,8 @@ import socket
 import pickle
 import threading
 
+import simulation
+
 
 class Server:
     """
@@ -55,7 +57,7 @@ class Server:
         """
         for client in Server.clients:
             def under_receive():
-                recv_data = client.recv(1024)
+                recv_data = client.recv(10240)
                 try:
                     data = pickle.loads(recv_data)
                 except pickle.UnpicklingError:
@@ -68,8 +70,10 @@ class Server:
                     self._client_ready += 1
                     if self._client_ready == self._max_clients:
                         client.send("GO".encode())
+                        # Lancement de la simulation
+                        self.simulation = simulation.Simulation(Server.objects, self)
                     else:
-                        print("Il manque encore {} clients".format(self._max_clients - self._client_ready))
+                        print(f"Il manque encore {self._max_clients - self._client_ready} clients")
 
             t1_2_1 = threading.Thread(target=under_receive)
             t1_2_1.start()
@@ -86,7 +90,24 @@ class Server:
             data = [str_type, coords, size, width, color]
             self.send_to_clients(data)
 
-    def is_good_spot(self, coords, size, width):
+
+    def _add_to_dict(self, str_type, coords, size, width, color):
+        """Pour les objets 'wall', les coordonnées sont une liste"""
+        # Si c'est le premier objet de ce type que l'on voit, on init
+        if Server.objects.get(str_type) is None:
+            Server.objects[str_type] = []
+        if size is None:
+            size = width
+        # Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
+        Server.objects[str_type].append((coords, size, width, color))
+        print("ajouté côté serveur :", str_type, coords, size, width, color)
+
+    
+    def is_good_spot(self, x, y, size):
+        """
+        Retourne True si les coordonnées données en paramètre sont
+        disponibles en fonction de la taille donnée, False sinon
+        """
         for str_type in Server.objects:
             for properties in Server.objects[str_type]:
                 coords_obj, size_obj, width_obj, color_obj = properties
