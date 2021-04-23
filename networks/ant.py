@@ -46,7 +46,7 @@ class Ant:
 		self._y = posY
 		self._color = color
 		self._direction = random.randint(0,360)
-		self.nest = (posX, posY) # nest etat un tuple de coordonnes : (x,y)
+		self.nest = (posX, posY) # nest etant un tuple de coordonnes : (x, y)
 
 		self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
 		self._pheromon = [(posX,posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
@@ -55,7 +55,7 @@ class Ant:
 		Ant.ID += 1
 
 	def search_resource(self):
-		""" methode qui change la position de la fourmi en fonction de sa direction """
+		""" Méthode qui change la position de la fourmi en fonction de sa direction """
 		side = self._side()
 		# Si c'est le 1er ou 2e quartant
 		if side < 3:
@@ -86,7 +86,15 @@ class Ant:
 		if self._x == self.nest[0] and self._y == self.nest[1]:
 			self.has_resource = False
 			return
-		self._x,self._y = self._pheromon.pop()
+
+		# test pour voir d'où vient le pb
+		try:
+			self._x, self._y = self._pheromon.pop()
+		except:
+			print("nest :", self.nest, "; pos :", self._x, self._y)
+			self._x, self._y = self._pheromon.pop() # on recrée l'erreur
+
+
 
 	def _side(self):
 		""" Fonction qui renvoie un int correspondant au numero du quartant de la direction """

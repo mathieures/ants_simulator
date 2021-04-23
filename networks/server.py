@@ -29,7 +29,7 @@ class Server:
 		self._port = port
 		self._max_clients = max_clients
 
-		self._client_ready = 0
+		self._clients_ready = 0
 
 		print("Server online")
 
@@ -48,8 +48,11 @@ class Server:
 		Fonction pour accepter quand un client se connecte au serveur
 		Stocke le client dans l'attribut de classe 'clients'
 		"""
-		client, address = self._socket.accept()
-		Server.clients.append(client)
+		if len(Server.clients) < self._max_clients:
+			client, address = self._socket.accept()
+			Server.clients.append(client)
+		else:
+			print("trop de clients")
 
 	def receive(self):
 		"""
@@ -68,14 +71,15 @@ class Server:
 					str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					self.process_data(str_type, coords, size, width, color)
 				elif data.decode() == "Ready":
-					self._client_ready += 1
-					if self._client_ready == self._max_clients:
+					print("prec ready :", self._clients_ready, "max :", self._max_clients)
+					self._clients_ready += 1
+					if self._clients_ready == len(Server.clients):
 						client.send("GO".encode())
 						time.sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
 						# Lancement de la simulation
 						self.simulation = simulation.Simulation(Server.objects, self)
 					else:
-						print(f"Il manque encore {self._max_clients - self._client_ready} clients")
+						print(f"Il manque encore {len(Server.clients) - self._clients_ready} client(s)")
 
 			t1_2_1 = threading.Thread(target=under_receive)
 			t1_2_1.start()
@@ -85,8 +89,6 @@ class Server:
 		coords = tuple(coords) # normalement, déjà un tuple
 		str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
 
-		if size is None:
-			size = width
 		# Si l'endroit est libre
 		if self.check_all_coords(coords, size):
 			self._add_to_dict(str_type, coords, size, width, color)
@@ -106,7 +108,7 @@ class Server:
 		Server.objects[str_type].append((coords, size, width, color))
 		print("ajouté côté serveur :", str_type, coords, size, width, color)
 
-	
+
 	def is_good_spot(self, x, y, size):
 		"""
 		Retourne True si les coordonnées données en paramètre sont
@@ -172,9 +174,9 @@ class Server:
 		"""
 		Fonction envoyant des informations aux clients
 		"""
+		data = pickle.dumps(data)
 		try:
 			for client in Server.clients:
-				data = pickle.dumps(data)
 				client.sendall(data)
 		except BrokenPipeError as e:
 			print(e)
@@ -182,5 +184,5 @@ class Server:
 
 
 if __name__ == "__main__":
-	server = Server("127.0.0.1", 15555, 1)
+	server = Server("127.0.0.1", 15555, 5) # LE 5 EST À MODIFIER AVEC UN ARGUMENT EN LIGNE DE COMMANDE PAR EX
 	server.connect()
