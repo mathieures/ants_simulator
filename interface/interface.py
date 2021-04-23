@@ -93,15 +93,15 @@ class Interface:
 		self._root.bind("<Control-z>", self.fonction_bidon)
 		self._root.bind("<Escape>", self.deselect_buttons)
 
-		#
-		# Demander au serveur la couleur
-		#
-		self._local_color = None # par défaut, mais sera changé
+
+		self._local_color = 'red' # par défaut, mais sera changé
+
 
 		self._current_object_type = None
 		self._current_wall = None
 
 		self._ants = [] # liste d'id designant une fourmi crees par la fonction create_oval
+
 
 	## Gestion d'évènements ##
 
@@ -120,12 +120,10 @@ class Interface:
 			self._create_wall(event.x, event.y)
 
 	def on_release(self, event):
-		print("current wall :", self._current_wall)
 		if self._current_wall is not None:
 			wall_coords, wall_width = self._current_wall.coords, self._current_wall.width
 			self.ask_wall(wall_coords, wall_width)
 			self._delete_current_wall()
-			# self._client.ask_check_all_coords(wall_coords, )
 
 	def on_motion(self, event):
 		if self._current_wall is not None:
@@ -139,8 +137,8 @@ class Interface:
 		print("deselected all")
 
 
-
-	## Demande de confirmation pour créer les objets ##
+	## Demandes de confirmation pour créer les objets ##
+	
 	def ask_nest(self, x, y, size=20):
 		"""
 		Demande au serveur s'il peut créer un nid à l'endroit donné.
@@ -159,6 +157,7 @@ class Interface:
 
 
 	## Création d'objets ##
+	
 	def _create_object(self, str_type, coords, size=None, width=None, color=None):
 		"""Instancie l'objet du type reçu par le Client"""
 		str_type = str_type.lower()
@@ -209,7 +208,7 @@ class Interface:
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
 		x, y = coords
-		self._ants.append(self._canvas.create_oval(x-2, y-2, x+2, y+2, fill=color))
+		self._ants.append(self._canvas.create_oval(x-1, y-1, x+1, y+1, fill=color, outline=color))
 
 	def move_ant(self, deltax, deltay, index):
 		""" Fonction pour deplacer une fourmi """

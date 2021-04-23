@@ -86,6 +86,7 @@ class Client:
 		data = pickle.dumps([str_type, position, size, width, color])
 		self._socket.send(data)
 
+
 	def receive(self):
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
 		while True:
@@ -96,20 +97,30 @@ class Client:
 				data = recv_data
 			
 			if isinstance(data, list) or isinstance(data, tuple):
+				# Si on doit créer une des fourmis
 				if data[0] == "ants":
-					# data est de la forme: ["ants", fourmi1(coords, couleur), fourmi2(coords, couleur)...]
+					# data est de la forme : ["ants", [coords_fourmi1, couleur_fourmi1], [coords_fourmi2, couleur_fourmi2]...]
 					for i in range(1, len(data)):
 						self._interface.create_ant(data[i][0], data[i][1])
+				
+				# Si on doit bouger des fourmis
+				## Note : data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
+				## Note 2 : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
 				elif data[0] == "move_ants":
-					# data est de la forme: ["move_ants", fourmi1[deltax, deltay (,couleur)], fourmi2[deltax, deltay (,couleur)]...]
 					for i in range(1, len(data)):
 						self._interface.move_ant(data[i][0], data[i][1], i-1)
 						if len(data[i]) == 3:
 							self._interface.color_ant(data[i][2], i-1)
+				
+				# Si on reçoit la couleur locale de l'interface
+				elif data[0] == "color":
+					self._interface.local_color = data[1]
+
+				# Si c'est un objet créé par un client
 				else:
 					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					# Communique l'information d'un nouvel objet à l'interface
-					print("dit à interface de créer :", str_type, pos, size, width, color)
+					# print("dit à interface de créer :", str_type, pos, size, width, color)
 					self._interface._create_object(str_type, pos, size=size, width=width, color=color)
 			
 			else:

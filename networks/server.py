@@ -52,6 +52,7 @@ class Server:
 		"""
 		if len(Server.clients) < self._max_clients:
 			client, address = self._socket.accept()
+			self.send_to_client(client, ["color", color.random_rgb()])
 			Server.clients.append(client)
 		else:
 			print("trop de clients")
@@ -68,14 +69,15 @@ class Server:
 					data = pickle.loads(recv_data)
 				except pickle.UnpicklingError:
 					data = recv_data
-				# Si c'est une liste, on sait que la demande est éffectuée pour créer un élément
-				if type(data) == list:
+				# Si c'est une liste, on sait que la demande est effectuée pour créer un élément
+				if isinstance(data, list):
 					str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					self.process_data(str_type, coords, size, width, color)
 				elif data.decode() == "Ready":
 					self._clients_ready += 1
 					if self._clients_ready == len(Server.clients):
-						self.send_to_clients("GO")
+						self.send_to_all_clients("GO")
+						print("GO")
 						time.sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
 						# Lancement de la simulation
 						self.simulation = simulation.Simulation(Server.objects, self)
@@ -95,7 +97,7 @@ class Server:
 			self._add_to_dict(str_type, coords, size, width, color)
 
 			data = [str_type, coords, size, width, color]
-			self.send_to_clients(data)
+			self.send_to_all_clients(data)
 
 
 	def _add_to_dict(self, str_type, coords, size, width, color):
@@ -135,7 +137,7 @@ class Server:
 			if not self.is_good_spot(coords_list[i], coords_list[i+1], size):
 				# print("nope, coords", (coords_list[i], coords_list[i+1]), "size :", size, "pas bonnes")
 				return False
-		# print("toutes les coords sont ok")
+		print("toutes les coords sont ok")
 		return True
 
 
@@ -158,6 +160,7 @@ class Server:
 			t1_2.join(1)
 
 
+	'''
 	def send(self, data):
 		"""
 		Fonction envoyant des informations aux clients
@@ -165,23 +168,29 @@ class Server:
 		try:
 			for client in Server.clients:
 				data = pickle.dumps(data)
-				client.send_to_clientsall(data)
+				client.send_to_all_clientsall(data)
+		except BrokenPipeError as e:
+			print(e)
+			sys.exit(1)
+	'''
+
+	def send_to_client(self, client, data):
+		"""Envoie des données à un seul client"""
+		data = pickle.dumps(data)
+		try:
+			client.sendall(data)
 		except BrokenPipeError as e:
 			print(e)
 			sys.exit(1)
 
 
-	def send_to_clients(self, data):
+	def send_to_all_clients(self, data):
 		"""
 		Fonction envoyant des informations aux clients
 		"""
-		data = pickle.dumps(data)
-		try:
-			for client in Server.clients:
-				client.sendall(data)
-		except BrokenPipeError as e:
-			print(e)
-			sys.exit(1)
+		for client in Server.clients:
+			self.send_to_client(client, data)
+			# print("sent :", data, "to")
 
 
 if __name__ == "__main__":

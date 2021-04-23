@@ -27,11 +27,11 @@ class Simulation():
 				curr_ant = ant.Ant(x,y,color)
 				self.ants.append(curr_ant)
 				ants.append(((x,y), color))
-		self.server.send_to_clients(ants)
+		self.server.send_to_all_clients(ants)
 
 	def start_simulation(self):
 		for i in range(500):
-			self.server.send_to_clients("clear_ants")
+			self.server.send_to_all_clients("clear_ants")
 			ants = ["move_ants"] # liste de [deltax, deltay (,couleur)] a envoyer au client pour bouger les fourmis
 			for ant in self.ants:
 				lastx, lasty = ant.x, ant.y
@@ -51,14 +51,14 @@ class Simulation():
 					except:
 						print("bug de direction")
 						print(ant.direction, type(ant.direction))
-				elif self.touch_resource(x,y, 4):
+				elif self.touch_resource(x, y, 4):
 					# La fourmi devient grise car elle touche une ressource
 					ant.has_resource = True
 					ants[ant.id+1].append("grey")
 				elif ant.touch_nest():
 					ant.has_resource = False
 					ants[ant.id+1].append(ant.color)
-			self.server.send_to_clients(ants)
+			self.server.send_to_all_clients(ants)
 			time.sleep(0.1) # Ajout de latence
 
 	def touch_wall(self, x, y, size):
