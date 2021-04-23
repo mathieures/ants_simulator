@@ -203,8 +203,12 @@ class Interface:
 		self._ants.append(self._canvas.create_oval(x-2, y-2, x+2, y+2, fill=color))
 
 	def move_ant(self, deltax, deltay, index):
-		""" Fonciton pour deplacer une fourmi """
+		""" Fonction pour deplacer une fourmi """
 		self._canvas.move(self._ants[index], deltax, deltay)
+
+	def color_ant(self,color, index):
+		""" Fonction pour changer la couleur d'une fourmi """
+		self._canvas.itemconfig(self._ants[index], fill=color)
 
 	def fonction_bidon(self, event=None):
 		print("fonction bidon au rapport")

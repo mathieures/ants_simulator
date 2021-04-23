@@ -37,6 +37,10 @@ class Ant:
 	def has_resource(self, pbool):
 		self._has_resource = pbool
 
+	@property
+	def id(self):
+		return self._id
+
 	###############################
 
 	ID = 0
@@ -81,12 +85,12 @@ class Ant:
 
 	def go_to_nest(self):
 		""" La fourmi retourne au nid en parcourant le meme chemin que l'aller """
-		if len(self._pheromon) == 0 or (self._x == self.nest[0] and self._y == self.nest[1]):
-			self._has_resource = False
-			return
 		self._x, self._y = self._pheromon.pop()
 
-
+	def touch_nest(self):
+		if len(self._pheromon) == 0 or (self._x == self.nest[0] and self._y == self.nest[1]):
+			return True
+		return False
 
 	def _side(self):
 		""" Fonction qui renvoie un int correspondant au numero du quartant de la direction """

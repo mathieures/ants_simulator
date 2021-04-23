@@ -90,9 +90,11 @@ class Client:
 					for i in range(1, len(data)):
 						self._interface.create_ant(data[i][0], data[i][1])
 				elif data[0] == "move_ants":
-					# data est de la forme: ["move_ants", fourmi1(deltax, deltay), fourmi2(deltax, deltay)...]
+					# data est de la forme: ["move_ants", fourmi1[deltax, deltay (,couleur)], fourmi2[deltax, deltay (,couleur)]...]
 					for i in range(1, len(data)):
 						self._interface.move_ant(data[i][0], data[i][1], i-1)
+						if len(data[i]) == 3:
+							self._interface.color_ant(data[i][2], i-1)
 				else:
 					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					# Communique l'information d'un nouvel objet à l'interface
