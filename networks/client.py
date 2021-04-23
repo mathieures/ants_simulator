@@ -37,12 +37,22 @@ class Client:
 	def wall_ok(self):
 		return self._wall_ok
 
+	@property
+	def interface(self):
+		return self._interface
+	
+	@interface.setter
+	def interface(self, new_interface):
+		self._interface = new_interface
+
+
 	def connect(self):
 		try:
 			self._socket.connect((self._ip, self._port))
 			self.receive()
 		except ConnectionRefusedError:
 			print("Erreur serveur non connecté")
+			exit(1)
 
 	def send(self, element, pos, data):
 		"""
@@ -84,7 +94,8 @@ class Client:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
-			if type(data) == list or type(data) == tuple:
+			
+			if isinstance(data, list) or isinstance(data, tuple):
 				if data[0] == "ants":
 					# data est de la forme: ["ants", fourmi1(coords, couleur), fourmi2(coords, couleur)...]
 					for i in range(1, len(data)):
@@ -98,16 +109,9 @@ class Client:
 					# Communique l'information d'un nouvel objet à l'interface
 					print("dit à interface de créer :", str_type, pos, size, width, color)
 					self._interface._create_object(str_type, pos, size=size, width=width, color=color)
+			
 			else:
 				if data == "clear_ants":
 					self._interface.clear_ants()
 				elif data.decode() == "GO":
 					self._interface.countdown()
-
-
-	def _set_interface(self, interface):
-		"""
-		Garde en mémoire l'interface, pour
-		pouvoir lui envoyer des informations
-		"""
-		self._interface = interface

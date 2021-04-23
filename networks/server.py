@@ -7,6 +7,8 @@ import threading
 import time
 import simulation
 
+import color
+
 
 class Server:
 	"""
@@ -35,8 +37,8 @@ class Server:
 
 	def connect(self):
 		"""
-		Fonction de connection utilisé par le serveur pour écouter avec l'IP et le port.
-		Utilisé dans un thread séparé
+		Fonction de connexion utilisée par le serveur pour
+		écouter avec l'IP et le port (dans un thread séparé)
 		"""
 		self._socket.bind((self._ip, self._port))
 		self._socket.listen(self._max_clients)
@@ -56,8 +58,8 @@ class Server:
 
 	def receive(self):
 		"""
-		Fonction qui sert à réceptionner les données envoyés depuis le client
-		Utilise une sous fonction 'under_receive' qui va manipuler dans un thread les données reçus
+		Fonction qui sert à réceptionner les données envoyées depuis le client
+		Utilise une sous fonction 'under_receive' qui va manipuler dans un thread les données reçues
 		"""
 		for client in Server.clients:
 			def under_receive():
@@ -71,7 +73,6 @@ class Server:
 					str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					self.process_data(str_type, coords, size, width, color)
 				elif data.decode() == "Ready":
-					print("prec ready :", self._clients_ready, "max :", self._max_clients)
 					self._clients_ready += 1
 					if self._clients_ready == len(Server.clients):
 						client.send("GO".encode())
