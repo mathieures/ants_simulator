@@ -26,7 +26,7 @@ class Ant:
 		return self._color
 
 	@color.setter
-	def direction(self, pcolor):
+	def color(self, pcolor):
 		self._color = pcolor
 
 	@property
@@ -71,28 +71,20 @@ class Ant:
 				self._x -= 1
 			else:
 				self._x += 1
-		# Si la fourmi atteint un bord du haut ou un bord gauche
+		# Si la fourmi atteint un bord du haut ou un bord gauche, elle change de direction
 		if self._y <= 0 or self._x <= 0:
 			self._direction = 315
 		else:
 			# On randomize la direction pour donner un effet de mouvement aleatoire
-			self._direction = random.randint(self._direction-30, self._direction+30)
-		if self._direction > 360:
-			self._direction -= 30
+			self._direction = random.randint(self._direction-30, self._direction+30) % 360 
 		self._pheromon.append((self._x, self._y))
 
 	def go_to_nest(self):
 		""" La fourmi retourne au nid en parcourant le meme chemin que l'aller """
-		if self._x == self.nest[0] and self._y == self.nest[1]:
-			self.has_resource = False
+		if len(self._pheromon) == 0 or (self._x == self.nest[0] and self._y == self.nest[1]):
+			self._has_resource = False
 			return
-
-		# test pour voir d'où vient le pb
-		try:
-			self._x, self._y = self._pheromon.pop()
-		except:
-			print("nest :", self.nest, "; pos :", self._x, self._y)
-			self._x, self._y = self._pheromon.pop() # on recrée l'erreur
+		self._x, self._y = self._pheromon.pop()
 
 
 

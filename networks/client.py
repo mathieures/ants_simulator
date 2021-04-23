@@ -101,7 +101,7 @@ class Client:
 			else:
 				if data == "clear_ants":
 					self._interface.clear_ants()
-				elif data.decode() == "GO":
+				elif data == "GO":
 					self._interface.countdown()
 
 

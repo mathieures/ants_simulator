@@ -42,9 +42,13 @@ class Simulation():
 					ant.search_resource()
 				x,y = ant.x, ant.y
 				# Si la fourmi touche un mur, elle prend une direction opposee
-				if self.touch_wall(x,y, 3):
-					ant.direction = (ant.direction + 180) % 360
-				elif self.touch_resource(x,y,3):
+				if self.touch_wall(x,y, 4):
+					try:
+						ant.direction = (ant.direction + 180) % 360
+					except:
+						print("bug de direction")
+						print(ant.direction, type(ant.direction))
+				elif self.touch_resource(x,y, 4):
 					ant.has_resource = True
 				deltax = x - lastx
 				deltay = y - lasty

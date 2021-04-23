@@ -200,7 +200,7 @@ class Interface:
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
 		x, y = coords
-		self._ants.append(self._canvas.create_oval(x-1, y-1, x+1, y+1, fill=color))
+		self._ants.append(self._canvas.create_oval(x-2, y-2, x+2, y+2, fill=color))
 
 	def move_ant(self, deltax, deltay, index):
 		""" Fonciton pour deplacer une fourmi """
