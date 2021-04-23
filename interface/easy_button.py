@@ -9,7 +9,7 @@ class EasyButton:
     """
     def __init__(self, interface, parent, width, height,
                  text=None, object_type=None, no_icon=False, large=False,
-                 side=tk.LEFT, command=None):
+                 side=tk.LEFT, command_select=None, command_deselect=None):
         
         self._interface = interface # utile pour changer l'objet courant
         self._canvas = tk.Canvas(parent, width=width, height=height)
@@ -19,7 +19,7 @@ class EasyButton:
         self._object_type = object_type
         # S'il y a bien un type et que l'on veut une icône
         if self._object_type is not None and not no_icon:
-            self._icon_object = self._object_type(self._canvas, (width//2, height//2), size=width//2)
+            self._icon_object = self._object_type(self._canvas, (width//2, height//2), width//2)
         else:
             self._icon_object = None
 
@@ -27,7 +27,8 @@ class EasyButton:
         if self._text is not None:
             self._text_id = self._canvas.create_text(width//2, height//2, text=self._text)
 
-        self._command = command
+        self._command_select = command_select
+        self._command_deselect = command_deselect
 
         self._canvas.pack(side=side)
         self._canvas.bind("<Button-1>", self.select)
@@ -45,9 +46,9 @@ class EasyButton:
         if self._object_type is not None:
             print("selected", self._object_type)
             self._interface.current_object_type = self._object_type
-        if self._command is not None:
-            self._command()
-            self.deselect()
+        
+        if self._command_select is not None:
+            self._command_select()
 
     def deselect(self, event=None):
         """
@@ -57,3 +58,5 @@ class EasyButton:
         self._canvas['relief'] = 'flat' # ne fonctionne pas, je ne sais pas pourquoi
         self._canvas['bg'] = self._default_bg_color
         # print("deselected")
+        if self._command_deselect is not None:
+            self._command_deselect()

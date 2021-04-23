@@ -19,15 +19,18 @@ class Simulation():
 	def init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
 		ants = ["ants"] # liste des fourmis a envoyer au serveur
-		for nest in self.objects["nest"]:
-			# nest est un tuple de la forme (coords, size, width, color)
-			x,y = nest[0]
-			color = nest[3]
-			for i in range(20):
-				curr_ant = ant.Ant(x,y,color)
-				self.ants.append(curr_ant)
-				ants.append(((x,y), color))
-		self.server.send_to_all_clients(ants)
+		nests = self.objects.get("nest")
+		# Sécurité pour ne pas commencer sans nid
+		if nests is not None:
+			for nest in self.objects["nest"]:
+				# nest est un tuple de la forme (coords, size, width, color)
+				x,y = nest[0]
+				color = nest[3]
+				for i in range(20):
+					curr_ant = ant.Ant(x,y,color)
+					self.ants.append(curr_ant)
+					ants.append(((x,y), color))
+			self.server.send_to_all_clients(ants)
 
 	def start_simulation(self):
 		for i in range(500):

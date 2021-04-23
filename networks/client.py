@@ -72,6 +72,7 @@ class Client:
 
 	def unset_ready(self):
 		"""Informe le serveur que ce client n'est plus prêt"""
+		print("à faire : set unready")
 		pass
 
 	def ask_object(self, object_type, position, size=None, width=None, color=None):

@@ -2,7 +2,7 @@ from .custom_object import CustomObject
 
 
 class Resource(CustomObject):
-    def __init__(self, canvas, coords, size=20, width=None, color=None):
+    def __init__(self, canvas, coords, size=20):
         """
         Instancie une ressource.
         Note : ni le paramètre width ni le paramètre color n'ont d'effet ici.

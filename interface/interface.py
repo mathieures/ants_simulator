@@ -82,7 +82,9 @@ class Interface:
 
 			EasyButton(self,
 					   self._objects_frame, 50, 50, text='Ready',
-					   side=tk.RIGHT, command=self._client.set_ready)
+					   side=tk.RIGHT,
+					   command_select=self._client.set_ready,
+					   command_deselect=self._client.unset_ready)
 		]
 
 		# Évènements
@@ -163,21 +165,16 @@ class Interface:
 		"""Instancie l'objet du type reçu par le Client"""
 		str_type = str_type.lower()
 		if str_type == "resource":
-			object_type = Resource
+			Resource(self._canvas, coords, size=size)
 		elif str_type == "nest":
-			object_type = Nest
+			Nest(self._canvas, coords, size=size, color=color)
 		elif str_type == "wall":
-			# les murs sont spéciaux car on veut que size soit width
-			size = width
-			object_type = Wall
-			# Wall(self._canvas, coords, size=width, width=size)
-			# return
+			Wall(self._canvas, coords, width=width, size=0)
 		elif str_type == "ant":
-			object_type = Ant
+			Ant(self._canvas, coords, size=size, color=color)
 		else:
 			print("mauvais type :", str_type)
 			return
-		object_type(self._canvas, coords, size=size, width=width, color=color)
 
 	def _delete_current_wall(self):
 		print("deleting current wall ;", self._current_wall, self._current_object_type)
@@ -204,7 +201,7 @@ class Interface:
 
 	def _create_wall(self, x, y, width=10):
 		"""On crée un objet Wall, qu'on étendra"""
-		self._current_wall = Wall(self._canvas, (x, y), width=width)
+		self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
 
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
