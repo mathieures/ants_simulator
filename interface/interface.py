@@ -153,10 +153,8 @@ class Interface:
 		self._client.ask_object(Resource, (x, y), size)
 	
 	def ask_wall(self, coords_list, width=20):
-		# Appelé seulement à la fin du clic long
-		print("ON DEMANDE UN MUR")
+		"""Demande un mur. Appelé seulement à la fin d'un clic long."""
 		self._client.ask_object(Wall, coords_list, width=width)
-	
 
 
 	## Création d'objets ##
