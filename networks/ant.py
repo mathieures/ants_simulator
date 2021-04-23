@@ -84,7 +84,7 @@ class Ant:
 		self._pheromon.append((self._x, self._y))
 
 	def go_to_nest(self):
-		""" La fourmi retourne au nid en parcourant le meme chemin que l'aller """
+		""" La fourmi retourne au nid en parcourant le même chemin qu'à l'aller """
 		self._x, self._y = self._pheromon.pop()
 
 	def touch_nest(self):
@@ -93,7 +93,7 @@ class Ant:
 		return False
 
 	def _side(self):
-		""" Fonction qui renvoie un int correspondant au numero du quartant de la direction """
+		""" Fonction qui renvoie un int correspondant au numéro du quartant de la direction """
 		if self._direction < 90:
 			return 1
 		elif self._direction >= 90 and self._direction < 180:

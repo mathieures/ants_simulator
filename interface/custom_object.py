@@ -1,5 +1,5 @@
 class CustomObject:
-    """Classe mère des objets, illustre la pose d'objets (À NE PAS UTILISER SEUL)"""
+    """Classe mère des objets, illustre la pose d'objets (à ne pas utiliser seule)"""
 
     @property
     def id(self):
@@ -44,4 +44,8 @@ class CustomObject:
         return centre_coords
 
     def draw(self, centre_coords):
+        """
+        Doit être réécrite dans les classes filles pour
+        retourner l'id d'un objet de canvas tkinter
+        """
         raise NotImplementedError

@@ -88,8 +88,8 @@ class Server:
 			t1_2_1.start()
 
 	def process_data(self, str_type, coords, size, width, color):
-		print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
-		coords = tuple(coords) # normalement, déjà un tuple
+		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
+		coords = tuple(coords) # normalement, déjà un tuple, mais au cas où
 		str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
 
 		# Si l'endroit est libre
@@ -101,7 +101,8 @@ class Server:
 
 
 	def _add_to_dict(self, str_type, coords, size, width, color):
-		"""Pour les objets 'wall', les coordonnées sont une liste"""
+		"""Ajoute une entrée au dictionnaire"""
+		# Note : Pour les objets 'wall', les coordonnées sont une liste
 		# Si c'est le premier objet de ce type que l'on voit, on init
 		if Server.objects.get(str_type) is None:
 			Server.objects[str_type] = []
@@ -144,9 +145,8 @@ class Server:
 
 	def condition(self):
 		"""
-		Fonction 'principale' de la classe.
-		Elle permet au serveur d'accepter et recevoir en même temps
-		Utilisé dans des threads
+		Fonction indispensable, elle permet au serveur d'accepter
+		des connexions et de recevoir des données en même temps.
 		"""
 		while True:
 			t1_1 = threading.Thread(target=self.accept)

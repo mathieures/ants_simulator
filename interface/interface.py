@@ -4,6 +4,7 @@ from .easy_button import EasyButton
 from .nest import Nest
 from .resource import Resource
 from .wall import Wall
+from .ant import Ant
 
 import threading
 import time
@@ -94,13 +95,13 @@ class Interface:
 		self._root.bind("<Escape>", self.deselect_buttons)
 
 
-		self._local_color = 'red' # par défaut, mais sera changé
+		self._local_color = '' # par défaut, mais sera changé
 
 
 		self._current_object_type = None
 		self._current_wall = None
 
-		self._ants = [] # liste d'id designant une fourmi crees par la fonction create_oval
+		self._ants = [] # liste d'objets Ant
 
 
 	## Gestion d'évènements ##
@@ -157,7 +158,7 @@ class Interface:
 
 
 	## Création d'objets ##
-	
+
 	def _create_object(self, str_type, coords, size=None, width=None, color=None):
 		"""Instancie l'objet du type reçu par le Client"""
 		str_type = str_type.lower()
@@ -207,18 +208,19 @@ class Interface:
 
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
-		x, y = coords
-		self._ants.append(self._canvas.create_oval(x-1, y-1, x+1, y+1, fill=color, outline=color))
+		self._ants.append(Ant(self._canvas, coords, color))
 
-	def move_ant(self, deltax, deltay, index):
+	def move_ant(self, index, delta_x, delta_y):
 		""" Fonction pour deplacer une fourmi """
-		self._canvas.move(self._ants[index], deltax, deltay)
+		self._ants[index].move(delta_x, delta_y)
 
-	def color_ant(self,color, index):
+	def color_ant(self, index, color):
 		""" Fonction pour changer la couleur d'une fourmi """
-		self._canvas.itemconfig(self._ants[index], fill=color)
+		self._ants[index].color = color
+
 
 	def fonction_bidon(self, event=None):
+		# À ENLEVER
 		print("fonction bidon au rapport")
 
 	def countdown(self):

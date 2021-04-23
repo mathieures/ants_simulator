@@ -32,7 +32,7 @@ class Simulation():
 	def start_simulation(self):
 		for i in range(500):
 			self.server.send_to_all_clients("clear_ants")
-			ants = ["move_ants"] # liste de [deltax, deltay (,couleur)] a envoyer au client pour bouger les fourmis
+			ants = ["move_ants"] # liste [deltax, deltay] (et parfois une couleur) a envoyer au client pour bouger les fourmis
 			for ant in self.ants:
 				lastx, lasty = ant.x, ant.y
 				if ant.has_resource:
@@ -45,44 +45,43 @@ class Simulation():
 				deltay = y - lasty
 				ants.append([deltax, deltay])
 				# Si la fourmi touche un mur, elle prend une direction opposee
-				if self.touch_wall(x,y, 4):
+				if self.touch_wall(x, y):
 					try:
 						ant.direction = (ant.direction + 180) % 360
 					except:
 						print("bug de direction")
 						print(ant.direction, type(ant.direction))
-				elif self.touch_resource(x, y, 4):
+				elif self.touch_resource(x, y):
 					# La fourmi devient grise car elle touche une ressource
 					ant.has_resource = True
-					ants[ant.id+1].append("grey")
+					ants[ant.id+1].append("grey") # +1 car le 1er élément est une str
 				elif ant.touch_nest():
 					ant.has_resource = False
-					ants[ant.id+1].append(ant.color)
+					ants[ant.id+1].append(ant.color) # +1 car le 1er élément est une str
 			self.server.send_to_all_clients(ants)
 			time.sleep(0.1) # Ajout de latence
 
-	def touch_wall(self, x, y, size):
+	def touch_wall(self, x, y):
 		""" Fonction qui retourne True si la position touche un mur, False sinon """
 		if "wall" not in self.objects:
 			return False
 		for wall in self.objects["wall"]:
-			offset = wall[2]
-			coords_obj = wall[0]
-			for i in range(0,len(wall[0]), 2):
-				if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
-					coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
+			offset = wall[2] // 2 + 1 # width / 2, +1 pour l'outline
+			coords_wall = wall[0]
+			for i in range(0, len(coords_wall), 2):
+				if (coords_wall[i] - offset <= x <= coords_wall[i] + offset) and (
+					coords_wall[i+1] - offset <= y <= coords_wall[i+1] + offset):
 					return True
 		return False
 
-	def touch_resource(self, x, y, size):
+	def touch_resource(self, x, y):
 		""" Fonction qui retourne True si la position touche une ressource, False sinon """
 		if "resource" not in self.objects:
 			return False
 		for resource in self.objects["resource"]:
-			coords_obj = resource[0]
-			offset = resource[1]
-			if (coords_obj[0] - offset <= x <= coords_obj[0] + offset) and (
-					coords_obj[1] - offset <= y <= coords_obj[1] + offset):
+			coords_resource = resource[0]
+			offset = resource[1] // 2 + 1 # size / 2, +1 pour l'outline
+			if (coords_resource[0] - offset <= x <= coords_resource[0] + offset) and (
+				coords_resource[1] - offset <= y <= coords_resource[1] + offset):
 					return True
 		return False
-

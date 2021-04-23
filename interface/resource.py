@@ -7,7 +7,7 @@ class Resource(CustomObject):
         Instancie une ressource.
         Note : ni le paramètre width ni le paramètre color n'ont d'effet ici.
         """
-        super().__init__(canvas, coords, size=size, color=color)
+        super().__init__(canvas, coords, size=size)
 
     def draw(self, offset_coords):
         """Override la méthode d'origine"""

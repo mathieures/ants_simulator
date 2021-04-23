@@ -97,20 +97,21 @@ class Client:
 				data = recv_data
 			
 			if isinstance(data, list) or isinstance(data, tuple):
-				# Si on doit créer une des fourmis
-				if data[0] == "ants":
+				# Si on doit bouger des fourmis
+				## data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
+				## Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
+				## Note 2 : on soustrait 1 car le 1er élément est la str
+				if data[0] == "move_ants":
+					for i in range(1, len(data)):
+						self._interface.move_ant(i-1, data[i][0], data[i][1]) # id, delta_x, delta_y
+						if len(data[i]) == 3:
+							self._interface.color_ant(i-1, data[i][2]) # id, couleur
+				
+				# Si on doit créer des fourmis
+				elif data[0] == "ants":
 					# data est de la forme : ["ants", [coords_fourmi1, couleur_fourmi1], [coords_fourmi2, couleur_fourmi2]...]
 					for i in range(1, len(data)):
-						self._interface.create_ant(data[i][0], data[i][1])
-				
-				# Si on doit bouger des fourmis
-				## Note : data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
-				## Note 2 : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
-				elif data[0] == "move_ants":
-					for i in range(1, len(data)):
-						self._interface.move_ant(data[i][0], data[i][1], i-1)
-						if len(data[i]) == 3:
-							self._interface.color_ant(data[i][2], i-1)
+						self._interface.create_ant(data[i][0], data[i][1]) # coords, couleur
 				
 				# Si on reçoit la couleur locale de l'interface
 				elif data[0] == "color":
