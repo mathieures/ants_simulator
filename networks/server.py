@@ -75,7 +75,7 @@ class Server:
 				elif data.decode() == "Ready":
 					self._clients_ready += 1
 					if self._clients_ready == len(Server.clients):
-						client.send("GO".encode())
+						self.send_to_clients("GO")
 						time.sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
 						# Lancement de la simulation
 						self.simulation = simulation.Simulation(Server.objects, self)
