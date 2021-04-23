@@ -118,12 +118,8 @@ class Server:
 				offset = size_obj
 				# On teste un espace autour des coords
 				for i in range(0, len(coords_obj) - 1, 2):
-					if (coords_obj[i] - offset <= x+size <= coords_obj[i] + offset) and (
-						coords_obj[i+1] - offset <= y+size <= coords_obj[i+1] + offset):
-						print("-> is not good spot")
-						return False
-					if (coords_obj[i] - offset <= x-size <= coords_obj[i] + offset) and (
-						coords_obj[i+1] - offset <= y-size <= coords_obj[i+1] + offset):
+					if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
+						coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
 						print("-> is not good spot")
 						return False
 		print("-> is good spot")

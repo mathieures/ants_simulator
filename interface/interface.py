@@ -4,7 +4,6 @@ from .easy_button import EasyButton
 from .nest import Nest
 from .resource import Resource
 from .wall import Wall
-from .ant_client import Ant
 
 import threading
 import time
@@ -92,6 +91,8 @@ class Interface:
 
 		self._current_object_type = None
 		self._current_wall = None
+
+		self._ants = [] # liste d'id designant une fourmi crees par la fonction create_oval
 
 	## Gestion d'évènements ##
 
@@ -196,6 +197,14 @@ class Interface:
 		"""On crée un objet Wall, qu'on étendra"""
 		self._current_wall = Wall(self._canvas, (x, y), width=width)
 
+	def create_ant(self, coords, color):
+		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
+		x, y = coords
+		self._ants.append(self._canvas.create_oval(x-1, y-1, x+1, y+1, fill=color))
+
+	def move_ant(self, deltax, deltay, index):
+		""" Fonciton pour deplacer une fourmi """
+		self._canvas.move(self._ants[index], deltax, deltay)
 
 	def fonction_bidon(self, event=None):
 		print("fonction bidon au rapport")
@@ -213,7 +222,6 @@ class Interface:
 		self._canvas.delete(self._root,text)
 
 	def clear_ants(self):
-		print("Clearing ants")
 		self.canvas.delete("ant")
 
 

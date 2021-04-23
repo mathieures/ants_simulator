@@ -3,6 +3,8 @@ import tkinter as tk
 
 class Ant:
 
+	# Accesseurs et mutateurs
+	#########################
 	@property
 	def x(self):
 		return self._x
@@ -20,18 +22,37 @@ class Ant:
 		self._direction = pdirection
 
 	@property
+	def color(self):
+		return self._color
+
+	@color.setter
+	def direction(self, pcolor):
+		self._color = pcolor
+
+	@property
 	def has_resource(self):
 		return self._has_resource
 
-	def __init__(self, posX, posY, color, nest_coords):
+	@has_resource.setter
+	def has_resource(self, pbool):
+		self._has_resource = pbool
+
+	###############################
+
+	ID = 0
+
+	def __init__(self, posX, posY, color):
 		self._x = posX
 		self._y = posY
-		self.color = color
+		self._color = color
 		self._direction = random.randint(0,360)
-		self.nest = nest_coords # nest etat un tuple de coordonnes : (x,y)
+		self.nest = (posX, posY) # nest etat un tuple de coordonnes : (x,y)
 
 		self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
 		self._pheromon = [(posX,posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
+
+		self._id = Ant.ID
+		Ant.ID += 1
 
 	def search_resource(self):
 		""" methode qui change la position de la fourmi en fonction de sa direction """
@@ -61,6 +82,7 @@ class Ant:
 		self._pheromon.append((self._x, self._y))
 
 	def go_to_nest(self):
+		""" La fourmi retourne au nid en parcourant le meme chemin que l'aller """
 		if self._x == self.nest[0] and self._y == self.nest[1]:
 			self.has_resource = False
 			return

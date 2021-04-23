@@ -86,11 +86,13 @@ class Client:
 				data = recv_data
 			if type(data) == list or type(data) == tuple:
 				if data[0] == "ants":
-					str_type = "ant"
-					size = 3
-					width = None
+					# data est de la forme: ["ants", fourmi1(coords, couleur), fourmi2(coords, couleur)...]
 					for i in range(1, len(data)):
-						self._interface._create_object(str_type, data[i][0], size=size, width=width, color=data[i][1])
+						self._interface.create_ant(data[i][0], data[i][1])
+				elif data[0] == "move_ants":
+					# data est de la forme: ["move_ants", fourmi1(deltax, deltay), fourmi2(deltax, deltay)...]
+					for i in range(1, len(data)):
+						self._interface.move_ant(data[i][0], data[i][1], i-1)
 				else:
 					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					# Communique l'information d'un nouvel objet à l'interface
