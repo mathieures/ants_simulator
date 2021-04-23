@@ -29,10 +29,19 @@ class Interface:
 	def current_object_type(self, new_object_type):
 		self._current_object_type = new_object_type
 
+	@property
+	def local_color(self):
+		return self._local_color
+	
+	@local_color.setter
+	def local_color(self, new_color):
+		self._local_color = new_color
+
+
 	def __init__(self, client, width, height):
 		self._root = tk.Tk()
 		self._client = client
-		self._client._set_interface(self)
+		self._client.interface = self
 
 		self._canvas = tk.Canvas(self._root, width=width, height=height)
 		self._canvas.pack(side=tk.BOTTOM)
@@ -87,7 +96,7 @@ class Interface:
 		#
 		# Demander au serveur la couleur
 		#
-		self._local_color = 'red'
+		self._local_color = None # par défaut, mais sera changé
 
 		self._current_object_type = None
 		self._current_wall = None
