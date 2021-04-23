@@ -107,6 +107,10 @@ class Client:
 						self._interface.move_ant(i-1, data[i][0], data[i][1]) # id, delta_x, delta_y
 						if len(data[i]) == 3:
 							self._interface.color_ant(i-1, data[i][2]) # id, couleur
+
+				elif data[0] == "pheromones":
+					for i in range(1, len(data)):
+						self._interface.create_pheromone(data[i])
 				
 				# Si on doit créer des fourmis
 				elif data[0] == "ants":

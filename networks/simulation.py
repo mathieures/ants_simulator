@@ -10,7 +10,7 @@ class Simulation():
 		self.objects = objects
 
 		self.ants = [] # Liste d'instances de fourmi
-		self._pheromon = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une resource
+		self._pheromone = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une resource
 
 		self.init_ants()
 		time.sleep(0.1) # Ajout d'une latence pour envoyer les donnees
@@ -36,11 +36,13 @@ class Simulation():
 		for i in range(500):
 			self.server.send_to_all_clients("clear_ants")
 			ants = ["move_ants"] # liste [deltax, deltay] (et parfois une couleur) a envoyer au client pour bouger les fourmis
+			pheromones = ["pheromones"]
 			for ant in self.ants:
 				lastx, lasty = ant.x, ant.y
 				if ant.has_resource:
 					ant.go_to_nest()
-					self._pheromon.append((ant.x, ant.y))
+					self._pheromone.append((ant.x, ant.y))
+					pheromones.append((ant.x, ant.y))
 				else:
 					ant.search_resource()
 				x,y = ant.x, ant.y
@@ -63,6 +65,9 @@ class Simulation():
 					ants[ant.id+1].append(ant.color) # +1 car le 1er élément est une str
 			self.server.send_to_all_clients(ants)
 			time.sleep(0.1) # Ajout de latence
+			if len(pheromones) > 1:
+				self.server.send_to_all_clients(pheromones)
+				time.sleep(0.1)
 
 	def touch_wall(self, x, y):
 		""" Fonction qui retourne True si la position touche un mur, False sinon """

@@ -53,7 +53,7 @@ class Ant:
 		self.nest = (posX, posY) # nest etant un tuple de coordonnes : (x, y)
 
 		self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
-		self._pheromon = [(posX,posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
+		self._pheromone = [(posX,posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
 
 		self._id = Ant.ID
 		Ant.ID += 1
@@ -81,14 +81,14 @@ class Ant:
 		else:
 			# On randomize la direction pour donner un effet de mouvement aleatoire
 			self._direction = random.randint(self._direction-30, self._direction+30) % 360 
-		self._pheromon.append((self._x, self._y))
+		self._pheromone.append((self._x, self._y))
 
 	def go_to_nest(self):
 		""" La fourmi retourne au nid en parcourant le même chemin qu'à l'aller """
-		self._x, self._y = self._pheromon.pop()
+		self._x, self._y = self._pheromone.pop()
 
 	def touch_nest(self):
-		if len(self._pheromon) == 0 or (self._x == self.nest[0] and self._y == self.nest[1]):
+		if len(self._pheromone) == 0 or (self._x == self.nest[0] and self._y == self.nest[1]):
 			return True
 		return False
 
