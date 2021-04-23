@@ -5,6 +5,7 @@ from .nest import Nest
 from .resource import Resource
 from .wall import Wall
 from .ant import Ant
+from .pheromone import Pheromone
 
 import threading
 import time
@@ -104,6 +105,7 @@ class Interface:
 		self._current_wall = None
 
 		self._ants = [] # liste d'objets Ant
+		self._pheromones = []
 
 
 	## Gestion d'évènements ##
@@ -172,6 +174,8 @@ class Interface:
 			Wall(self._canvas, coords, width=width, size=0)
 		elif str_type == "ant":
 			Ant(self._canvas, coords, size=size, color=color)
+		elif str_type == "pheromone":
+			Pheromone(self._canvas, coords)
 		else:
 			print("mauvais type :", str_type)
 			return
@@ -202,6 +206,13 @@ class Interface:
 	def _create_wall(self, x, y, width=10):
 		"""On crée un objet Wall, qu'on étendra"""
 		self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
+
+	def create_pheromone(self, coords):
+		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
+		for pheromone in self._pheromones:
+			if pheromone.coords == coords:
+				pheromone.darker()
+		self._pheromones.append(Pheromone(self._canvas, coords))
 
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
