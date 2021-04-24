@@ -142,26 +142,21 @@ class Interface:
 		self._current_object_type = None
 
 	def send_ready(self):
-		print("SEND READY")
 		for button in self._objects_buttons:
 			if button.text != "Ready":
 				button.hide()
 			else:
 				# On laisse le bouton Ready toujours actif
 				button.text = "Not ready"
-		print(" -> disabled all but ready")
 		self._client.set_ready()
 
 	def send_notready(self):
-		print("SEND NOT READY")
 		for button in self._objects_buttons:
 			if button.text != "Not ready":
 				button.show()
 			else:
 				# Le bouton Ready est toujours actif
 				button.text = "Ready"
-				print("SET TEXT TO READY")
-		print(" -> enabled all")
 		self._client.set_notready()
 
 

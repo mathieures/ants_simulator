@@ -78,7 +78,6 @@ class EasyButton:
         Désélectionne tous les boutons, change l'apparence
         de celui-ci et change l'objet courant de l'interface
         """
-        print("set selected to true")
         self._interface.deselect_buttons() # on désélectionne tous les boutons
         # self._canvas['relief'] = 'raised' # ne fonctionne pas, je ne sais pas pourquoi
         self._canvas['bg'] = '#999'
@@ -89,7 +88,6 @@ class EasyButton:
 
         if exec_command and self._command_select is not None:
             self._command_select()
-            print("executed command_select")
         
         self._selected = True
 
@@ -98,13 +96,11 @@ class EasyButton:
         Désélectionne le bouton, mais seulement visuellement :
         on modifie l'objet sélectionné dans l'interface
         """
-        print("set selected to false")
         # self._canvas['relief'] = 'flat' # ne fonctionne pas, je ne sais pas pourquoi
         self._canvas['bg'] = self._default_bg_color
 
         if exec_command and self._command_deselect is not None:
             self._command_deselect()
-            print("executed command_deselect")
         
         self._selected = False
 
