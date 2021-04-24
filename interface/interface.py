@@ -82,10 +82,10 @@ class Interface:
 					   object_type=Wall),
 
 			EasyButton(self,
-					   self._objects_frame, 50, 50, text='Ready',
+					   self._objects_frame, 70, 50, text='Ready',
 					   side=tk.RIGHT,
-					   command_select=self._client.set_ready,
-					   command_deselect=self._client.unset_ready)
+					   command_select=self.send_ready,
+					   command_deselect=self.send_notready)
 		]
 
 		# Évènements
@@ -134,12 +134,35 @@ class Interface:
 		if self._current_wall is not None:
 			self._current_wall.expand(event.x, event.y)
 
+
 	def deselect_buttons(self, event=None):
 		"""Désélectionne tous les boutons des objets, pour libérer le clic"""
 		for button in self._objects_buttons:
-			button.deselect()  # seulement visuel
+			button.deselect(exec_command=False)
 		self._current_object_type = None
-		print("deselected all")
+
+	def send_ready(self):
+		print("SEND READY")
+		for button in self._objects_buttons:
+			if button.text != "Ready":
+				button.hide()
+			else:
+				# On laisse le bouton Ready toujours actif
+				button.text = "Not ready"
+		print(" -> disabled all but ready")
+		self._client.set_ready()
+
+	def send_notready(self):
+		print("SEND NOT READY")
+		for button in self._objects_buttons:
+			if button.text != "Not ready":
+				button.show()
+			else:
+				# Le bouton Ready est toujours actif
+				button.text = "Ready"
+				print("SET TEXT TO READY")
+		print(" -> enabled all")
+		self._client.set_notready()
 
 
 	## Demandes de confirmation pour créer les objets ##
@@ -182,7 +205,6 @@ class Interface:
 		print("deleting current wall ;", self._current_wall, self._current_object_type)
 		self._canvas.delete(self._current_wall.id)
 		self._current_wall = None
-		print(" -> current wall :", self._current_wall)
 
 
 	'''
@@ -206,7 +228,7 @@ class Interface:
 		self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
 
 	def create_pheromone(self, coords):
-		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
+		""" On affiche une phéromone et on l'ajoute dans la liste de phéromones """
 		for pheromone in self._pheromones:
 			if pheromone.coords == coords:
 				pheromone.darker()
@@ -217,7 +239,7 @@ class Interface:
 		self._ants.append(Ant(self._canvas, coords, color))
 
 	def move_ant(self, index, delta_x, delta_y):
-		""" Fonction pour deplacer une fourmi """
+		""" Fonction pour déplacer une fourmi """
 		self._ants[index].move(delta_x, delta_y)
 
 	def color_ant(self, index, color):

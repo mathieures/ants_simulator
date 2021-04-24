@@ -70,9 +70,9 @@ class Client:
 		print("Ready envoyé")
 		self._socket.send("Ready".encode())
 
-	def unset_ready(self):
+	def set_notready(self):
 		"""Informe le serveur que ce client n'est plus prêt"""
-		print("à faire : set unready")
+		print("à faire : set notready")
 		pass
 
 	def ask_object(self, object_type, position, size=None, width=None, color=None):
