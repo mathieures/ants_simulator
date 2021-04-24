@@ -10,7 +10,7 @@ class Pheromone(CustomObject):
 		"""Instancie une pheromone graphiquement"""
 		super().__init__(canvas, coords, size=3,color="#FFDFDB")
 
-		# Tintes roses du clair au fonce
+		# Teintes roses du clair au fonce
 		self.tints = ["#FFDFDB", "#FBBFB8", "#F79F95", "#F38071", "#F0604D"]
 		self.curr_tint = 0 # Index de la teinte qui correspond a la couleur courante
 
