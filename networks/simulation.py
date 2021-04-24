@@ -33,6 +33,7 @@ class Simulation():
 			self.server.send_to_all_clients(ants)
 
 	def start_simulation(self):
+		""" Fonction principale qui lance la simulation et calcule le déplacement de chaque fourmi """
 		for i in range(500):
 			self.server.send_to_all_clients("clear_ants")
 			ants = ["move_ants"] # liste [deltax, deltay] (et parfois une couleur) a envoyer au client pour bouger les fourmis
@@ -45,18 +46,15 @@ class Simulation():
 					pheromones.append((ant.x, ant.y))
 				else:
 					ant.search_resource()
+				# Si la fourmi touche un mur, elle prend une direction opposee
+				if self.touch_wall(ant.x, ant.y):
+					ant.direction = (ant.direction + 180) % 360
+				ant.change_position()
 				x,y = ant.x, ant.y
 				deltax = x - lastx
 				deltay = y - lasty
 				ants.append([deltax, deltay])
-				# Si la fourmi touche un mur, elle prend une direction opposee
-				if self.touch_wall(x, y):
-					try:
-						ant.direction = (ant.direction + 180) % 360
-					except:
-						print("bug de direction")
-						print(ant.direction, type(ant.direction))
-				elif self.touch_resource(x, y):
+				if self.touch_resource(x, y):
 					# La fourmi devient grise car elle touche une ressource
 					ant.has_resource = True
 					ants[ant.id+1].append("grey") # +1 car le 1er élément est une str
