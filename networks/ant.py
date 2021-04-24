@@ -53,12 +53,12 @@ class Ant:
 		self.nest = (posX, posY) # nest etant un tuple de coordonnes : (x, y)
 
 		self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
-		self._pheromone = [(posX,posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
+		#self._pheromone = [(posX,posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
 
 		self._id = Ant.ID
 		Ant.ID += 1
 
-	def search_resource(self):
+	def change_position(self):
 		""" Méthode qui change la position de la fourmi en fonction de sa direction """
 		side = self._side()
 		# Si c'est le 1er ou 2e quartant
@@ -75,20 +75,40 @@ class Ant:
 				self._x -= 1
 			else:
 				self._x += 1
+
+	def search_resource(self):
+		""" Fonction qui donne une direciton aleatoire pour chercher une ressource """
+
 		# Si la fourmi atteint un bord du haut ou un bord gauche, elle change de direction
 		if self._y <= 0 or self._x <= 0:
 			self._direction = 315
 		else:
 			# On randomize la direction pour donner un effet de mouvement aleatoire
 			self._direction = random.randint(self._direction-30, self._direction+30) % 360 
-		self._pheromone.append((self._x, self._y))
 
 	def go_to_nest(self):
-		""" La fourmi retourne au nid en parcourant le même chemin qu'à l'aller """
-		self._x, self._y = self._pheromone.pop()
+		""" La fourmi pointe vers le nid """
+		deltax = self.nest[0] - self.x
+		deltay = self.nest[1] - self.y
+		# Si deltax est positif, la fourmi doit aller vers la droite
+		if deltax > 0:
+			# Si deltay est positif, la fourmi doit aller vers le bas
+			if deltay > 0:
+				# On met une direction dans le 4 eme quartant
+				self._direction = 315
+			else:
+				# direction dans le 1er quartant
+				self._direction = 45
+		else:
+			if deltay > 0:
+				# direction dans le 3 eme quartant
+				self._direction = 225
+			else:
+				# 2 eme quartant
+				self._direction = 135
 
 	def touch_nest(self):
-		if len(self._pheromone) == 0 or (self._x == self.nest[0] and self._y == self.nest[1]):
+		if self._x == self.nest[0] and self._y == self.nest[1]:
 			return True
 		return False
 
