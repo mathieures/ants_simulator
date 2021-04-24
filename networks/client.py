@@ -100,17 +100,24 @@ class Client:
 			if isinstance(data, list) or isinstance(data, tuple):
 				# Si on doit bouger des fourmis
 				## data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
+				## data peut aussi etre de la forme [["move_ants", [deltax...]], ["pheromones", (fourmi1x, fourmi1y)...]]
 				## Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
 				## Note 2 : on soustrait 1 car le 1er élément est la str
-				if data[0] == "move_ants":
+
+				# si on a les mouvements des fourmis et les pheromones en meme temps
+				if len(data) == 2 and data[0][0] == "move_ants":
+					for i in range(1, len(data[0])):
+						self._interface.move_ant(i-1, data[0][i][0], data[0][i][1]) # id, delta_x, delta_y
+						if len(data[0][i]) == 3:
+							self._interface.color_ant(i-1, data[0][i][2]) # id, couleur
+					for i in range(1, len(data[1])):
+						self._interface.create_pheromone(data[1][i])
+
+				elif data[0] == "move_ants":
 					for i in range(1, len(data)):
 						self._interface.move_ant(i-1, data[i][0], data[i][1]) # id, delta_x, delta_y
 						if len(data[i]) == 3:
 							self._interface.color_ant(i-1, data[i][2]) # id, couleur
-
-				elif data[0] == "pheromones":
-					for i in range(1, len(data)):
-						self._interface.create_pheromone(data[i])
 				
 				# Si on doit créer des fourmis
 				elif data[0] == "ants":

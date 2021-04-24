@@ -61,11 +61,12 @@ class Simulation():
 				elif ant.touch_nest():
 					ant.has_resource = False
 					ants[ant.id+1].append(ant.color) # +1 car le 1er élément est une str
-			self.server.send_to_all_clients(ants)
-			time.sleep(0.1) # Ajout de latence
 			if len(pheromones) > 1:
-				self.server.send_to_all_clients(pheromones)
-				time.sleep(0.1)
+				# On envoie les mouvements des fourmis + les pheromones pour eviter encore de la latence
+				self.server.send_to_all_clients([ants,pheromones])
+			else:
+				self.server.send_to_all_clients(ants)
+			time.sleep(0.1) # ajout d'une latence
 
 	def touch_wall(self, x, y):
 		""" Fonction qui retourne True si la position touche un mur, False sinon """
