@@ -8,8 +8,9 @@ import threading
 class Client:
 	def __init__(self, ip, port):
 		try:
-			assert isinstance(ip, str), "Erreur l'IP n'est pas une châine de caractère valide"
-			assert isinstance(port, int), "Erreur le port n'est pas un entier valide"
+			assert isinstance(ip, str), "Erreur l'IP pour se connecter au serveur n'est pas une châine de caractère valide"
+			assert isinstance(port, int), "Erreur le port pour se connecter au serveur n'est pas un entier valide"
+			assert len(ip) > 0, "Erreur l'IP pour se connecter au serveur ne peut pas être vide"
 		except AssertionError as e:
 			print(e)
 			sys.exit()
@@ -18,10 +19,11 @@ class Client:
 		self._ip = ip
 		self._port = port
 
-
 		self._resource_ok = False
 		self._nest_ok = False
 		self._wall_ok = False
+
+		self._connected = True
 
 		self._interface = None
 
@@ -45,14 +47,23 @@ class Client:
 	def interface(self, new_interface):
 		self._interface = new_interface
 
+	@property
+	def connected(self):
+		return self._connected
+
+	@connected.setter
+	def connected(self, is_connected):
+		self._connected = is_connected
+
 
 	def connect(self):
 		try:
 			self._socket.connect((self._ip, self._port))
+			self._connected = True
 			self.receive()
 		except ConnectionRefusedError:
 			print("Erreur serveur non connecté")
-			exit(1)
+			sys.exit(1)
 
 	def send(self, element, pos, data):
 		"""
@@ -85,7 +96,11 @@ class Client:
 		str_type = object_type.__name__
 		print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
 		data = pickle.dumps([str_type, position, size, width, color])
-		self._socket.send(data)
+		try:
+			self._socket.send(data)
+		except BrokenPipeError:
+			print("Erreur envoie donnée. Fermeture")
+			sys.exit(1)
 
 
 	def receive(self):

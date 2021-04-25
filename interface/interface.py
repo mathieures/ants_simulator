@@ -1,14 +1,15 @@
 import tkinter as tk
+import threading
+import time
+
 from .easy_menu import EasyMenu
 from .easy_button import EasyButton
 from .nest import Nest
 from .resource import Resource
 from .wall import Wall
-from .ant import Ant
 from .pheromone import Pheromone
+from .ant import Ant
 
-import threading
-import time
 
 from networks import client
 
@@ -34,7 +35,7 @@ class Interface:
 	@property
 	def local_color(self):
 		return self._local_color
-	
+
 	@local_color.setter
 	def local_color(self, new_color):
 		self._local_color = new_color
@@ -161,7 +162,7 @@ class Interface:
 
 
 	## Demandes de confirmation pour créer les objets ##
-	
+
 	def ask_nest(self, x, y, size=20):
 		"""
 		Demande au serveur s'il peut créer un nid à l'endroit donné.
@@ -171,7 +172,7 @@ class Interface:
 
 	def ask_resource(self, x, y, size=20):
 		self._client.ask_object(Resource, (x, y), size)
-	
+
 	def ask_wall(self, coords_list, width=20):
 		"""Demande un mur. Appelé seulement à la fin d'un clic long."""
 		self._client.ask_object(Wall, coords_list, width=width)

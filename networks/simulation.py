@@ -1,8 +1,10 @@
 import random
-import ant
 import time
 
-class Simulation():
+import ant_server
+
+
+class Simulation:
 	""" Classe qui lance toute la simulation de fourmis a partir du dico d'objets defini par le serveur """
 
 	def __init__(self, objects, server):
@@ -27,7 +29,7 @@ class Simulation():
 				x,y = nest[0]
 				color = nest[3]
 				for i in range(20):
-					curr_ant = ant.Ant(x,y,color)
+					curr_ant = ant_server.Ant(x,y,color)
 					self.ants.append(curr_ant)
 					ants.append(((x,y), color))
 			self.server.send_to_all_clients(ants)

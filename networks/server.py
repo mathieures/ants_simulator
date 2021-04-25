@@ -1,10 +1,9 @@
 import sys
-
 import socket
 import pickle
 import threading
-
 import time
+
 import simulation
 
 import color
@@ -25,6 +24,8 @@ class Server:
 		except AssertionError as e:
 			print(e)
 			sys.exit()
+
+		print(ip, port, max_clients)
 
 		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self._ip = ip
@@ -50,7 +51,7 @@ class Server:
 		Fonction pour accepter quand un client se connecte au serveur
 		Stocke le client dans l'attribut de classe 'clients'
 		"""
-		if len(Server.clients) < self._max_clients:
+		if len(Server.clients) <= self._max_clients:
 			client, address = self._socket.accept()
 			self.send_to_client(client, ["color", color.random_rgb()])
 			Server.clients.append(client)
@@ -141,8 +142,6 @@ class Server:
 		print("toutes les coords sont ok")
 		return True
 
-
-
 	def condition(self):
 		"""
 		Fonction indispensable, elle permet au serveur d'accepter
@@ -158,21 +157,6 @@ class Server:
 			t1_2.daemon = True
 			t1_2.start()
 			t1_2.join(1)
-
-
-	'''
-	def send(self, data):
-		"""
-		Fonction envoyant des informations aux clients
-		"""
-		try:
-			for client in Server.clients:
-				data = pickle.dumps(data)
-				client.send_to_all_clientsall(data)
-		except BrokenPipeError as e:
-			print(e)
-			sys.exit(1)
-	'''
 
 	def send_to_client(self, client, data):
 		"""Envoie des données à un seul client"""
@@ -194,5 +178,18 @@ class Server:
 
 
 if __name__ == "__main__":
-	server = Server("127.0.0.1", 15555, 5) # LE 5 EST À MODIFIER AVEC UN ARGUMENT EN LIGNE DE COMMANDE PAR EX
+	if len(sys.argv) < 4:
+		print("Erreur de format des arguments")
+		print("python3 serveur IP PORT NB_MAX_CLIENTS")
+		sys.exit(1)
+	else:
+		ip = sys.argv[1]
+		try:
+			port = int(sys.argv[2])
+			max_clients = int(sys.argv[3])
+		except ValueError:
+			print("Erreur ces arguments doivent être des entiers")
+			sys.exit(1)
+
+	server = Server(ip, port, max_clients)
 	server.connect()

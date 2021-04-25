@@ -8,20 +8,21 @@ class ConfigClient:
 
     @property
     def ip(self):
-        print("type de ip :", type(self._ip.get()))
+        # print("type de ip :", type(self._ip.get()))
         return self._ip.get()
-    
+
     @property
     def port(self):
-        print("type de port :", type(self._port.get()))
+        # print("type de port :", type(self._port.get()))
         return self._port.get()
 
 
     def __init__(self, root):
-        self._window = tk.Toplevel(root)
+        self._root = root
+        self._window = tk.Toplevel(self._root)
         self._window.title('Ant Simulator')
-       
-        root.withdraw() # Cache la fenetre principale
+
+        self._root.withdraw() # Cache la fenetre principale
 
         # Frames
         self._labelframe = tk.LabelFrame(self._window, text="Configure which server to join")
@@ -29,7 +30,7 @@ class ConfigClient:
 
         self._buttonframe = tk.Frame(self._window)
         self._buttonframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
-        
+
         self._topframe = tk.Frame(self._labelframe)
         self._topframe.pack(side=tk.TOP, expand=True, fill=tk.X)
         self._centerframe = tk.Frame(self._labelframe)
@@ -55,13 +56,15 @@ class ConfigClient:
 
         # Bouton pour rejoindre
 
-        self._join_button = tk.Button(self._buttonframe, text='Join', command=self.a_toi_de_jouer_baptiste)
+        self._join_button = tk.Button(self._buttonframe, text='Join', command=self.connection)
         self._join_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
-    def a_toi_de_jouer_baptiste(self):
-        print("je compte sur toi !")
-        self._window.destroy()
-        root.deiconify() # remet la fenetre principale au premier plan
+    def connection(self):
+        if len(self._ip.get()) > 0 and self._port.get() > 0:
+            print("Tentative de connection en cours...")
+            self._window.destroy()
+            self._root.deiconify() # remet la fenetre principale au premier plan
+            self._root.destroy()
 
 
 
@@ -69,6 +72,5 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     c = ConfigClient(root)
-    
+
     root.mainloop()
-    

@@ -84,7 +84,7 @@ class Ant:
 			self._direction = 315
 		else:
 			# On randomize la direction pour donner un effet de mouvement aleatoire
-			self._direction = random.randint(self._direction-30, self._direction+30) % 360 
+			self._direction = random.randint(self._direction-30, self._direction+30) % 360
 
 	def go_to_nest(self):
 		""" La fourmi pointe vers le nid """
