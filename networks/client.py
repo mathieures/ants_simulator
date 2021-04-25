@@ -75,6 +75,8 @@ class Client:
     def set_ready(self):
         """Informe le serveur que ce client est prêt"""
         print("Ready envoyé")
+        for button in self._interface.objects_buttons[:-1]:
+            button.state = "disabled"
         self._socket.send("Ready".encode())
 
     def unset_ready(self):

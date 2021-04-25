@@ -10,7 +10,7 @@ class EasyButton:
     def __init__(self, interface, parent, width, height,
                  text=None, object_type=None, no_icon=False, large=False,
                  side=tk.LEFT, command=None):
-        
+
         self._interface = interface # utile pour changer l'objet courant
         self._canvas = tk.Canvas(parent, width=width, height=height)
         self._default_bg_color = self._canvas['bg'] # on sauvegarde la couleur par défaut
@@ -23,6 +23,8 @@ class EasyButton:
         else:
             self._icon_object = None
 
+        self._state = "normal"
+
         self._text = text
         if self._text is not None:
             self._text_id = self._canvas.create_text(width//2, height//2, text=self._text)
@@ -31,7 +33,6 @@ class EasyButton:
 
         self._canvas.pack(side=side)
         self._canvas.bind("<Button-1>", self.select)
-
 
     def select(self, event=None):
         """

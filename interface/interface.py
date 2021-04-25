@@ -21,6 +21,11 @@ class Interface:
         return self._canvas
 
     @property
+    def objects_buttons(self):
+        return self._objects_buttons
+
+
+    @property
     def current_object_type(self):
         return self._current_object_type
 
