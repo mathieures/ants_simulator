@@ -1,8 +1,9 @@
 # Dossier cache python
-__pycache__/
+*__pycache__/
 
 # Utile pour Mathieu
 desktop.ini
+backup*
 
 # Si vous voulez ignorer d'autres trucs
 # mais pas pour tout le monde, vous pouvez

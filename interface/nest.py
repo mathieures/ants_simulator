@@ -2,7 +2,7 @@ from .custom_object import CustomObject
 
 
 class Nest(CustomObject):
-    def __init__(self, canvas, coords, size=15, color='', width=None):
+    def __init__(self, canvas, coords, size=15, color=''):
         """Instancie un nid. Note : le paramètre width n'a pas d'effet ici."""
         super().__init__(canvas, coords, size=size, color=color)
 
