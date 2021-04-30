@@ -8,6 +8,8 @@ import simulation
 
 import color
 
+from config_server import ConfigServer
+
 
 class Server:
 	"""
@@ -17,24 +19,52 @@ class Server:
 
 	objects = {}
 
+	@property
+	def ip(self):
+		return self._ip
+
+	@ip.setter
+	def ip(self, new_ip):
+		self._ip = new_ip
+	
+	@property
+	def port(self):
+		return self._port
+
+	@port.setter
+	def port(self, new_port):
+		self._port = new_port
+	
+	@property
+	def max_clients(self):
+		return self._max_clients
+	
+	@max_clients.setter
+	def max_clients(self, new_max_clients):
+		self._max_clients = new_max_clients
+
+
 	def __init__(self, ip, port, max_clients):
 		try:
 			assert isinstance(ip, str), "Erreur l'IP n'est pas une chaîne de caractère valide"
 			assert isinstance(port, int), "Erreur le port n'est pas un entier valide"
+			assert isinstance(max_clients, int), "Erreur le nombre de clients maximum n'est pas un entier valide"
 		except AssertionError as e:
 			print(e)
 			sys.exit()
+		# S'il n'y a pas eu d'erreur
+		else:
+			self._ip = ip
+			self._port = port
+			self._max_clients = max_clients
+			print("parametres serveur :", self._ip, self._port, self._max_clients)
 
-		print(ip, port, max_clients)
+			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			
+			self._clients_ready = 0
 
-		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self._ip = ip
-		self._port = port
-		self._max_clients = max_clients
+			print("Server online")
 
-		self._clients_ready = 0
-
-		print("Server online")
 
 	def connect(self):
 		"""
@@ -178,13 +208,20 @@ class Server:
 
 
 if __name__ == "__main__":
+	# S'il n'y a pas assez d'arguments, on ouvre la fenetre
 	if len(sys.argv) < 4:
-		print("Erreur de format des arguments")
-		print("python3 serveur IP PORT NB_MAX_CLIENTS")
-		sys.exit(1)
+		config = ConfigServer() # bloquant
+
+		ip = config.ip
+		port = config.port
+		max_clients = config.max_clients
+
+		# print("Erreur de format des arguments")
+		# print("Syntaxe : python3 serveur <IP> <PORT> <NB_MAX_CLIENTS>")
+		# sys.exit(1)
 	else:
-		ip = sys.argv[1]
 		try:
+			ip = int(sys.argv[1])
 			port = int(sys.argv[2])
 			max_clients = int(sys.argv[3])
 		except ValueError:

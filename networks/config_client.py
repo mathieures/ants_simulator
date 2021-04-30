@@ -61,7 +61,7 @@ class ConfigClient:
 
     def connection(self):
         if len(self._ip.get()) > 0 and self._port.get() > 0:
-            print("Tentative de connection en cours...")
+            print("Tentative de connexion en cours...")
             self._window.destroy()
             self._root.deiconify() # remet la fenetre principale au premier plan
             self._root.destroy()
