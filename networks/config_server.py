@@ -18,8 +18,8 @@ class ConfigServer:
             return '127.0.0.1'
         else:
             # ip etc.
-            return '127.0.0.1' # à toi de jouer baptiste ;)
-    
+            return self.get_current_ip()
+
 
     @property
     def port(self):
@@ -30,7 +30,7 @@ class ConfigServer:
     def max_clients(self):
         # print("type de max_clients :", type(self._max_clients.get()))
         return self._max_clients.get()
-    
+
 
 
     def __init__(self):
@@ -43,7 +43,7 @@ class ConfigServer:
 
         self._buttonframe = tk.Frame(self._root)
         self._buttonframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
-        
+
 
         self._topframe = tk.Frame(self._labelframe)
         self._topframe.pack(side=tk.TOP, expand=True, fill=tk.X)
@@ -56,10 +56,10 @@ class ConfigServer:
         self._modes = ['Local only', 'Current IP']
         self._current_mode = tk.StringVar()
         self._current_mode.set(self._modes[0])
-        
+
         self._max_clients = tk.IntVar()
         self._max_clients.set(5)
-        
+
         self._port = tk.IntVar()
         self._port.set(15555)
 
@@ -94,6 +94,14 @@ class ConfigServer:
             print("Tentative de connexion en cours...")
 
             self._root.destroy()
+
+    def get_current_ip(self):
+        import socket 
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 1))  # connect() for UDP doesn't send packets
+        local_ip_address = s.getsockname()[0]
+
+        return local_ip_address
 
 
 
