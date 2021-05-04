@@ -4,29 +4,8 @@ import socket
 import pickle
 import threading
 
-
 class Client:
-	def __init__(self, ip, port):
-		try:
-			assert isinstance(ip, str), "Erreur l'IP pour se connecter au serveur n'est pas une châine de caractère valide"
-			assert isinstance(port, int), "Erreur le port pour se connecter au serveur n'est pas un entier valide"
-			assert len(ip) > 0, "Erreur l'IP pour se connecter au serveur ne peut pas être vide"
-		except AssertionError as e:
-			print(e)
-			sys.exit()
-
-		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self._ip = ip
-		self._port = port
-
-		self._resource_ok = False
-		self._nest_ok = False
-		self._wall_ok = False
-
-		self._connected = True
-
-		self._interface = None
-
+	
 	@property
 	def ressource_ok(self):
 		return self._resource_ok
@@ -54,6 +33,28 @@ class Client:
 	@connected.setter
 	def connected(self, is_connected):
 		self._connected = is_connected
+	
+
+	def __init__(self, ip, port):
+		try:
+			assert isinstance(ip, str), "Erreur l'IP pour se connecter au serveur n'est pas une châine de caractère valide"
+			assert isinstance(port, int), "Erreur le port pour se connecter au serveur n'est pas un entier valide"
+			assert len(ip) > 0, "Erreur l'IP pour se connecter au serveur ne peut pas être vide"
+		except AssertionError as e:
+			print(e)
+			sys.exit()
+
+		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self._ip = ip
+		self._port = port
+
+		self._resource_ok = False
+		self._nest_ok = False
+		self._wall_ok = False
+
+		self._connected = True
+
+		self._interface = None
 
 
 	def connect(self):
@@ -92,39 +93,45 @@ class Client:
 		un élément d'un type et d'une taille donnés
 		à la position donnée.
 		"""
-		print("object_type :", object_type, "name :", object_type.__name__)
-		str_type = object_type.__name__
+		str_type = object_type.__name__ # nom de classe de l'objet
 		print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
 		data = pickle.dumps([str_type, position, size, width, color])
 		try:
 			self._socket.send(data)
 		except BrokenPipeError:
-			print("Erreur envoie donnée. Fermeture")
+			print("Erreur envoi donnée. Fermeture")
 			sys.exit(1)
 
 
 	def receive(self):
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
 		while True:
+
 			recv_data = self._socket.recv(10240)
 			try:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
 
+			
+			# Si on doit bouger des fourmis
 			if isinstance(data, list) or isinstance(data, tuple):
-				# Si on doit bouger des fourmis
-				## data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
-				## data peut aussi etre de la forme [["move_ants", [deltax...]], ["pheromones", (fourmi1x, fourmi1y)...]]
-				## Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
-				## Note 2 : on soustrait 1 car le 1er élément est la str
+				'''
+				data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
+				data peut aussi etre de la forme [["move_ants", [deltax...]], ["pheromones", (fourmi1x, fourmi1y)...]]
+				Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
+				Note 2 : on soustrait 1 car le 1er élément est la str
+				'''
 
 				# si on a les mouvements des fourmis et les pheromones en meme temps
 				if len(data) == 2 and data[0][0] == "move_ants":
+					# On bouge les fourmis
+					# self._interface.move_ants(data[0][1:]) # on donne toutes les coordonnees d'un coup
 					for i in range(1, len(data[0])):
 						self._interface.move_ant(i-1, data[0][i][0], data[0][i][1]) # id, delta_x, delta_y
 						if len(data[0][i]) == 3:
 							self._interface.color_ant(i-1, data[0][i][2]) # id, couleur
+					# On cree ou fonce les pheromones
 					for i in range(1, len(data[1])):
 						self._interface.create_pheromone(data[1][i])
 
@@ -152,7 +159,7 @@ class Client:
 					self._interface._create_object(str_type, pos, size=size, width=width, color=color)
 
 			else:
-				if data == "clear_ants":
-					self._interface.clear_ants()
-				elif data == "GO":
+				if data == "GO":
 					self._interface.countdown()
+				# if data == "clear_ants":
+				# 	self._interface.clear_ants()

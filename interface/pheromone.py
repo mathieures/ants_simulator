@@ -8,7 +8,7 @@ class Pheromone(CustomObject):
 
 	def __init__(self, canvas, coords):
 		"""Instancie une pheromone graphiquement"""
-		super().__init__(canvas, coords, size=3,color="#FFDFDB")
+		super().__init__(canvas, coords, size=3, color="#FFDFDB")
 
 		# Teintes roses du clair au fonce
 		self._tints = ["#FFDFDB", "#FBBFB8", "#F79F95", "#F38071", "#F0604D"]
@@ -16,15 +16,14 @@ class Pheromone(CustomObject):
 
 	def draw(self, offset_coords):
 		""" Cree la premiere pheromone, override la methode d'origine """
-		p_id = self._canvas.create_rectangle(self.get_centre_coords(offset_coords), 
-											fill=self._color, outline='')
-		self._canvas.tag_lower(p_id) # On met les pheromones en arrieres plan
-		return p_id
+		id = self._canvas.create_rectangle(self.get_centre_coords(offset_coords), 
+										   fill=self._color, outline='')
+		self._canvas.tag_lower(id) # On met les pheromones en arriere-plan
+		return id
 
 
-	def darker(self):
-		if self._curr_tint == 4:
-			return
-		self._curr_tint += 1
-		self._color = self._tints[self._curr_tint]
-		self._canvas.itemconfig(self._id, fill=self._color)
+	def darken(self):
+		if self._curr_tint < 4:
+			self._curr_tint += 1
+			self._color = self._tints[self._curr_tint]
+			self._canvas.itemconfig(self._id, fill=self._color)

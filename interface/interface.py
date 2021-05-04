@@ -50,7 +50,6 @@ class Interface:
 		self._canvas.pack(side=tk.BOTTOM)
 
 		# Menus déroulants
-
 		self._menu_frame = tk.Frame(self._root, bg='red')  # COULEUR À ENLEVER
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
@@ -65,7 +64,6 @@ class Interface:
 									("Undo (Ctrl+Z)", self.fonction_bidon)])
 
 		# Barre de sélection de l'objet
-
 		self._objects_frame = tk.Frame(self._root, bg='blue')  # COULEUR À ENLEVER
 		self._objects_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
@@ -90,13 +88,13 @@ class Interface:
 		]
 
 		# Évènements
-
 		self._canvas.bind("<Button-1>", self.on_click)
 		self._canvas.bind("<ButtonRelease-1>", self.on_release)
 		self._canvas.bind("<B1-Motion>", self.on_motion)
 
 		self._root.bind("<Control-z>", self.fonction_bidon)
 		self._root.bind("<Escape>", self.deselect_buttons)
+		self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
 
 		self._local_color = '' # par défaut, mais sera changé
@@ -106,7 +104,9 @@ class Interface:
 		self._current_wall = None
 
 		self._ants = [] # liste d'objets Ant
-		self._pheromones = []
+		self._pheromones = {} # dictionnaire de coordonnees, associees a des objets Pheromone
+
+		# Note : la mainloop est lancee dans un thread, par le main
 
 
 	## Gestion d'évènements ##
@@ -225,10 +225,10 @@ class Interface:
 
 	def create_pheromone(self, coords):
 		""" On affiche une phéromone et on l'ajoute dans la liste de phéromones """
-		for pheromone in self._pheromones:
-			if pheromone.coords == coords:
-				pheromone.darker()
-		self._pheromones.append(Pheromone(self._canvas, coords))
+		if coords in self._pheromones:
+			self._pheromones[coords].darken()
+		else:
+			self._pheromones[coords] = Pheromone(self._canvas, coords)
 
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
@@ -237,6 +237,19 @@ class Interface:
 	def move_ant(self, index, delta_x, delta_y):
 		""" Fonction pour déplacer une fourmi """
 		self._ants[index].move(delta_x, delta_y)
+
+	# A l'air d'être moins opti
+	# def move_ants(self, relative_coords):
+	# 	"""
+	# 	Prend en paramètre les coordonnées relatives
+	# 	de toutes les fourmis, rangées dans l'ordre
+	# 	Il y a aussi parfois une couleur
+	# 	"""
+	# 	for i in range(len(relative_coords)):
+	# 		ant = self._ants[i]
+	# 		ant.move(relative_coords[i][0], relative_coords[i][1])
+	# 		if len(relative_coords[i]) == 3:
+	# 			ant.color = relative_coords[i][2]
 
 	def color_ant(self, index, color):
 		""" Fonction pour changer la couleur d'une fourmi """
@@ -248,8 +261,8 @@ class Interface:
 		print("fonction bidon au rapport")
 
 	def countdown(self):
-		h = int(self._canvas["height"])//2
-		w = int(self._canvas["width"])//2
+		h = int(self._canvas["height"]) // 2
+		w = int(self._canvas["width"]) // 2
 		text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Attention ça commence")
 		time.sleep(1)
 		for i in range(3, 0, -1):
@@ -259,8 +272,13 @@ class Interface:
 		time.sleep(1)
 		self._canvas.delete(self._root,text)
 
-	def clear_ants(self):
-		self.canvas.delete("ant")
+	# def clear_ants(self):
+	# 	self.canvas.delete("ant")
+
+	def quit_app(self):
+		# pour l'instant, ne fonctionne pas
+		# exit(1)
+		pass
 
 
 

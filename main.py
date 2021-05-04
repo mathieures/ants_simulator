@@ -6,23 +6,17 @@ from networks.client import Client
 from networks.config_client import ConfigClient
 
 
-def ask_connection():
-    root = tk.Tk()
-
-    config = ConfigClient(root)
-
-    root.mainloop()
-
-    return config.ip, config.port
-
 def main():
 
-    config_ip, config_port = ask_connection()
+    config = ConfigClient() # bloquant
+    config_ip, config_port = config.ip, config.port
 
     if len(config_ip) > 0 and config_port > 0:
+        print("Tentative de connexion en cours...")
         client = Client(config_ip, config_port)
 
         if client.connected:
+            print("Connecté.")
             app = Interface(client, 1050, 600)
 
             t0 = threading.Thread(target=client.connect)
@@ -31,7 +25,7 @@ def main():
             t1.run()
         else:
             print("Serveur non connecté.")
-            print("Tentative de connection interrompu.")
+            print("Tentative de connexion interrompue.")
 
 
 if __name__ == "__main__":

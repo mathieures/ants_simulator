@@ -2,7 +2,7 @@ import sys
 import socket
 import pickle
 import threading
-import time
+from time import sleep
 
 import simulation
 
@@ -16,8 +16,6 @@ class Server:
 	Application du serveur
 	"""
 	clients = []
-
-	objects = {}
 
 	@property
 	def ip(self):
@@ -62,6 +60,8 @@ class Server:
 			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			
 			self._clients_ready = 0
+
+			self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
 
 			print("Server online")
 
@@ -109,9 +109,9 @@ class Server:
 					if self._clients_ready == len(Server.clients):
 						self.send_to_all_clients("GO")
 						print("GO")
-						time.sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
+						sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
 						# Lancement de la simulation
-						self.simulation = simulation.Simulation(Server.objects, self)
+						self._simulation.start()
 					else:
 						print(f"Il manque encore {len(Server.clients) - self._clients_ready} client(s)")
 
@@ -125,22 +125,22 @@ class Server:
 
 		# Si l'endroit est libre
 		if self.check_all_coords(coords, size):
-			self._add_to_dict(str_type, coords, size, width, color)
+			self._add_to_sim(str_type, coords, size, width, color)
 
 			data = [str_type, coords, size, width, color]
 			self.send_to_all_clients(data)
 
 
-	def _add_to_dict(self, str_type, coords, size, width, color):
+	def _add_to_sim(self, str_type, coords, size, width, color):
 		"""Ajoute une entrée au dictionnaire"""
 		# Note : Pour les objets 'wall', les coordonnées sont une liste
 		# Si c'est le premier objet de ce type que l'on voit, on init
-		if Server.objects.get(str_type) is None:
-			Server.objects[str_type] = []
+		if self._simulation.objects.get(str_type) is None:
+			self._simulation.objects[str_type] = []
 		if size is None:
 			size = width
 		# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-		Server.objects[str_type].append((coords, size, width, color))
+		self._simulation.objects[str_type].append((coords, size, width, color))
 		print("ajouté côté serveur :", str_type, coords, size, width, color)
 
 
@@ -149,8 +149,8 @@ class Server:
 		Retourne True si les coordonnées données en paramètre sont
 		disponibles en fonction de la taille donnée, False sinon
 		"""
-		for str_type in Server.objects:
-			for properties in Server.objects[str_type]:
+		for str_type in self._simulation.objects:
+			for properties in self._simulation.objects[str_type]:
 				coords_obj, size_obj, width_obj, color_obj = properties
 				offset = size_obj
 				# On teste un espace autour des coords

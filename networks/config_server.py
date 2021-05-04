@@ -9,7 +9,7 @@ class ConfigServer:
     @property
     def ip(self):
         """
-        Retourne une valeur en fonction du mode choisi par l'utilisateur :
+        Retourne une valeur en fonction du mode choisi par l'utilisateur
         'Local only' renverra '127.0.0.1'
         'Current IP' renverra l'IP de la machine
         """
@@ -17,25 +17,20 @@ class ConfigServer:
         if mode == self._modes[0]:
             return '127.0.0.1'
         else:
-            # ip etc.
             return self.get_current_ip()
-
 
     @property
     def port(self):
-        # print("type de port :", type(self._port.get()))
         return self._port.get()
 
     @property
     def max_clients(self):
-        # print("type de max_clients :", type(self._max_clients.get()))
         return self._max_clients.get()
-
 
 
     def __init__(self):
         self._root = tk.Tk()
-        self._root.title('Ant Simulator')
+        self._root.title('Server config')
 
         # Frames
         self._labelframe = tk.LabelFrame(self._root, text="Configure the server to create")
@@ -65,13 +60,11 @@ class ConfigServer:
 
 
         # Liste deroulante
-
         tk.Label(self._topframe, text='Mode:', width=10).pack(side=tk.LEFT)
         self._mode_option_menu = tk.OptionMenu(self._topframe, self._current_mode, *self._modes)
         self._mode_option_menu.pack(side=tk.RIGHT)
 
         # Entrees de texte
-
         tk.Label(self._centerframe, text='PORT:', width=10).pack(side=tk.LEFT)
         self._port_entry = tk.Entry(self._centerframe, textvariable=self._port)
         self._port_entry.pack(side=tk.RIGHT)
@@ -81,15 +74,21 @@ class ConfigServer:
                                           width=18, textvariable=self._max_clients)
         self._max_clients_sb.pack(side=tk.RIGHT)
 
-
         # Bouton pour creer le serveur
-
         self._create_server_button = tk.Button(self._buttonframe, text='Join', command=self.create_server)
         self._create_server_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
+        # Bindings
+
+        # Pour gerer la touche Entree
+        self._root.bind("<Return>", self.enter)
+        
+        # Pour gerer la fermeture de la fenetre
+        self._root.protocol("WM_DELETE_WINDOW", self.quit_config)
+        
         self._root.mainloop()
 
-    def create_server(self):
+    def create_server(self, event=None):
         if self._max_clients.get() > 0 and self._port.get() > 0:
             print("Tentative de connexion en cours...")
 
@@ -103,6 +102,12 @@ class ConfigServer:
 
         return local_ip_address
 
+    # Bindings
+    def enter(self, event):
+        self._create_server_button.invoke()
+
+    def quit_config(self):
+        exit(1)
 
 
 
