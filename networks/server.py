@@ -117,7 +117,6 @@ class Server:
 
 			t1_2_1 = threading.Thread(target=under_receive)
 			t1_2_1.start()
-			print("threads courants :", threading.active_count())
 
 	def process_data(self, str_type, coords, size, width, color):
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)

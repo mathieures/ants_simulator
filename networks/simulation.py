@@ -12,7 +12,6 @@ class Simulation:
 	def objects(self, new_objects):
 		self._objects = new_objects
 
-
 	def __init__(self, server):
 		self.server = server
 
@@ -54,7 +53,6 @@ class Simulation:
 				# Si la fourmi touche un mur, elle prend une direction opposee
 				if self.is_wall(x, y):
 					ant.direction += 180
-				# ant.change_position()
 				ant.move()
 				new_x, new_y = ant.coords # la position a change
 				deltax = new_x - x # deplacement relatif
@@ -63,7 +61,7 @@ class Simulation:
 
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
-				if index_resource:
+				if index_resource != None:
 					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
 					ants[ant.id].append(index_resource)
@@ -101,7 +99,7 @@ class Simulation:
 	def is_resource(self, x, y):
 		""" Fonction qui retourne True s'il y a une ressource à cette position, False sinon """
 		if "resource" not in self._objects:
-			return False
+			return None
 		i = 0
 		for resource in self._objects["resource"]:
 			coords_resource, size = resource[0], resource[1]
@@ -110,4 +108,4 @@ class Simulation:
 				coords_resource[1] - offset <= y <= coords_resource[1] + offset):
 					return i # On retourne l'index de la ressource
 			i += 1
-		return False
+		return None

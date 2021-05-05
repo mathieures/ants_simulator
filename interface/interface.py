@@ -234,7 +234,6 @@ class Interface:
 			self._pheromones[coords] = Pheromone(self._canvas, coords)
 
 	def shrink_resource(self, index):
-		print("Il y a {} ressources".format(len(self._resources)))
 		self._resources[index].shrink()
 
 	def create_ant(self, coords, color):
