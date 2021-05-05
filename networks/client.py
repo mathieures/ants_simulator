@@ -126,11 +126,18 @@ class Client:
 				# si on a les mouvements des fourmis et les pheromones en meme temps
 				if len(data) == 2 and data[0][0] == "move_ants":
 					# On bouge les fourmis
-					# self._interface.move_ants(data[0][1:]) # on donne toutes les coordonnees d'un coup
 					for i in range(1, len(data[0])):
 						self._interface.move_ant(i-1, data[0][i][0], data[0][i][1]) # id, delta_x, delta_y
 						if len(data[0][i]) == 3:
-							self._interface.color_ant(i-1, data[0][i][2]) # id, couleur
+							color = data[0][i][2]
+							# color est soit un int (index de la ressource touchee), soit une couleur
+							# si color est un int, alors la fourmi a touché une ressource et se met en gris,
+							# Nous devons rapetisser la ressource
+							if isinstance(color, int):
+								self._interface.shrink_resource(color)
+								self._interface.color_ant(i-1, "grey")
+							else:
+								self._interface.color_ant(i-1, color) # id, couleur
 					# On cree ou fonce les pheromones
 					for i in range(1, len(data[1])):
 						self._interface.create_pheromone(data[1][i])
@@ -139,7 +146,15 @@ class Client:
 					for i in range(1, len(data)):
 						self._interface.move_ant(i-1, data[i][0], data[i][1]) # id, delta_x, delta_y
 						if len(data[i]) == 3:
-							self._interface.color_ant(i-1, data[i][2]) # id, couleur
+							color = data[i][2]
+							# color est soit un int (index de la ressource touchee), soit une couleur
+							# si color est un int, alors la fourmi a touché une ressource et se met en gris,
+							# Nous devons rapetisser la ressource
+							if isinstance(color, int):
+								self._interface.shrink_resource(color)
+								self._interface.color_ant(i-1, "grey")
+							else:
+								self._interface.color_ant(i-1, color) # id, couleur
 
 				# Si on doit créer des fourmis
 				elif data[0] == "ants":

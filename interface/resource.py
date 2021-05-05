@@ -13,3 +13,8 @@ class Resource(CustomObject):
         """Override la méthode d'origine"""
         return self._canvas.create_rectangle(self.get_centre_coords(offset_coords),
                                              fill='#777')
+
+    def shrink(self):
+        """ Fonction pour rapetisser une ressource """
+        coords = self._canvas.coords(self._id)
+        self._canvas.scale(self._id, coords[0], coords[1], 0.95, 0.95)

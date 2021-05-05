@@ -104,6 +104,7 @@ class Interface:
 		self._current_wall = None
 
 		self._ants = [] # liste d'objets Ant
+		self._resources = [] # liste d'objets Resource
 		self._pheromones = {} # dictionnaire de coordonnees, associees a des objets Pheromone
 
 		# Note : la mainloop est lancee dans un thread, par le main
@@ -184,7 +185,9 @@ class Interface:
 		"""Instancie l'objet du type reçu par le Client"""
 		str_type = str_type.lower()
 		if str_type == "resource":
-			Resource(self._canvas, coords, size=size)
+			# On affiche une ressource, et on l'ajoute dans la liste de
+			# Ressources pour pouvoir y acceder par la suite
+			self._resources.append(Resource(self._canvas, coords, size=size))
 		elif str_type == "nest":
 			Nest(self._canvas, coords, size=size, color=color)
 		elif str_type == "wall":
@@ -230,6 +233,10 @@ class Interface:
 		else:
 			self._pheromones[coords] = Pheromone(self._canvas, coords)
 
+	def shrink_resource(self, index):
+		print("Il y a {} ressources".format(len(self._resources)))
+		self._resources[index].shrink()
+
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
 		self._ants.append(Ant(self._canvas, coords, color))
@@ -238,23 +245,9 @@ class Interface:
 		""" Fonction pour déplacer une fourmi """
 		self._ants[index].move(delta_x, delta_y)
 
-	# A l'air d'être moins opti
-	# def move_ants(self, relative_coords):
-	# 	"""
-	# 	Prend en paramètre les coordonnées relatives
-	# 	de toutes les fourmis, rangées dans l'ordre
-	# 	Il y a aussi parfois une couleur
-	# 	"""
-	# 	for i in range(len(relative_coords)):
-	# 		ant = self._ants[i]
-	# 		ant.move(relative_coords[i][0], relative_coords[i][1])
-	# 		if len(relative_coords[i]) == 3:
-	# 			ant.color = relative_coords[i][2]
-
 	def color_ant(self, index, color):
 		""" Fonction pour changer la couleur d'une fourmi """
 		self._ants[index].color = color
-
 
 	def fonction_bidon(self, event=None):
 		# À ENLEVER
@@ -271,9 +264,6 @@ class Interface:
 		self._canvas.itemconfig(text, text="C'est parti")
 		time.sleep(1)
 		self._canvas.delete(self._root,text)
-
-	# def clear_ants(self):
-	# 	self.canvas.delete("ant")
 
 	def quit_app(self):
 		# pour l'instant, ne fonctionne pas

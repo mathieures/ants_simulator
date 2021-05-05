@@ -18,7 +18,7 @@ class Simulation:
 
 		self.ants = [] # Liste d'instances de fourmi
 		self._objects = {}
-		self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une resource
+		self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une ressource
 
 	def init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
@@ -41,9 +41,7 @@ class Simulation:
 		""" Fonction principale qui lance la simulation et calcule le déplacement de chaque fourmi """
 		self.init_ants()
 
-		# for i in range(500):
-		for i in range(1500): # note de mathieu : j'ai un peu augmenté, plus pratique
-			# self.server.send_to_all_clients("clear_ants")
+		for i in range(1500):
 			ants = [] # liste [deltax, deltay] (et parfois une couleur) a envoyer au client pour bouger les fourmis
 			pheromones = []
 
@@ -62,11 +60,13 @@ class Simulation:
 				deltax = new_x - x # deplacement relatif
 				deltay = new_y - y
 				ants.append([deltax, deltay]) # les fourmis sont toujours dans le meme ordre
+
+				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
-				if self.is_resource(new_x, new_y):
-					# On informe les clients qu'elle change de couleur
+				if index_resource:
+					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
-					ants[ant.id].append("grey")
+					ants[ant.id].append(index_resource)
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
@@ -82,7 +82,7 @@ class Simulation:
 			else:
 				self.server.send_to_all_clients(ants)
 
-			# sleep(0.1) # ajout d'une latence
+			sleep(0.1) # ajout d'une latence
 			# sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
 
 	def is_wall(self, x, y):
@@ -102,10 +102,12 @@ class Simulation:
 		""" Fonction qui retourne True s'il y a une ressource à cette position, False sinon """
 		if "resource" not in self._objects:
 			return False
+		i = 0
 		for resource in self._objects["resource"]:
 			coords_resource, size = resource[0], resource[1]
 			offset = size // 2 + 1 # +1 pour l'outline
 			if (coords_resource[0] - offset <= x <= coords_resource[0] + offset) and (
 				coords_resource[1] - offset <= y <= coords_resource[1] + offset):
-					return True
+					return i # On retourne l'index de la ressource
+			i += 1
 		return False
