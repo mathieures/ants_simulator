@@ -117,6 +117,7 @@ class Server:
 
 			t1_2_1 = threading.Thread(target=under_receive)
 			t1_2_1.start()
+			print("threads courants :", threading.active_count())
 
 	def process_data(self, str_type, coords, size, width, color):
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
@@ -132,7 +133,7 @@ class Server:
 
 
 	def _add_to_sim(self, str_type, coords, size, width, color):
-		"""Ajoute une entrée au dictionnaire"""
+		"""Ajoute une entrée au dictionnaire d'objets de la simulation"""
 		# Note : Pour les objets 'wall', les coordonnées sont une liste
 		# Si c'est le premier objet de ce type que l'on voit, on init
 		if self._simulation.objects.get(str_type) is None:
