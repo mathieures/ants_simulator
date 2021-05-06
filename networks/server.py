@@ -129,53 +129,11 @@ class Server:
 		str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
 
 		# Si l'endroit est libre
-		if self.check_all_coords(coords, size):
-			self._add_to_sim(str_type, coords, size, width, color)
+		if self._simulation.check_all_coords(coords, size):
+			self._simulation.add_to_objects(str_type, coords, size, width, color)
 
 			data = [str_type, coords, size, width, color]
 			self.send_to_all_clients(data)
-
-
-	def _add_to_sim(self, str_type, coords, size, width, color):
-		"""Ajoute une entrée au dictionnaire d'objets de la simulation"""
-		# Note : Pour les objets 'wall', les coordonnées sont une liste
-		# Si c'est le premier objet de ce type que l'on voit, on init
-		if self._simulation.objects.get(str_type) is None:
-			self._simulation.objects[str_type] = []
-		if size is None:
-			size = width
-		# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-		self._simulation.objects[str_type].append((coords, size, width, color))
-		print("ajouté côté serveur :", str_type, coords, size, width, color)
-
-
-	def is_good_spot(self, x, y, size):
-		"""
-		Retourne True si les coordonnées données en paramètre sont
-		disponibles en fonction de la taille donnée, False sinon
-		"""
-		for str_type in self._simulation.objects:
-			for properties in self._simulation.objects[str_type]:
-				coords_obj, size_obj, width_obj, color_obj = properties
-				offset = size_obj
-				# On teste un espace autour des coords
-				for i in range(0, len(coords_obj) - 1, 2):
-					if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
-						coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
-						print("-> is not good spot")
-						return False
-		print("-> is good spot")
-		return True
-
-	def check_all_coords(self, coords_list, size):
-		"""Vérifie que toutes les coordonnées de la liste sont valides"""
-		# print("len coords :", len(coords_list))
-		for i in range(0, len(coords_list) - 1, 2):
-			if not self.is_good_spot(coords_list[i], coords_list[i+1], size):
-				# print("nope, coords", (coords_list[i], coords_list[i+1]), "size :", size, "pas bonnes")
-				return False
-		print("toutes les coords sont ok")
-		return True
 
 	def condition(self):
 		"""
@@ -201,7 +159,6 @@ class Server:
 		except BrokenPipeError as e:
 			print(e)
 			sys.exit(1)
-
 
 	def send_to_all_clients(self, data):
 		"""
