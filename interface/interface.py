@@ -272,7 +272,7 @@ class Interface:
 						ant.color = ant.base_color
 
 		for i in range(0, len(relative_coords), step):
-			curr_thread = threading.Thread(target=move_ants_in_thread, daemon=True, args=(i, step)) # pas sûr s'il faut daemon
+			curr_thread = threading.Thread(target=move_ants_in_thread, args=(i, step)) # pas sûr s'il faut daemon
 			curr_thread.start()
 
 		'''
