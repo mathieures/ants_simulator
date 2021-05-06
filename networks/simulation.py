@@ -122,7 +122,6 @@ class Simulation:
 			i += 1
 		return None
 
-
 	def _is_good_spot(self, x, y, size):
 		"""
 		Retourne True si les coordonnées données en paramètre sont
