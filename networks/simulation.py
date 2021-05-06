@@ -73,7 +73,7 @@ class Simulation:
 
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
-				if index_resource is not None:
+				if not ant.has_resource and index_resource is not None:
 					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
 					ants[ant.id].append(index_resource)

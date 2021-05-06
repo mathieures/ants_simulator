@@ -97,9 +97,7 @@ class Interface:
 		self._root.bind("<Escape>", self.deselect_buttons)
 		self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-
 		self._local_color = '' # par défaut, mais sera changé
-
 
 		self._current_object_type = None
 		self._current_wall = None
@@ -110,7 +108,6 @@ class Interface:
 		self._pheromones = {} # dictionnaire de coordonnees, associees a des objets Pheromone
 
 		# Note : la mainloop est lancee dans un thread, par le main
-
 
 	## Gestion d'évènements ##
 
