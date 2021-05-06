@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import threading
 import time
 
@@ -61,7 +62,7 @@ class Interface:
 
 		self._menu_edit = EasyMenu(self._menu_frame, "Edit",
 								   [("Reset yours", self.fonction_bidon),
-									("Undo (Ctrl+Z)", self.fonction_bidon)])
+									("Undo (Ctrl+Z)", self.undo)])
 
 		# Barre de sélection de l'objet
 		self._objects_frame = tk.Frame(self._root, bg='blue')  # COULEUR À ENLEVER
@@ -92,7 +93,7 @@ class Interface:
 		self._canvas.bind("<ButtonRelease-1>", self.on_release)
 		self._canvas.bind("<B1-Motion>", self.on_motion)
 
-		self._root.bind("<Control-z>", self.fonction_bidon)
+		self._root.bind("<Control-z>", self.undo)
 		self._root.bind("<Escape>", self.deselect_buttons)
 		self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
@@ -103,6 +104,7 @@ class Interface:
 		self._current_object_type = None
 		self._current_wall = None
 
+		self._last_objects = [] # liste d'objets places : [id d'objet + str_type], pour pouvoir annuler les placements
 		self._ants = [] # liste d'objets Ant
 		self._resources = [] # liste d'objets Resource
 		self._pheromones = {} # dictionnaire de coordonnees, associees a des objets Pheromone
@@ -187,11 +189,15 @@ class Interface:
 		if str_type == "resource":
 			# On affiche une ressource, et on l'ajoute dans la liste de
 			# Ressources pour pouvoir y acceder par la suite
-			self._resources.append(Resource(self._canvas, coords, size=size))
+			obj = Resource(self._canvas, coords, size=size)
+			self._resources.append(obj)
+			self._last_objects.append([obj.id, "resource"])
 		elif str_type == "nest":
-			Nest(self._canvas, coords, size=size, color=color)
+			obj = Nest(self._canvas, coords, size=size, color=color)
+			self._last_objects.append([obj.id, "nest"])
 		elif str_type == "wall":
-			Wall(self._canvas, coords, width=width, size=0)
+			obj = Wall(self._canvas, coords, width=width, size=0)
+			self._last_objects.append([obj.id, "wall"])
 		elif str_type == "ant":
 			Ant(self._canvas, coords, size=size, color=color)
 		elif str_type == "pheromone":
@@ -204,7 +210,6 @@ class Interface:
 		print("deleting current wall ;", self._current_wall, self._current_object_type)
 		self._canvas.delete(self._current_wall.id)
 		self._current_wall = None
-
 
 	'''
 	def _create_nest(self, x, y, size, color):
@@ -248,6 +253,14 @@ class Interface:
 		""" Fonction pour changer la couleur d'une fourmi """
 		self._ants[index].color = color
 
+	def undo(self, event=None):
+		""" Fonction pour annuler un placement """
+		# last_object est de la forme : [id, str_type]
+		if len(self._last_objects) > 0:
+			last_object = self._last_objects.pop()
+			self._canvas.delete(last_object[0])
+			self._client.undo_object(last_object[1])
+
 	def fonction_bidon(self, event=None):
 		# À ENLEVER
 		print("fonction bidon au rapport")
@@ -265,9 +278,8 @@ class Interface:
 		self._canvas.delete(self._root,text)
 
 	def quit_app(self):
-		# pour l'instant, ne fonctionne pas
-		# exit(1)
-		pass
+		if messagebox.askyesno('Quit', 'Êtes-vous sûr de vouloir quitter ?'):
+			self._root.quit()
 
 
 

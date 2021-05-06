@@ -100,10 +100,15 @@ class Server:
 					data = pickle.loads(recv_data)
 				except pickle.UnpicklingError:
 					data = recv_data
-				# Si c'est une liste, on sait que la demande est effectuée pour créer un élément
+				# Si c'est une liste, on sait que la demande est effectuée pour créer un élément, ou annuler
 				if isinstance(data, list):
-					str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
-					self.process_data(str_type, coords, size, width, color)
+					if data[0] == "undo":
+						print("Annulation coté serv")
+						str_type = data[1]
+						self._simulation.objects[str_type].pop()
+					else:
+						str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
+						self.process_data(str_type, coords, size, width, color)
 				elif data.decode() == "Ready":
 					self._clients_ready += 1
 					if self._clients_ready == len(Server.clients):

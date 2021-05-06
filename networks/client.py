@@ -102,6 +102,16 @@ class Client:
 			print("Erreur envoi donnée. Fermeture")
 			sys.exit(1)
 
+	def undo_object(self, str_type):
+		""" Demande au serveur d'annuler le placement d'un objet """
+		print("Demande d'annulation objet {}".format(str_type))
+		data = pickle.dumps(["undo",str_type])
+		try:
+			self._socket.send(data)
+		except BrokenPipeError:
+			print("Erreur envoi donnée. Fermeture")
+			sys.exit(1)
+
 
 	def receive(self):
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
