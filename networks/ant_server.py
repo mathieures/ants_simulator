@@ -78,11 +78,12 @@ class AntServer:
     def move(self):
         """ Méthode qui change la position de la fourmi en fonction de sa direction """
         # Direction
-        if self._has_resource:
+        # Note Maximino : J'ai mis en commentaire car c'est la simulation qui fait les tests
+        """if self._has_resource:
             self._go_to_nest()
             self.lay_pheromone()
         else:
-            self._seek_resource()
+            self._seek_resource()"""
         
         # Mouvement
         if 22.5 <= self._direction < 67.5:
@@ -107,7 +108,7 @@ class AntServer:
             # Entre 337.5 et 22.5
             self._x += 1
 
-    def _seek_resource(self):
+    def seek_resource(self):
         """
         Fonction qui donne une direction aleatoire pour
         chercher une ressource ou fait suivre une phéromone
@@ -125,7 +126,7 @@ class AntServer:
             else:
                 self._direction = randint(self._direction-30, self._direction+30) % 360
 
-    def _go_to_nest(self):
+    def go_to_nest(self):
         """ La fourmi pointe vers le nid """
         delta_x = self._nest[0] - self._x
         delta_y = self._nest[1] - self._y

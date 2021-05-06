@@ -52,7 +52,19 @@ class Simulation:
 				
 				# Si la fourmi touche un mur, elle prend une direction opposee
 				if self.is_wall(x, y):
-					ant.direction += 180
+					# Si il y a un mur, mais que la fourmi possede une ressource,
+					# Elle essaye de contourner le mur en changeant sa direction
+					if ant.has_resource:
+						ant.direction += 30
+						ant.lay_pheromone()
+					else:
+						ant.direction += 180
+				else:
+					if ant.has_resource:
+						ant.go_to_nest()
+						ant.lay_pheromone()
+					else:
+						ant.seek_resource()
 				ant.move()
 				new_x, new_y = ant.coords # la position a change
 				deltax = new_x - x # deplacement relatif
