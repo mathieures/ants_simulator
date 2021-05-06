@@ -299,11 +299,17 @@ class Interface:
 
 	def undo(self, event=None):
 		""" Fonction pour annuler un placement """
+		
+		if len(self._last_objects) > 0:
+			self._client.undo_object(self._last_objects[-1][1])
+
+	def delete_last_object(self):
+		""" Fontcion qui supprime le dernier element placé """
+
 		# last_object est de la forme : [id, str_type]
 		if len(self._last_objects) > 0:
 			last_object = self._last_objects.pop()
 			self._canvas.delete(last_object[0])
-			self._client.undo_object(last_object[1])
 
 	def fonction_bidon(self, event=None):
 		# À ENLEVER

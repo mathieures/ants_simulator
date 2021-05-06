@@ -203,5 +203,5 @@ class Client:
 			else:
 				if data == "GO":
 					self._interface.countdown()
-				# if data == "clear_ants":
-				# 	self._interface.clear_ants()
+				elif data == "undo":
+					self._interface.delete_last_object()

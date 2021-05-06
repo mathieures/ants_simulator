@@ -109,6 +109,7 @@ class Server:
 						print("Annulation coté serv")
 						str_type = data[1]
 						self._simulation.objects[str_type].pop()
+						self.send_to_all_clients("undo")
 					else:
 						str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 						self.process_data(str_type, coords, size, width, color)
