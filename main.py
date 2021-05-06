@@ -21,8 +21,8 @@ def main():
 
             t0 = threading.Thread(target=client.connect)
             t0.start()
-            t1 = threading.Thread(target=app.root.mainloop)
-            t1.run()
+            
+            app.root.mainloop()
         else:
             print("Serveur non connecté.")
             print("Tentative de connexion interrompue.")

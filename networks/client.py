@@ -115,15 +115,14 @@ class Client:
 
 	def receive(self):
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
+		# Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
 		while True:
-
 			recv_data = self._socket.recv(10240)
 			try:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
 
-			
 			# Si on doit bouger des fourmis
 			if isinstance(data, list) or isinstance(data, tuple):
 				'''

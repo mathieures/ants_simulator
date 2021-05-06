@@ -273,12 +273,12 @@ class Interface:
 		for i in range(3, 0, -1):
 			self._canvas.itemconfig(text, text=i)
 			time.sleep(1)
-		self._canvas.itemconfig(text, text="C'est parti")
+		self._canvas.itemconfig(text, text="Let's go!")
 		time.sleep(1)
 		self._canvas.delete(self._root,text)
 
 	def quit_app(self):
-		if messagebox.askyesno('Quit', 'Êtes-vous sûr de vouloir quitter ?'):
+		if messagebox.askyesno('Quit', 'Are you sure to quit?'):
 			self._root.quit()
 
 

@@ -10,6 +10,9 @@ import color
 
 from config_server import ConfigServer
 
+# pour le debug
+from time import time
+
 
 class Server:
 	"""
@@ -60,6 +63,7 @@ class Server:
 			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			
 			self._clients_ready = 0
+			self._receiving_threads = {} # dictionnaire qui associe un client a un thread de reception
 
 			self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
 
@@ -85,6 +89,9 @@ class Server:
 			client, address = self._socket.accept()
 			self.send_to_client(client, ["color", color.random_rgb()])
 			Server.clients.append(client)
+			# On lui reserve une entree dans le dictionnaire
+			self._receiving_threads[client] = None
+
 		else:
 			print("trop de clients")
 
@@ -93,7 +100,7 @@ class Server:
 		Fonction qui sert à réceptionner les données envoyées depuis le client
 		Utilise une sous fonction 'under_receive' qui va manipuler dans un thread les données reçues
 		"""
-		for client in Server.clients:
+		for client in Server.clients:			
 			def under_receive():
 				recv_data = client.recv(10240)
 				try:
@@ -118,13 +125,22 @@ class Server:
 						# Lancement de la simulation
 						self._simulation.start()
 					else:
-						print(f"Il manque encore {len(Server.clients) - self._clients_ready} client(s)")
+						print("Il manque encore {} client(s)".format(len(Server.clients) - self._clients_ready))
+			
+			# Si le client n'avait pas de thread associe, on en cree un
+			if self._receiving_threads[client] is None:
+				self._receiving_threads[client] = threading.Thread(target=under_receive)
+				self._receiving_threads[client].start()
+			# Si le thread associe a ce client est termine (on a recu de lui), on en refait un
+			if not self._receiving_threads[client].is_alive():
+				self._receiving_threads[client] = threading.Thread(target=under_receive)
+				self._receiving_threads[client].start()
 
-			t1_2_1 = threading.Thread(target=under_receive)
-			t1_2_1.start()
+			# print("threads courants :", threading.active_count())
 
 	def process_data(self, str_type, coords, size, width, color):
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
+		t0 = time()
 		coords = tuple(coords) # normalement, déjà un tuple, mais au cas où
 		str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
 
@@ -134,22 +150,39 @@ class Server:
 
 			data = [str_type, coords, size, width, color]
 			self.send_to_all_clients(data)
+		
+		t1 = time()
+		print("temps :", t1 - t0)
 
 	def condition(self):
 		"""
 		Fonction indispensable, elle permet au serveur d'accepter
 		des connexions et de recevoir des données en même temps.
 		"""
-		while True:
-			t1_1 = threading.Thread(target=self.accept)
-			t1_1.daemon = True
-			t1_1.start()
-			t1_1.join(1)
+		accepting_thread = threading.Thread(target=self.accept)
+		accepting_thread.daemon = True
+		accepting_thread.start()
+		accepting_thread.join(0.2)
 
-			t1_2 = threading.Thread(target=self.receive)
-			t1_2.daemon = True
-			t1_2.start()
-			t1_2.join(1)
+		receiving_thread = threading.Thread(target=self.receive)
+		receiving_thread.daemon = True
+		receiving_thread.start()
+		receiving_thread.join(0.2)
+
+		while True:
+			if not accepting_thread.is_alive():
+				# print("accepting dead")
+				accepting_thread = threading.Thread(target=self.accept)
+				accepting_thread.daemon = True
+				accepting_thread.start()
+			accepting_thread.join(0.2)
+
+			if not receiving_thread.is_alive():
+				# print("receiving dead")
+				receiving_thread = threading.Thread(target=self.receive)
+				receiving_thread.daemon = True
+				receiving_thread.start()
+			receiving_thread.join(0.2)
 
 	def send_to_client(self, client, data):
 		"""Envoie des données à un seul client"""
