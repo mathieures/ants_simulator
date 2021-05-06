@@ -185,7 +185,7 @@ class Interface:
 		str_type = str_type.lower()
 		if str_type == "resource":
 			# On affiche une ressource, et on l'ajoute dans la liste de
-			# Ressources pour pouvoir y acceder par la suite
+			# ressources pour pouvoir y acceder par la suite
 			obj = Resource(self._canvas, coords, size=size)
 			self._resources.append(obj)
 			self._last_objects.append([obj.id, "resource"])
@@ -201,10 +201,9 @@ class Interface:
 			Pheromone(self._canvas, coords)
 		else:
 			print("mauvais type :", str_type)
-			return
 
 	def _delete_current_wall(self):
-		print("deleting current wall ;", self._current_wall, self._current_object_type)
+		# print("deleting current wall ;", self._current_wall, self._current_object_type)
 		self._canvas.delete(self._current_wall.id)
 		self._current_wall = None
 
@@ -235,6 +234,13 @@ class Interface:
 		else:
 			self._pheromones[coords] = Pheromone(self._canvas, coords)
 
+	def create_pheromones(self, coords_list):
+		for coords in coords_list:
+			if coords in self._pheromones:
+				self._pheromones[coords].darken()
+			else:
+				self._pheromones[coords] = Pheromone(self._canvas, coords)
+
 	def shrink_resource(self, index):
 		self._resources[index].shrink()
 
@@ -246,9 +252,50 @@ class Interface:
 		""" Fonction pour déplacer une fourmi """
 		self._ants[index].move(delta_x, delta_y)
 
-	def color_ant(self, index, color):
-		""" Fonction pour changer la couleur d'une fourmi """
-		self._ants[index].color = color
+	def move_ants(self, relative_coords):
+		"""
+		Bouge les fourmis grâce à la liste des coordonnées relatives.
+		Les coordonnées i sont pour la fourmi i.
+		"""
+		step = 20 # on bouge tel nombre de fourmis dans chaque thread
+		def move_ants_in_thread(start, number):
+			for i in range(start, start + number):
+				ant = self._ants[i]
+				ant.move(relative_coords[i][0], relative_coords[i][1])
+				if len(relative_coords[i]) > 2:
+					resource_index = relative_coords[i][2]
+					# Nous devons rapetisser la ressource
+					if resource_index != -1:
+						self.shrink_resource(resource_index)
+						ant.color = 'grey'
+					else:
+						ant.color = ant.base_color
+
+		for i in range(0, len(relative_coords), step):
+			curr_thread = threading.Thread(target=move_ants_in_thread, daemon=True, args=(i, step)) # pas sûr s'il faut daemon
+			curr_thread.start()
+
+		'''
+		for i in range(len(relative_coords)):
+			ant = self._ants[i]
+			ant.move(relative_coords[i][0], relative_coords[i][1])
+
+			# Le dernier element est l'index de la ressource touchee
+			# ou -1, signifiant un retour au nid
+			if len(relative_coords[i]) > 2:
+				resource_index = relative_coords[i][2]
+				# Nous devons rapetisser la ressource
+				if resource_index != -1:
+					self.shrink_resource(resource_index)
+					ant.color = 'grey'
+				else:
+					ant.color = ant.base_color
+		'''
+
+
+	# def color_ant(self, index, color):
+	# 	""" Fonction pour changer la couleur d'une fourmi """
+	# 	self._ants[index].color = color
 
 	def undo(self, event=None):
 		""" Fonction pour annuler un placement """

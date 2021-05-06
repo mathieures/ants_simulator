@@ -162,25 +162,6 @@ class AntServer:
             else:
                 self._direction = 90
 
-    # Mieux dans simulation.py, que dans ant_server.py
-    # def touch_nest(self):
-    #   if self._x == self._nest[0] and self._y == self._nest[1]:
-    #       return True
-    #   return False
-
-    '''
-    def _side(self):
-        """ Fonction qui renvoie un int correspondant au numéro du quartant de la direction """
-        if self._direction < 90:
-            return 1
-        elif self._direction >= 90 and self._direction < 180:
-            return 2
-        elif self._direction >= 180 and self._direction < 270:
-            return 3
-        return 4
-
-    '''
-
     def lay_pheromone(self):
         """
         Pose une phéromone exactement où est la fourmi,

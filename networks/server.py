@@ -10,10 +10,6 @@ import color
 
 from config_server import ConfigServer
 
-# pour le debug
-from time import time
-
-
 class Server:
 	"""
 	Application du serveur
@@ -140,9 +136,8 @@ class Server:
 
 	def process_data(self, str_type, coords, size, width, color):
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
-		t0 = time()
-		coords = tuple(coords) # normalement, déjà un tuple, mais au cas où
-		str_type = str_type.lower() # normalement, déjà en minuscules, mais au cas où
+		coords = tuple(coords) # normalement, deja un tuple, mais au cas ou
+		str_type = str_type.lower() # normalement, deja en minuscules, mais au cas ou
 
 		# Si l'endroit est libre
 		if self._simulation.check_all_coords(coords, size):
@@ -150,22 +145,17 @@ class Server:
 
 			data = [str_type, coords, size, width, color]
 			self.send_to_all_clients(data)
-		
-		t1 = time()
-		print("temps :", t1 - t0)
 
 	def condition(self):
 		"""
 		Fonction indispensable, elle permet au serveur d'accepter
 		des connexions et de recevoir des données en même temps.
 		"""
-		accepting_thread = threading.Thread(target=self.accept)
-		accepting_thread.daemon = True
+		accepting_thread = threading.Thread(target=self.accept, daemon=True)
 		accepting_thread.start()
 		accepting_thread.join(0.2)
 
-		receiving_thread = threading.Thread(target=self.receive)
-		receiving_thread.daemon = True
+		receiving_thread = threading.Thread(target=self.receive, daemon=True)
 		receiving_thread.start()
 		receiving_thread.join(0.2)
 

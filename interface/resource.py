@@ -16,5 +16,4 @@ class Resource(CustomObject):
 
     def shrink(self):
         """ Fonction pour rapetisser une ressource """
-        coords = self._canvas.coords(self._id)
-        self._canvas.scale(self._id, coords[0], coords[1], 0.95, 0.95)
+        self._canvas.scale(self._id, self.coords[0], self.coords[1], 0.95, 0.95)

@@ -8,7 +8,6 @@ class Ant(CustomObject):
 
     @property
     def color(self):
-        """On a besoin qu'elle soit accessible"""
         return self._color
 
     @color.setter
@@ -16,10 +15,16 @@ class Ant(CustomObject):
         self._color = new_color
         self._canvas.itemconfig(self._id, fill=self._color)
 
+    @property
+    def base_color(self):
+        return self._base_color
+
 
     def __init__(self, canvas, coords, color, size=3):
         """Instancie une fourmi graphiquement"""
         super().__init__(canvas, coords, size=size, color=color)
+        self._base_color = color
+
 
     def draw(self, offset_coords):
         return self._canvas.create_oval(self.get_centre_coords(offset_coords),

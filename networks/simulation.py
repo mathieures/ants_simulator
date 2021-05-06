@@ -17,7 +17,7 @@ class Simulation:
 
 		self.ants = [] # Liste d'instances de fourmi
 		self._objects = {}
-		self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une ressource
+		# self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une ressource
 
 	def init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
@@ -47,24 +47,23 @@ class Simulation:
 			for ant in self.ants:
 				x, y = ant.coords # position actuelle
 				if ant.has_resource:
-					self._all_pheromones.append((x, y))
-					pheromones.append((x, y))
-				
-				# Si la fourmi touche un mur, elle prend une direction opposee
-				if self.is_wall(x, y):
-					# Si il y a un mur, mais que la fourmi possede une ressource,
-					# Elle essaye de contourner le mur en changeant sa direction
-					if ant.has_resource:
+					# self._all_pheromones.append((x, y)) # a pas l'air d'etre utilise
+					pheromones.append((x, y)) # test de pas envoyer les phero pour voir si c'est ça qui fait laguer
+
+					# S'il y a un mur mais que la fourmi porte une ressource,
+					# elle essaie de contourner le mur par la gauche
+					if self.is_wall(x, y):
 						ant.direction += 30
-						ant.lay_pheromone()
 					else:
-						ant.direction += 180
-				else:
-					if ant.has_resource:
 						ant.go_to_nest()
-						ant.lay_pheromone()
-					else:
-						ant.seek_resource()
+					ant.lay_pheromone()
+				# Si elle n'en a pas mais qu'il y a un mur, elle fait demi-tour
+				elif self.is_wall(x, y):
+					ant.direction += 180
+				# Sinon elle n'a rien trouve
+				else:
+					ant.seek_resource()
+
 				ant.move()
 				new_x, new_y = ant.coords # la position a change
 				deltax = new_x - x # deplacement relatif
@@ -80,10 +79,10 @@ class Simulation:
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
-					ants[ant.id].append(ant.color)
+					ants[ant.id].append(-1) # Signal pour dire de reprendre la couleur d'origine
 			ants.insert(0, "move_ants") # on precise que l'on veut bouger les fourmis
 			# S'il y a de nouvelles pheromones
-			if len(pheromones) > 1:
+			if pheromones:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter encore de la latence
 				pheromones.insert(0, "pheromones") # on precise que l'on veut ajouter des pheromones
 				self.server.send_to_all_clients([ants, pheromones])
@@ -94,6 +93,7 @@ class Simulation:
 
 			# sleep(0.1) # ajout d'une latence
 			sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
+		print("[simulation terminee]")
 
 	def is_wall(self, x, y):
 		""" Fonction qui retourne True s'il y a un mur à cette position, False sinon """
