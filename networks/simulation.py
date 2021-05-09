@@ -13,7 +13,7 @@ class Simulation:
 		self._objects = new_objects
 
 	def __init__(self, server):
-		self.server = server
+		self._server = server
 
 		self.ants = [] # Liste d'instances de fourmi
 		self._objects = {}
@@ -33,16 +33,17 @@ class Simulation:
 					curr_ant = ant_server.AntServer(x, y, color)
 					self.ants.append(curr_ant)
 					ants.append(((x,y), color))
-			self.server.send_to_all_clients(ants)
+			self._server.send_to_all_clients(ants)
 			sleep(0.1) # Ajout d'une latence pour envoyer les donnees
 
 	def start(self):
 		""" Fonction principale qui lance la simulation et calcule le déplacement de chaque fourmi """
 		self.init_ants()
 
-		for i in range(1500):
-			ants = [] # liste [deltax, deltay] (et parfois une couleur) a envoyer au client pour bouger les fourmis
-			pheromones = []
+		# for i in range(1500):
+		while self._server.online:
+			ants = [] # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis
+			pheromones = [] # liste de coordonnees (x, y)
 
 			for ant in self.ants:
 				x, y = ant.coords # position actuelle
@@ -65,10 +66,10 @@ class Simulation:
 					ant.seek_resource()
 
 				ant.move()
-				new_x, new_y = ant.coords # la position a change
-				deltax = new_x - x # deplacement relatif
-				deltay = new_y - y
-				ants.append([deltax, deltay]) # les fourmis sont toujours dans le meme ordre
+				new_x, new_y = ant.coords # on sait que la position a change
+				delta_x = new_x - x # deplacement relatif
+				delta_y = new_y - y
+				ants.append([delta_x, delta_y]) # les fourmis sont toujours dans le meme ordre
 
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
@@ -85,11 +86,11 @@ class Simulation:
 			if pheromones:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter encore de la latence
 				pheromones.insert(0, "pheromones") # on precise que l'on veut ajouter des pheromones
-				self.server.send_to_all_clients([ants, pheromones])
+				self._server.send_to_all_clients([ants, pheromones])
 
 			# Sinon on n'envoie que les positions
 			else:
-				self.server.send_to_all_clients(ants)
+				self._server.send_to_all_clients(ants)
 
 			# sleep(0.1) # ajout d'une latence
 			sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu

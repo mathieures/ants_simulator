@@ -171,7 +171,7 @@ class AntServer:
         AntServer.PHEROMONES[(self._x, self._y)] = ((self._direction - 180) % 360, 3) # direction, size
         # print("phéromone posée en :", self._x, self._y, "direction :", self._direction)
     
-    def follow_direction_biaised(self, direction, proba=90):
+    def follow_direction_biaised(self, direction, proba=60):
         """Suit une direction ou pas, suivant une probabilité"""
         # 90% de chances de la suivre
         if randint(0, 100) >= proba:

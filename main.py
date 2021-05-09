@@ -12,21 +12,19 @@ def main():
     config_ip, config_port = config.ip, config.port
 
     if len(config_ip) > 0 and config_port > 0:
-        print("Tentative de connexion en cours...")
+        print("Attempting connection…")
         client = Client(config_ip, config_port)
 
         if client.connected:
-            print("Connecté.")
             app = Interface(client, 1050, 600)
 
             t0 = threading.Thread(target=client.connect)
             t0.start()
+            print("Connected.")
             
             app.root.mainloop()
         else:
-            print("Serveur non connecté.")
-            print("Tentative de connexion interrompue.")
-
+            print("[Error] No connected server.")
 
 if __name__ == "__main__":
     main()

@@ -122,7 +122,6 @@ class Client:
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
 		# Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
 		while True:
-
 			recv_data = self._socket.recv(10240)
 			try:
 				data = pickle.loads(recv_data)
@@ -138,50 +137,22 @@ class Client:
 				Note 2 : on soustrait 1 car le 1er élément est la str
 				'''
 
-				# si on a les mouvements des fourmis et les pheromones en meme temps
+				# Si on a les mouvements des fourmis et les pheromones en meme temps
 				if len(data) == 2 and data[0][0] == "move_ants":
 					# On bouge les fourmis
 					temps_deplacement0 = time()
 					self._interface.move_ants(data[0][1:])
 					temps_deplacement1 = time()
 					print("temps_deplacement :", temps_deplacement1 - temps_deplacement0)
-					'''
-					for i in range(1, len(data[0])):
-						self._interface.move_ant(i-1, data[0][i][0], data[0][i][1]) # id, delta_x, delta_y
-						if len(data[0][i]) == 3:
-							color = data[0][i][2]
-							# color est soit un int (index de la ressource touchee), soit une couleur
-							# si color est un int, alors la fourmi a touché une ressource et se met en gris,
-							# Nous devons rapetisser la ressource
-							if isinstance(color, int):
-								self._interface.shrink_resource(color)
-								self._interface.color_ant(i-1, "grey")
-							else:
-								self._interface.color_ant(i-1, color) # id, couleur
-					'''
 					
 					# On cree ou fonce les pheromones
 					self._interface.create_pheromones(data[1][1:])
-					# for i in range(1, len(data[1])):
-					# 	self._interface.create_pheromone(data[1][i])
 
 				elif data[0] == "move_ants":
 					temps_deplacement0 = time()
 					self._interface.move_ants(data[1:])
 					temps_deplacement1 = time()
 					print("temps_deplacement :", temps_deplacement1 - temps_deplacement0)
-					# for i in range(1, len(data)):
-					# 	self._interface.move_ant(i-1, data[i][0], data[i][1]) # id, delta_x, delta_y
-					# 	if len(data[i]) == 3:
-					# 		color = data[i][2]
-					# 		# color est soit un int (index de la ressource touchee), soit une couleur
-					# 		# si color est un int, alors la fourmi a touché une ressource et se met en gris,
-					# 		# Nous devons rapetisser la ressource
-					# 		if isinstance(color, int):
-					# 			self._interface.shrink_resource(color)
-					# 			self._interface.color_ant(i-1, "grey")
-					# 		else:
-					# 			self._interface.color_ant(i-1, color) # id, couleur
 
 				# Si on doit créer des fourmis
 				elif data[0] == "ants":
@@ -197,11 +168,8 @@ class Client:
 				else:
 					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					# Communique l'information d'un nouvel objet à l'interface
-					# print("dit à interface de créer :", str_type, pos, size, width, color)
 					self._interface._create_object(str_type, pos, size=size, width=width, color=color)
 
 			else:
 				if data == "GO":
 					self._interface.countdown()
-				# if data == "clear_ants":
-				# 	self._interface.clear_ants()
