@@ -11,6 +11,11 @@ import color
 from config_server import ConfigServer
 from server_window import ServerWindow
 
+
+# pour le debug
+from time import time
+
+
 class Server:
 	"""
 	Application du serveur.
@@ -213,13 +218,9 @@ class Server:
 
 	def quit(self):
 		self._online = False
-		print("EXITING SERVER : destroying window")
 		if self._window is not None:
 			self._window.quit_window()
-			print("après appel de quit window")
-		print("appel de sys.exit")
 		sys.exit(0)
-		print("après sys.exit ?")
 
 
 if __name__ == "__main__":

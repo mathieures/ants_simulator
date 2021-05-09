@@ -99,7 +99,7 @@ class Client:
 		à la position donnée.
 		"""
 		str_type = object_type.__name__ # nom de classe de l'objet
-		print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
+		# print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
 		data = pickle.dumps([str_type, position, size, width, color])
 		try:
 			self._socket.send(data)
@@ -122,11 +122,15 @@ class Client:
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
 		# Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
 		while True:
+			temps_attente0 = time()
 			recv_data = self._socket.recv(10240)
+			temps_attente1 = time()
 			try:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
+			temps_receive0 = time()
+			# print("temps d'attente :", temps_attente1 - temps_attente0, end=' ; ')
 
 			# Si on doit bouger des fourmis
 			if isinstance(data, list) or isinstance(data, tuple):
@@ -140,31 +144,26 @@ class Client:
 				# Si on a les mouvements des fourmis et les pheromones en meme temps
 				if len(data) == 2 and data[0][0] == "move_ants":
 					# On bouge les fourmis
-					temps_deplacement0 = time()
 					self._interface.move_ants(data[0][1:])
-					temps_deplacement1 = time()
-					print("temps_deplacement :", temps_deplacement1 - temps_deplacement0)
 					
+					temps_ph = time()
 					# On cree ou fonce les pheromones
 					self._interface.create_pheromones(data[1][1:])
+					# print("temps phéros :", time() - temps_ph)
 
 				elif data[0] == "move_ants":
-					temps_deplacement0 = time()
 					self._interface.move_ants(data[1:])
-					temps_deplacement1 = time()
-					print("temps_deplacement :", temps_deplacement1 - temps_deplacement0)
 
-				# Si on doit créer des fourmis
+				# Si on doit creer des fourmis
 				elif data[0] == "ants":
 					# data est de la forme : ["ants", [coords_fourmi1, couleur_fourmi1], [coords_fourmi2, couleur_fourmi2]...]
-					for i in range(1, len(data)):
-						self._interface.create_ant(data[i][0], data[i][1]) # coords, couleur
+					self._interface.create_ants(data[1:])
 
 				# Si on reçoit la couleur locale de l'interface
 				elif data[0] == "color":
 					self._interface.local_color = data[1]
 
-				# Si c'est un objet créé par un client
+				# Si c'est un objet cree par un client
 				else:
 					str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 					# Communique l'information d'un nouvel objet à l'interface
@@ -173,3 +172,5 @@ class Client:
 			else:
 				if data == "GO":
 					self._interface.countdown()
+			temps_receive1 = time()
+			# print("receive :", temps_receive1 - temps_receive0)

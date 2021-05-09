@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import threading
-import time
+from time import sleep
 
 from .easy_menu import EasyMenu
 from .easy_button import EasyButton
@@ -227,26 +227,53 @@ class Interface:
 		"""On crée un objet Wall, qu'on étendra"""
 		self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
 
+	'''
 	def create_pheromone(self, coords):
 		""" On affiche une phéromone et on l'ajoute dans la liste de phéromones """
 		if coords in self._pheromones:
 			self._pheromones[coords].darken()
 		else:
 			self._pheromones[coords] = Pheromone(self._canvas, coords)
+	'''
 
 	def create_pheromones(self, coords_list):
-		for coords in coords_list:
-			if coords in self._pheromones:
-				self._pheromones[coords].darken()
-			else:
-				self._pheromones[coords] = Pheromone(self._canvas, coords)
+		"""Crée ou fonce plusieurs phéromones à la fois"""
+		# peut-être que ça va casser vu qu'on modifie le dico alors qu'on le traverse dans d'autres
+		step = 20 # on cree ou fonce tel nombre de fourmis dans chaque thread
+		length = len(coords_list)
+		
+		def create_pheromones_in_thread(start, number):
+			end = start + number
+			if end > len(coords_list):
+				end = len(coords_list)
+
+			for i in range(start, end):
+				coords = coords_list[i]
+				if coords in self._pheromones:
+					self._pheromones[coords].darken()
+				else:
+					self._pheromones[coords] = Pheromone(self._canvas, coords)
+
+		for i in range(0, length, step):
+			threading.Thread(target=create_pheromones_in_thread, args=(i, step)).start()
+
 
 	def shrink_resource(self, index):
 		self._resources[index].shrink()
 
+	'''
 	def create_ant(self, coords, color):
 		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
 		self._ants.append(Ant(self._canvas, coords, color))
+	'''
+
+	def create_ants(self, ants_list):
+		"""
+		Crée toutes les fourmis en fonction
+		des coordonnées et couleurs dans la liste
+		"""
+		for ant in ants_list:
+			self._ants.append(Ant(self._canvas, ant[0], ant[1])) # coords, couleur
 
 	def move_ant(self, index, delta_x, delta_y):
 		""" Fonction pour déplacer une fourmi """
@@ -258,8 +285,14 @@ class Interface:
 		Les coordonnées i sont pour la fourmi i.
 		"""
 		step = 20 # on bouge tel nombre de fourmis dans chaque thread
+		length = len(relative_coords)
+
 		def move_ants_in_thread(start, number):
-			for i in range(start, start + number):
+			end = start + number
+			if end > length:
+				end = length
+			
+			for i in range(start, end):
 				ant = self._ants[i]
 				ant.move(relative_coords[i][0], relative_coords[i][1])
 				if len(relative_coords[i]) > 2:
@@ -271,27 +304,8 @@ class Interface:
 					else:
 						ant.color = ant.base_color
 
-		for i in range(0, len(relative_coords), step):
-			curr_thread = threading.Thread(target=move_ants_in_thread, args=(i, step)) # pas sûr s'il faut daemon
-			curr_thread.start()
-
-		'''
-		for i in range(len(relative_coords)):
-			ant = self._ants[i]
-			ant.move(relative_coords[i][0], relative_coords[i][1])
-
-			# Le dernier element est l'index de la ressource touchee
-			# ou -1, signifiant un retour au nid
-			if len(relative_coords[i]) > 2:
-				resource_index = relative_coords[i][2]
-				# Nous devons rapetisser la ressource
-				if resource_index != -1:
-					self.shrink_resource(resource_index)
-					ant.color = 'grey'
-				else:
-					ant.color = ant.base_color
-		'''
-
+		for i in range(0, length, step):
+			threading.Thread(target=move_ants_in_thread, args=(i, step)).start()
 
 	# def color_ant(self, index, color):
 	# 	""" Fonction pour changer la couleur d'une fourmi """
@@ -312,14 +326,14 @@ class Interface:
 	def countdown(self):
 		h = int(self._canvas["height"]) // 2
 		w = int(self._canvas["width"]) // 2
-		text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Attention ça commence")
-		time.sleep(1)
+		text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Starting in…")
+		sleep(1)
 		for i in range(3, 0, -1):
 			self._canvas.itemconfig(text, text=i)
-			time.sleep(1)
+			sleep(1)
 		self._canvas.itemconfig(text, text="Let's go!")
-		time.sleep(1)
-		self._canvas.delete(self._root,text)
+		sleep(1)
+		self._canvas.delete(self._root, text)
 
 	def quit_app(self):
 		if messagebox.askyesno('Quit', 'Are you sure to quit?'):

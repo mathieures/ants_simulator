@@ -182,7 +182,8 @@ class AntServer:
         Renvoie True si la fourmi est sur une phéromone
         en fonction de la taille des phéromones (3 pixels)
         """
-        for coords_phero in AntServer.PHEROMONES:
+        # Faire une copie des cles permet d'eviter les RuntimeError
+        for coords_phero in tuple(AntServer.PHEROMONES.keys()):
             direction, size = AntServer.PHEROMONES.get(coords_phero)
             offset = size // 2 + 1 # +1 pour l'outline
             if (coords_phero[0] - offset <= self._x <= coords_phero[0] + offset) and (
