@@ -48,8 +48,8 @@ class Simulation:
 		step = 20
 		length = len(self._ants)
 
-		ants = [None] * len(self._ants) # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis		
-		
+		ants = ["move_ants"] + [None] * len(self._ants) # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis
+
 		def simulate_ants_in_thread(start, number):
 			end = start + number
 			if end > length:
@@ -57,6 +57,7 @@ class Simulation:
 			
 			for i in range(start, end):
 				ant = self._ants[i]
+				ant_index = i+1 # indice dans ants
 
 				x, y = ant.coords # position actuelle
 				if ant.has_resource:
@@ -80,18 +81,18 @@ class Simulation:
 				new_x, new_y = ant.coords # on sait que la position a change
 				delta_x = new_x - x # deplacement relatif
 				delta_y = new_y - y
-				ants[ant.id] = [delta_x, delta_y] # les fourmis sont toujours dans le meme ordre
+				ants[ant_index] = [delta_x, delta_y] # les fourmis sont toujours dans le meme ordre
 
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
 				if not ant.has_resource and index_resource is not None:
 					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
-					ants[ant.id].append(index_resource)
+					ants[ant_index].append(index_resource)
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
-					ants[ant.id].append(-1) # Signal pour dire de reprendre la couleur d'origine
+					ants[ant_index].append(-1) # Signal pour dire de reprendre la couleur d'origine
 
 
 		# for i in range(1500):
@@ -145,20 +146,17 @@ class Simulation:
 					ants[ant.id].append(-1) # Signal pour dire de reprendre la couleur d'origine
 			'''
 
-			ants.insert(0, "move_ants") # on precise que l'on veut bouger les fourmis
 			# S'il y a de nouvelles pheromones
 			if pheromones:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter de la latence
 				pheromones.insert(0, "pheromones") # on precise que l'on veut ajouter des pheromones
 				self._server.send_to_all_clients([ants, pheromones])
-				ants.pop(0) # pour le test, jusqu'à une nouvelle solution
 
 			# Sinon on n'envoie que les positions
 			else:
 				self._server.send_to_all_clients(ants)
-				ants.pop(0) # pour le test, jusqu'à une nouvelle solution
 
-			# print("temps sim :", time() - temps_sim)
+			print("temps sim :", time() - temps_sim)
 			# sleep(0.1) # ajout d'une latence
 			sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
 		print("[simulation terminee]")
