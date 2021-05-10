@@ -49,16 +49,22 @@ class AntServer:
         """
         return self._color
 
-    # N'est pas utilisé
-    # @color.setter
-    # def color(self, pcolor):
-    #   self._color = pcolor
+    @property
+    def endurance(self):
+        """Entier allant de 0 à 100"""
+        return self._endurance
+    
+    @endurance.setter
+    def endurance(self, new_endur):
+        self._endurance = new_endur
 
     ###############################
 
     # Attributs de classe
     ID = 0
     PHEROMONES = {} # dictionnaire de coordonnees, associees a une direction
+    MAX_ENDURANCE = 512
+
 
     def __init__(self, posX, posY, color):
         self._id = AntServer.ID
@@ -71,21 +77,12 @@ class AntServer:
         self._nest = (posX, posY) # couple de coordonnees : (x, y)
 
         self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
-        # self._nest_pheromone = [(posX, posY)] # Pheromone propre a chaque fourmi pour pouvoir retourner dans son nid si elle trouve une ressource
+        self._endurance = AntServer.MAX_ENDURANCE
 
 
     # def change_position(self):
     def move(self):
         """ Méthode qui change la position de la fourmi en fonction de sa direction """
-        # Direction
-        # Note Maximino : J'ai mis en commentaire car c'est la simulation qui fait les tests
-        """if self._has_resource:
-            self._go_to_nest()
-            self.lay_pheromone()
-        else:
-            self._seek_resource()"""
-
-        # Mouvement
         if 22.5 <= self._direction < 67.5:
             self._x += 1
             self._y -= 1

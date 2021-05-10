@@ -18,7 +18,7 @@ def main():
         if client.connected:
             app = Interface(client, 1050, 600)
 
-            t0 = threading.Thread(target=client.connect)
+            t0 = threading.Thread(target=client.connect, daemon=True)
             t0.start()
             print("Connected.")
 

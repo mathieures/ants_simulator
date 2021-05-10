@@ -300,14 +300,16 @@ class Interface:
 				if len(relative_coords[i]) > 2:
 					resource_index = relative_coords[i][2]
 					# Nous devons rapetisser la ressource
-					if resource_index != -1:
+					if isinstance(resource_index, int):
 						self.shrink_resource(resource_index)
 						ant.color = 'grey'
-					else:
+					elif resource_index == "base":
 						ant.color = ant.base_color
+					else:
+						ant.color = resource_index
 
 		for i in range(0, length, step):
-			threading.Thread(target=move_ants_in_thread, args=(i, step)).start()
+			threading.Thread(target=move_ants_in_thread, args=(i, step), daemon=True).start()
 
 	# def color_ant(self, index, color):
 	# 	""" Fonction pour changer la couleur d'une fourmi """
@@ -337,8 +339,8 @@ class Interface:
 		sleep(1)
 		self._canvas.delete(self._root, text)
 
-	def quit_app(self):
-		if messagebox.askyesno('Quit', 'Are you sure to quit?'):
+	def quit_app(self, force=False):
+		if force or messagebox.askyesno('Quit', 'Are you sure to quit?'):
 			self._root.quit()
 
 

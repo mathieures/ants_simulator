@@ -61,12 +61,11 @@ class Simulation:
 
 				x, y = ant.coords # position actuelle
 				if ant.has_resource:
-					pheromones.append((x, y)) # on peut ne pas les ajouter dans l'ordre
-
+					pheromones.append((x, y)) # l'ordre n'est pas important
 					# S'il y a un mur mais que la fourmi porte une ressource,
-					# elle essaie de contourner le mur par la gauche
 					if self.is_wall(x, y):
-						ant.direction += 30
+						# On contourne le mur par la gauche
+						ant.direction += 45
 					else:
 						ant.go_to_nest()
 					ant.lay_pheromone()
@@ -74,8 +73,11 @@ class Simulation:
 				elif self.is_wall(x, y):
 					ant.direction += 180
 				# Sinon elle n'a rien trouve
-				else:
+				elif ant.endurance > 0:
 					ant.seek_resource()
+					ant.endurance -= 1
+				else:
+					ant.go_to_nest()
 
 				ant.move()
 				new_x, new_y = ant.coords # on sait que la position a change
@@ -92,33 +94,35 @@ class Simulation:
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
-					ants[ant_index].append(-1) # Signal pour dire de reprendre la couleur d'origine
+					ant.endurance = ant.MAX_ENDURANCE
+					ants[ant_index].append('base') # Reprendre la couleur d'origine
+				elif ant.endurance <= 0:
+					ants[ant_index].append("black")
 
 
 		# for i in range(1500):
 		while self._server.online:
 			temps_sim = time()
-			pheromones = [] # liste de coordonnees (x, y), qu'on remet a zero
+			pheromones = ["pheromones"] # liste de coordonnees (x, y), qu'on remet a zero
 
 			for i in range(0, length, step):
 				curr_thread = threading.Thread(target=simulate_ants_in_thread, args=(i, step), daemon=True)
 				curr_thread.start()
-			curr_thread.join(1) # on donne 1s au dernier pour finir sinon tant pis
+			curr_thread.join(1) # on donne 1s maximum au dernier pour finir
 
 			# S'il y a de nouvelles pheromones
 			if pheromones:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter de la latence
-				pheromones.insert(0, "pheromones") # on precise que l'on veut ajouter des pheromones
 				self._server.send_to_all_clients([ants, pheromones])
 
 			# Sinon on n'envoie que les positions
 			else:
 				self._server.send_to_all_clients(ants)
 
-			print("temps sim :", time() - temps_sim)
-			# sleep(0.1) # ajout d'une latence
-			sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
+			# print("temps sim :", time() - temps_sim)
+			sleep(0.05) # ajout d'une latence
 		print("[simulation terminee]")
+		# faudra afficher le vainqueur ou quoi par là
 
 	def is_wall(self, x, y):
 		""" Fonction qui retourne True s'il y a un mur à cette position, False sinon """
@@ -184,4 +188,4 @@ class Simulation:
 			size = width
 		# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
 		self._objects[str_type].append((coords, size, width, color))
-		print("ajouté côté serveur :", str_type, coords, size, width, color)
+		# print("ajouté côté serveur :", str_type, coords, size, width, color)

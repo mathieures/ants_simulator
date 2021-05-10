@@ -10,19 +10,10 @@ from time import time
 
 
 class Client:
-
-	@property
-	def ressource_ok(self):
-		return self._resource_ok
-
-	@property
-	def nest_ok(self):
-		return self._nest_ok
-
-	@property
-	def wall_ok(self):
-		return self._wall_ok
-
+	"""
+	Classe responsable de la réception, la distribution
+	et l'envoi de données depuis et vers le serveur.
+	"""
 	@property
 	def interface(self):
 		return self._interface
@@ -35,16 +26,12 @@ class Client:
 	def connected(self):
 		return self._connected
 
-	@connected.setter
-	def connected(self, is_connected):
-		self._connected = is_connected
-
 
 	def __init__(self, ip, port):
 		try:
-			assert isinstance(ip, str), "Erreur l'IP pour se connecter au serveur n'est pas une châine de caractère valide"
-			assert isinstance(port, int), "Erreur le port pour se connecter au serveur n'est pas un entier valide"
-			assert len(ip) > 0, "Erreur l'IP pour se connecter au serveur ne peut pas être vide"
+			assert isinstance(ip, str), "[Error] the server IP is not a valid string"
+			assert isinstance(port, int), "[Error] the server port is not a valid integer"
+			assert len(ip) > 0, "[Error] the server IP cannot be empty"
 		except AssertionError as e:
 			print(e)
 			sys.exit()
@@ -52,10 +39,6 @@ class Client:
 		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self._ip = ip
 		self._port = port
-
-		self._resource_ok = False
-		self._nest_ok = False
-		self._wall_ok = False
 
 		self._connected = True
 
@@ -68,7 +51,7 @@ class Client:
 			self._connected = True
 			self.receive()
 		except ConnectionRefusedError:
-			print("Erreur serveur non connecté")
+			print("[Error] No server found")
 			sys.exit(1)
 
 	def send(self, element, pos, data):
@@ -89,8 +72,9 @@ class Client:
 
 	def set_notready(self):
 		"""Informe le serveur que ce client n'est plus prêt"""
-		print("à faire : set notready")
-		pass
+		print("À FAIRE : NOT READY")
+		print("Not ready envoyé")
+		self._socket.send("Not ready".encode())
 
 	def ask_object(self, object_type, position, size=None, width=None, color=None):
 		"""
@@ -104,17 +88,17 @@ class Client:
 		try:
 			self._socket.send(data)
 		except BrokenPipeError:
-			print("Erreur envoi donnée. Fermeture")
+			print("[Error] fatal error while sending data. Exiting.")
 			sys.exit(1)
 
 	def undo_object(self, str_type):
 		""" Demande au serveur d'annuler le placement d'un objet """
 		print("Demande d'annulation objet {}".format(str_type))
-		data = pickle.dumps(["undo",str_type])
+		data = pickle.dumps(["undo", str_type])
 		try:
 			self._socket.send(data)
 		except BrokenPipeError:
-			print("Erreur envoi donnée. Fermeture")
+			print("[Error] fatal error while sending data. Exiting.")
 			sys.exit(1)
 
 
@@ -122,15 +106,19 @@ class Client:
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
 		# Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
 		while True:
-			temps_attente0 = time()
-			recv_data = self._socket.recv(10240)
-			temps_attente1 = time()
+			temps_attente = time()
+			try:
+				recv_data = self._socket.recv(10240)
+			except ConnectionResetError:
+				print("[Error] server disconnected.")
+				self._interface.quit_app(force=True)
+				sys.exit(1)
 			try:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
-			temps_receive0 = time()
-			print("temps d'attente :", temps_attente1 - temps_attente0, end=' ; ')
+			temps_receive = time()
+			# print("temps d'attente :", time() - temps_attente, end=' ; ')
 
 			# Si on doit bouger des fourmis
 			if isinstance(data, list) or isinstance(data, tuple):
@@ -144,12 +132,12 @@ class Client:
 				# Si on a les mouvements des fourmis et les pheromones en meme temps
 				if len(data) == 2 and data[0][0] == "move_ants":
 					# On bouge les fourmis
+					temps_move = time()
 					self._interface.move_ants(data[0][1:])
+					print("temps move :", time() - temps_move)
 
-					temps_ph = time()
 					# On cree ou fonce les pheromones
 					self._interface.create_pheromones(data[1][1:])
-					# print("temps phéros :", time() - temps_ph)
 
 				elif data[0] == "move_ants":
 					self._interface.move_ants(data[1:])
@@ -172,5 +160,4 @@ class Client:
 			else:
 				if data == "GO":
 					self._interface.countdown()
-			temps_receive1 = time()
-			print("receive :", temps_receive1 - temps_receive0)
+			# print("receive :", time() - temps_receive)

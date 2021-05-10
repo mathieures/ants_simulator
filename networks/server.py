@@ -59,29 +59,29 @@ class Server:
 			assert isinstance(port, int), "[Error] PORT is not a valid integer"
 			assert isinstance(max_clients, int), "[Error] MAX_CLIENTS number is not a valid integer"
 		except AssertionError as e:
-			print(e)
-			sys.exit()
+			print("[Error]", e)
+			sys.exit(1)
+		
 		# S'il n'y a pas eu d'erreur
+		self._ip = ip
+		self._port = port
+		self._max_clients = max_clients
+
+		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+		self._clients_ready = 0
+		self._receiving_threads = {} # dictionnaire qui associe un client a un thread de reception
+
+		self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
+
+		if create_window:
+			self._window = ServerWindow(self, daemon=True) # daemon precise pour lisibilite
+			self._window.start()
 		else:
-			self._ip = ip
-			self._port = port
-			self._max_clients = max_clients
+			self._window = None
 
-			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-			self._clients_ready = 0
-			self._receiving_threads = {} # dictionnaire qui associe un client a un thread de reception
-
-			self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
-
-			if create_window:
-				self._window = ServerWindow(self, daemon=True) # daemon precise pour lisibilite
-				self._window.start()
-			else:
-				self._window = None
-
-			self._online = False
-			self.connect()
+		self._online = False
+		self.connect()
 
 
 	def connect(self):
@@ -95,10 +95,10 @@ class Server:
 			self.quit()
 
 		else:
-			print("Server online with the following parameters:",
-				"IP:", self._ip,
-				"PORT:", self._port,
-				"Max clients:", self._max_clients)
+			print("Server online with the following parameters:\n",
+				"\tIP:", self._ip, '\n',
+				"\tPORT:", self._port, '\n',
+				"\tMax clients:", self._max_clients)
 			self._online = True
 			self.condition()
 
@@ -108,13 +108,18 @@ class Server:
 		Stocke le client dans l'attribut de classe 'clients'
 		"""
 		if len(Server.clients) <= self._max_clients:
-			client, address = self._socket.accept()
-			self.send_to_client(client, ["color", color.random_rgb()])
-			Server.clients.append(client)
-			# On lui reserve une entree dans le dictionnaire
-			self._receiving_threads[client] = None
-			if self._window is not None:
-				self._window.clients += 1
+			try:
+				client, address = self._socket.accept()
+			except OSError:
+				# levee quand la connexion est coupee pendant l'attente d'accept
+				pass
+			else:
+				self.send_to_client(client, ("color", color.random_rgb()))
+				Server.clients.append(client)
+				# On lui reserve une entree dans le dictionnaire
+				self._receiving_threads[client] = None
+				if self._window is not None:
+					self._window.clients += 1
 
 		else:
 			print("[Warning] Denied access to a client (max number reached)")
@@ -153,6 +158,10 @@ class Server:
 						self._simulation.start()
 					else:
 						print("Il manque encore {} client(s)".format(len(Server.clients) - self._clients_ready))
+				elif data.decode() == "Not ready":
+					self._clients_ready -= 1
+					self._window.ready_clients -= 1
+					print("Il manque encore {} client(s)".format(len(Server.clients) - self._clients_ready))
 
 			# Si le client n'avait pas de thread associe, on en cree un
 			if self._receiving_threads[client] is None:
@@ -220,6 +229,7 @@ class Server:
 		self._online = False
 		if self._window is not None:
 			self._window.quit_window()
+		self._socket.close()
 		sys.exit(0)
 
 
