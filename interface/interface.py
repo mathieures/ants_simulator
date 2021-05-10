@@ -44,6 +44,8 @@ class Interface:
 
 	def __init__(self, client, width, height):
 		self._root = tk.Tk()
+		self._root.title("Ant Simulator")
+		
 		self._client = client
 		self._client.interface = self
 

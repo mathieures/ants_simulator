@@ -11,7 +11,7 @@ class CustomObject:
 
 	@property
 	def centre_coords(self):
-		return self.get_centre_coords(self._coords)
+		return self.get_centre_coords(self.coords)
 	
 
 	def __init__(self, canvas, coords, size=10, color='', width=0):
