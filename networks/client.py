@@ -132,9 +132,7 @@ class Client:
 				# Si on a les mouvements des fourmis et les pheromones en meme temps
 				if len(data) == 2 and data[0][0] == "move_ants":
 					# On bouge les fourmis
-					temps_move = time()
 					self._interface.move_ants(data[0][1:])
-					print("temps move :", time() - temps_move)
 
 					# On cree ou fonce les pheromones
 					self._interface.create_pheromones(data[1][1:])
