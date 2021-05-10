@@ -56,6 +56,7 @@ class ServerWindow(threading.Thread):
     def run(self):
         """Écrase la méthode d'origine"""
         self._root = tk.Tk()
+        self._root.title("Server")
 
         # Variables
         self._clients = tk.IntVar()

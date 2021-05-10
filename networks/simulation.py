@@ -117,7 +117,7 @@ class Simulation:
 
 			print("temps sim :", time() - temps_sim)
 			# sleep(0.1) # ajout d'une latence
-			sleep(0.02) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
+			sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
 		print("[simulation terminee]")
 
 	def is_wall(self, x, y):
@@ -160,7 +160,7 @@ class Simulation:
 				for i in range(0, len(coords_obj) - 1, 2):
 					if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
 						coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
-						print("-> is not good spot")
+						# print("-> is not good spot")
 						return False
 		# print("-> is good spot")
 		return True
@@ -171,7 +171,7 @@ class Simulation:
 			if not self._is_good_spot(coords_list[i], coords_list[i+1], size):
 				# print("non, coords", (coords_list[i], coords_list[i+1]), "size :", size, "pas bonnes")
 				return False
-		print("toutes les coords sont ok")
+		# print("toutes les coords sont ok")
 		return True
 
 	def add_to_objects(self, str_type, coords, size, width, color):
