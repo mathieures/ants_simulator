@@ -8,7 +8,7 @@ class AntServer:
     @property
     def id(self):
         return self._id
-    
+
     @property
     def x(self):
         return self._x
@@ -84,7 +84,7 @@ class AntServer:
             self.lay_pheromone()
         else:
             self._seek_resource()"""
-        
+
         # Mouvement
         if 22.5 <= self._direction < 67.5:
             self._x += 1
@@ -168,9 +168,17 @@ class AntServer:
         dans la direction dans laquelle elle va
         Note : écrase la potentielle phéromone déjà présente
         """
-        AntServer.PHEROMONES[(self._x, self._y)] = ((self._direction - 180) % 360, 3) # direction, size
+        AntServer.PHEROMONES[(self._x - 1, self._y - 1)] = (self._direction - 180) % 360 # direction
+        AntServer.PHEROMONES[(self._x - 1, self._y)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x - 1, self._y + 1)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x, self._y - 1)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x, self._y)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x, self._y + 1)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x + 1, self._y - 1)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x + 1, self._y)] = (self._direction - 180) % 360
+        AntServer.PHEROMONES[(self._x + 1, self._y + 1)] = (self._direction - 180) % 360
         # print("phéromone posée en :", self._x, self._y, "direction :", self._direction)
-    
+
     def follow_direction_biaised(self, direction, proba=60):
         """Suit une direction ou pas, suivant une probabilité"""
         # 90% de chances de la suivre
@@ -178,15 +186,5 @@ class AntServer:
             self._direction = direction
 
     def _sniff_pheromone(self):
-        """
-        Renvoie True si la fourmi est sur une phéromone
-        en fonction de la taille des phéromones (3 pixels)
-        """
-        # Faire une copie des cles permet d'eviter les RuntimeError
-        for coords_phero in tuple(AntServer.PHEROMONES):
-            direction, size = AntServer.PHEROMONES.get(coords_phero)
-            offset = size // 2 + 1 # +1 pour l'outline
-            if (coords_phero[0] - offset <= self._x <= coords_phero[0] + offset) and (
-                coords_phero[1] - offset <= self._y <= coords_phero[1] + offset):
-                    return direction
-        return None
+        """Renvoie une direction s'il y a une phéromone et None sinon"""
+        return AntServer.PHEROMONES.get((self._x, self._y))

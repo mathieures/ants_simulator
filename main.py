@@ -21,10 +21,11 @@ def main():
             t0 = threading.Thread(target=client.connect)
             t0.start()
             print("Connected.")
-            
+
             app.root.mainloop()
         else:
             print("[Error] No connected server.")
+
 
 if __name__ == "__main__":
     main()

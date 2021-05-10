@@ -68,7 +68,7 @@ class Server:
 			self._max_clients = max_clients
 
 			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			
+
 			self._clients_ready = 0
 			self._receiving_threads = {} # dictionnaire qui associe un client a un thread de reception
 
@@ -93,7 +93,7 @@ class Server:
 		except OSError:
 			print("[Error] Port {} not available".format(self._port))
 			self.quit()
-		
+
 		else:
 			print("Server online with the following parameters:",
 				"IP:", self._ip,
@@ -126,7 +126,7 @@ class Server:
 		Utilise une sous-fonction 'under_receive' qui
 		va manipuler dans un thread les données reçues.
 		"""
-		for client in Server.clients:			
+		for client in Server.clients:
 			def under_receive():
 				recv_data = client.recv(10240)
 				try:
@@ -153,7 +153,7 @@ class Server:
 						self._simulation.start()
 					else:
 						print("Il manque encore {} client(s)".format(len(Server.clients) - self._clients_ready))
-			
+
 			# Si le client n'avait pas de thread associe, on en cree un
 			if self._receiving_threads[client] is None:
 				self._receiving_threads[client] = threading.Thread(target=under_receive, daemon=True)
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 		print("new args :", sys.argv)
 	else:
 		create_window = True
-	
+
 	# S'il n'y a pas assez d'arguments, on ouvre la fenetre de config
 	if len(sys.argv) < 4:
 		config = ConfigServer() # bloquant

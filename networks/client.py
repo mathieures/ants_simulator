@@ -10,7 +10,7 @@ from time import time
 
 
 class Client:
-	
+
 	@property
 	def ressource_ok(self):
 		return self._resource_ok
@@ -38,7 +38,7 @@ class Client:
 	@connected.setter
 	def connected(self, is_connected):
 		self._connected = is_connected
-	
+
 
 	def __init__(self, ip, port):
 		try:
@@ -130,7 +130,7 @@ class Client:
 			except pickle.UnpicklingError:
 				data = recv_data
 			temps_receive0 = time()
-			# print("temps d'attente :", temps_attente1 - temps_attente0, end=' ; ')
+			print("temps d'attente :", temps_attente1 - temps_attente0, end=' ; ')
 
 			# Si on doit bouger des fourmis
 			if isinstance(data, list) or isinstance(data, tuple):
@@ -145,7 +145,7 @@ class Client:
 				if len(data) == 2 and data[0][0] == "move_ants":
 					# On bouge les fourmis
 					self._interface.move_ants(data[0][1:])
-					
+
 					temps_ph = time()
 					# On cree ou fonce les pheromones
 					self._interface.create_pheromones(data[1][1:])
@@ -173,4 +173,4 @@ class Client:
 				if data == "GO":
 					self._interface.countdown()
 			temps_receive1 = time()
-			# print("receive :", temps_receive1 - temps_receive0)
+			print("receive :", temps_receive1 - temps_receive0)

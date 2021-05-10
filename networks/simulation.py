@@ -54,7 +54,7 @@ class Simulation:
 			end = start + number
 			if end > length:
 				end = length
-			
+
 			for i in range(start, end):
 				ant = self._ants[i]
 				ant_index = i+1 # indice dans ants
@@ -105,47 +105,6 @@ class Simulation:
 				curr_thread.start()
 			curr_thread.join(1) # on donne 1s au dernier pour finir sinon tant pis
 
-
-			# dans un thread maintenant
-			'''
-			for ant in self._ants:
-				x, y = ant.coords # position actuelle
-				if ant.has_resource:
-					# self._all_pheromones.append((x, y)) # a pas l'air d'etre utilise
-					pheromones.append((x, y)) # test de pas envoyer les phero pour voir si c'est ça qui fait laguer
-
-					# S'il y a un mur mais que la fourmi porte une ressource,
-					# elle essaie de contourner le mur par la gauche
-					if self.is_wall(x, y):
-						ant.direction += 30
-					else:
-						ant.go_to_nest()
-					ant.lay_pheromone()
-				# Si elle n'en a pas mais qu'il y a un mur, elle fait demi-tour
-				elif self.is_wall(x, y):
-					ant.direction += 180
-				# Sinon elle n'a rien trouve
-				else:
-					ant.seek_resource()
-
-				ant.move()
-				new_x, new_y = ant.coords # on sait que la position a change
-				delta_x = new_x - x # deplacement relatif
-				delta_y = new_y - y
-				ants.append([delta_x, delta_y]) # les fourmis sont toujours dans le meme ordre
-
-				index_resource = self.is_resource(new_x, new_y)
-				# Si la fourmi touche une ressource
-				if not ant.has_resource and index_resource is not None:
-					# On donne aux clients l'index de la ressource touchee
-					ant.has_resource = True
-					ants[ant.id].append(index_resource)
-				# Si la fourmi est sur son nid
-				elif ant.coords == ant.nest:
-					ant.has_resource = False
-					ants[ant.id].append(-1) # Signal pour dire de reprendre la couleur d'origine
-			'''
-
 			# S'il y a de nouvelles pheromones
 			if pheromones:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter de la latence
@@ -158,7 +117,7 @@ class Simulation:
 
 			print("temps sim :", time() - temps_sim)
 			# sleep(0.1) # ajout d'une latence
-			sleep(0.05) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
+			sleep(0.02) # ajout d'une latence # note de mathieu : j'ai accéléré un peu
 		print("[simulation terminee]")
 
 	def is_wall(self, x, y):
