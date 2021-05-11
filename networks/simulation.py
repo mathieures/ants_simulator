@@ -105,13 +105,15 @@ class Simulation:
 			temps_sim = time()
 			pheromones = ["pheromones"] # liste de coordonnees (x, y), qu'on remet a zero
 
+			curr_thread = None
 			for i in range(0, length, step):
 				curr_thread = threading.Thread(target=simulate_ants_in_thread, args=(i, step), daemon=True)
 				curr_thread.start()
-			curr_thread.join(1) # on donne 1s maximum au dernier pour finir
+			if curr_thread is not None:
+				curr_thread.join(1) # on donne 1s maximum au dernier pour finir
 
 			# S'il y a de nouvelles pheromones
-			if pheromones:
+			if len(pheromones) > 1:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter de la latence
 				self._server.send_to_all_clients([ants, pheromones])
 
@@ -125,7 +127,8 @@ class Simulation:
 		# faudra afficher le vainqueur ou quoi par là
 
 	def is_wall(self, x, y):
-		""" Fonction qui retourne True s'il y a un mur à cette position, False sinon """
+		""" Retourne True s'il y a un mur à cette position, False sinon """
+		# Note : peu optimal
 		if "wall" not in self._objects:
 			return False
 		for wall in self._objects["wall"]:
@@ -138,7 +141,7 @@ class Simulation:
 		return False
 
 	def is_resource(self, x, y):
-		""" Fonction qui retourne True s'il y a une ressource à cette position, False sinon """
+		""" Retourne l'indice de la ressource à cette position ou None s'il n'y en a pas """
 		if "resource" not in self._objects:
 			return None
 		i = 0
