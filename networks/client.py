@@ -117,8 +117,6 @@ class Client:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
-			# except EOFError:
-			# 	continue
 			temps_receive = time()
 			# print("temps d'attente :", time() - temps_attente, end=' ; ')
 
