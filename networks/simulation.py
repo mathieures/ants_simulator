@@ -13,27 +13,25 @@ class Simulation:
 	def objects(self):
 		return self._objects
 
-	@objects.setter
-	def objects(self, new_objects):
-		self._objects = new_objects
 
 	def __init__(self, server):
 		self._server = server
 
 		self._ants = [] # Liste d'instances de fourmi
-		self._objects = {}
-		# self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une ressource
+		self._objects = {} # dico de dicos de la forme 'coords: tuple_de_proprietes'
+		self._current_resource_index = 0
 
 	def init_ants(self):
-		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
+		""" Fonction qui ajoute les fourmis dans chaque nid (envoie des donnees aux clients)"""
 		ants = ["ants"] # liste des fourmis a envoyer au serveur
 		nests = self._objects.get("nest")
-		# Sécurité pour ne pas commencer sans nid
+		# Securite pour ne pas commencer sans nid
 		if nests is not None:
-			for nest in self._objects["nest"]:
-				# nest est un tuple de la forme (coords, size, width, color)
+			for key in self._objects["nest"]:
+				nest = self._objects["nest"][key]
+				# nest est un tuple de la forme (coords, color)
 				x, y = nest[0]
-				color = nest[3]
+				color = nest[1]
 				for i in range(20):
 					curr_ant = ant_server.AntServer(x, y, color)
 					self._ants.append(curr_ant)
@@ -83,7 +81,7 @@ class Simulation:
 				new_x, new_y = ant.coords # on sait que la position a change
 				delta_x = new_x - x # deplacement relatif
 				delta_y = new_y - y
-				ants[ant_index] = [delta_x, delta_y] # les fourmis sont toujours dans le meme ordre
+				ants[ant_index] = (delta_x, delta_y) # les fourmis sont toujours dans le meme ordre
 
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
@@ -105,13 +103,15 @@ class Simulation:
 			temps_sim = time()
 			pheromones = ["pheromones"] # liste de coordonnees (x, y), qu'on remet a zero
 
+			curr_thread = None
 			for i in range(0, length, step):
 				curr_thread = threading.Thread(target=simulate_ants_in_thread, args=(i, step), daemon=True)
 				curr_thread.start()
-			curr_thread.join(1) # on donne 1s maximum au dernier pour finir
+			if curr_thread is not None:
+				curr_thread.join(1) # on donne 1s maximum au dernier pour finir
 
 			# S'il y a de nouvelles pheromones
-			if pheromones:
+			if len(pheromones) > 1:
 				# On envoie les mouvements des fourmis + les pheromones pour eviter de la latence
 				self._server.send_to_all_clients([ants, pheromones])
 
@@ -119,8 +119,9 @@ class Simulation:
 			else:
 				self._server.send_to_all_clients(ants)
 
-			# print("temps sim :", time() - temps_sim)
-			sleep(0.05) # ajout d'une latence
+			print("temps sim :", time() - temps_sim)
+			# sleep(0.05) # ajout d'une latence
+			sleep(0.1)
 		print("[simulation terminee]")
 		# faudra afficher le vainqueur ou quoi par là
 
@@ -128,6 +129,8 @@ class Simulation:
 		""" Fonction qui retourne True s'il y a un mur à cette position, False sinon """
 		if "wall" not in self._objects:
 			return False
+		return self._objects["wall"].get((x, y)) is not None
+		'''
 		for wall in self._objects["wall"]:
 			coords_wall, width = wall[0], wall[2]
 			offset = width // 2 + 1 # +1 pour l'outline
@@ -136,11 +139,14 @@ class Simulation:
 					coords_wall[i+1] - offset <= y <= coords_wall[i+1] + offset):
 					return True
 		return False
+		'''
 
 	def is_resource(self, x, y):
-		""" Fonction qui retourne True s'il y a une ressource à cette position, False sinon """
+		""" Retourne l'indice d'une ressource s'il y en a une à cette position, None sinon """
 		if "resource" not in self._objects:
 			return None
+		return self._objects["resource"].get((x, y)) # l'index de la ressource
+		'''
 		i = 0
 		for resource in self._objects["resource"]:
 			coords_resource, size = resource[0], resource[1]
@@ -150,6 +156,7 @@ class Simulation:
 					return i # On retourne l'index de la ressource
 			i += 1
 		return None
+		'''
 
 	def _is_good_spot(self, x, y, size):
 		"""
@@ -157,6 +164,10 @@ class Simulation:
 		disponibles en fonction de la taille donnée, False sinon
 		"""
 		for str_type in self._objects:
+			if self._objects[str_type].get((x, y)) is not None:
+				print("-> is not good spot")
+				return False
+			'''
 			for properties in self._objects[str_type]:
 				coords_obj, size_obj, width_obj, color_obj = properties
 				offset = size_obj
@@ -166,7 +177,8 @@ class Simulation:
 						coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
 						# print("-> is not good spot")
 						return False
-		# print("-> is good spot")
+			'''
+		print("-> is good spot")
 		return True
 
 	def check_all_coords(self, coords_list, size):
@@ -183,9 +195,36 @@ class Simulation:
 		# Note : Pour les objets 'wall', les coordonnées sont une liste
 		# Si c'est le premier objet de ce type que l'on voit, on init
 		if self._objects.get(str_type) is None:
-			self._objects[str_type] = []
+			self._objects[str_type] = {}
 		if size is None:
 			size = width
+
+		if str_type == "wall":
+			value = True
+		elif str_type == "resource":
+			value = self._current_resource_index
+			self._current_resource_index += 1
+		elif str_type == "nest":
+			value = (coords, color)
+
+		# On parcourt les coordonnees deux a deux
+		for i in range(0, len(coords), 2):
+			# On remplit toutes les cases alentour
+			for j in range(size // 2):
+				# peut-être mettre +1 (mais je crois que nan)
+				self._objects[str_type][(coords[i] - j, coords[i+1] - j)] = value
+				self._objects[str_type][(coords[i] - j, coords[i+1])] = value
+				self._objects[str_type][(coords[i] - j, coords[i+1] + j)] = value
+				self._objects[str_type][(coords[i], coords[i+1] - j)] = value
+				self._objects[str_type][(coords[i], coords[i+1])] = value
+				self._objects[str_type][(coords[i], coords[i+1] + j)] = value
+				self._objects[str_type][(coords[i] + j, coords[i+1] - j)] = value
+				self._objects[str_type][(coords[i] + j, coords[i+1])] = value
+				self._objects[str_type][(coords[i] + j, coords[i+1] + j)] = value
+
+		print("new dico :", self._objects[str_type])
+
+
 		# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-		self._objects[str_type].append((coords, size, width, color))
+		# self._objects[str_type].append((coords, size, width, color))
 		# print("ajouté côté serveur :", str_type, coords, size, width, color)
