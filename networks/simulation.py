@@ -22,6 +22,8 @@ class Simulation:
 
 		self._ants = [] # Liste d'instances de fourmi
 		self._objects = {}
+		
+		self.first_ant = True
 		# self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une ressource
 
 	def init_ants(self):
@@ -45,7 +47,6 @@ class Simulation:
 		""" Fonction principale qui lance la simulation et calcule le déplacement de chaque fourmi """
 		self.init_ants()
 
-		step = 20
 		length = len(self._ants)
 
 		ants = ["move_ants"] + [None] * len(self._ants) # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis
@@ -88,9 +89,14 @@ class Simulation:
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
 				if not ant.has_resource and index_resource is not None:
+					# Une fourmi a touche une ressource
 					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
-					ants[ant_index].append(index_resource)
+					if self.first_ant:
+						ants[ant_index].append([index_resource, "first_ant"])
+						self.first_ant = False
+					else:
+						ants[ant_index].append(index_resource)
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
@@ -100,7 +106,7 @@ class Simulation:
 					ants[ant_index].append("black")
 
 
-		# for i in range(1500):
+		step = 20
 		while self._server.online:
 			temps_sim = time()
 			pheromones = ["pheromones"] # liste de coordonnees (x, y), qu'on remet a zero
