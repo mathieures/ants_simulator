@@ -148,14 +148,15 @@ class Simulation:
 		# Note : peu optimal
 		if "wall" not in self._objects:
 			return False
-		for wall in self._objects["wall"]:
-			coords_wall, width = wall[0], wall[2]
-			offset = width // 2 + 1 # +1 pour l'outline
-			for i in range(0, len(coords_wall), 2):
-				if (coords_wall[i] - offset <= x <= coords_wall[i] + offset) and (
-					coords_wall[i+1] - offset <= y <= coords_wall[i+1] + offset):
-					return True
-		return False
+		return (x, y) in self._objects["wall"]
+		# for wall in self._objects["wall"]:
+		# 	coords_wall, width = wall[0], wall[2]
+		# 	offset = width // 2 + 1 # +1 pour l'outline
+		# 	for i in range(0, len(coords_wall), 2):
+		# 		if (coords_wall[i] - offset <= x <= coords_wall[i] + offset) and (
+		# 			coords_wall[i+1] - offset <= y <= coords_wall[i+1] + offset):
+		# 			return True
+		# return False
 
 	def is_resource(self, x, y):
 		""" Retourne l'indice de la ressource à cette position ou None s'il n'y en a pas """
@@ -177,15 +178,19 @@ class Simulation:
 		disponibles en fonction de la taille donnée, False sinon
 		"""
 		for str_type in self._objects:
-			for properties in self._objects[str_type]:
-				coords_obj, size_obj, width_obj, color_obj = properties
-				offset = size_obj
-				# On teste un espace autour des coords
-				for i in range(0, len(coords_obj) - 1, 2):
-					if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
-						coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
-						# print("-> is not good spot")
-						return False
+			if str_type == "wall":
+				if (x, y) in self._objects.get("wall"):
+					return False
+			else:
+				for properties in self._objects[str_type]:
+					coords_obj, size_obj, width_obj, color_obj = properties
+					offset = size_obj
+					# On teste un espace autour des coords
+					for i in range(0, len(coords_obj) - 1, 2):
+						if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
+							coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
+							# print("-> is not good spot")
+							return False
 		# print("-> is good spot")
 		return True
 
@@ -202,10 +207,31 @@ class Simulation:
 		"""Ajoute une entrée au dictionnaire d'objets de la simulation"""
 		# Note : Pour les objets 'wall', les coordonnées sont une liste
 		# Si c'est le premier objet de ce type que l'on voit, on init
-		if self._objects.get(str_type) is None:
-			self._objects[str_type] = []
 		if size is None:
 			size = width
-		# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-		self._objects[str_type].append((coords, size, width, color))
-		# print("ajouté côté serveur :", str_type, coords, size, width, color)
+		
+		if str_type == "wall":
+			walls = self._objects.get(str_type)
+			if walls is None:
+				self._objects[str_type] = set()
+			# On parcourt les coordonnees deux a deux
+			for i in range(0, len(coords), 2):
+				# On remplit toutes les cases alentour
+				x, y = coords[i], coords[i+1]
+				for j in range(1, size // 2):
+					# peut-être mettre +1 (mais je crois que nan)
+					self._objects[str_type].add((x - j, y - j))
+					self._objects[str_type].add((x - j, y))
+					self._objects[str_type].add((x - j, y + j))
+					self._objects[str_type].add((x, y - j))
+					self._objects[str_type].add((x, y))
+					self._objects[str_type].add((x, y + j))
+					self._objects[str_type].add((x + j, y - j))
+					self._objects[str_type].add((x + j, y))
+					self._objects[str_type].add((x + j, y + j))
+		else:
+			if self._objects.get(str_type) is None:
+				self._objects[str_type] = []
+			# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
+			self._objects.get(str_type).append((coords, size, width, color))
+			# print("ajouté côté serveur :", str_type, coords, size, width, color)
