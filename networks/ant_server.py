@@ -175,24 +175,25 @@ class AntServer:
 
     def lay_pheromone(self):
         """
-        Pose une phéromone exactement où est la fourmi,
-        dans la direction dans laquelle elle va
+        Pose une phéromone autour de la position de la
+        fourmi dans la direction dans laquelle elle va
         Note : écrase la potentielle phéromone déjà présente
         """
-        AntServer.PHEROMONES[(self._x - 1, self._y - 1)] = (self._direction - 180) % 360 # direction
-        AntServer.PHEROMONES[(self._x - 1, self._y)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x - 1, self._y + 1)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x, self._y - 1)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x, self._y)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x, self._y + 1)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x + 1, self._y - 1)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x + 1, self._y)] = (self._direction - 180) % 360
-        AntServer.PHEROMONES[(self._x + 1, self._y + 1)] = (self._direction - 180) % 360
-        # print("phéromone posée en :", self._x, self._y, "direction :", self._direction)
+        dir_to_resource = (self._direction - 180) % 360 # pointe vers la ressource
+        AntServer.PHEROMONES[(self._x - 1, self._y - 1)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x - 1, self._y)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x - 1, self._y + 1)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x, self._y - 1)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x, self._y)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x, self._y + 1)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x + 1, self._y - 1)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x + 1, self._y)] = dir_to_resource
+        AntServer.PHEROMONES[(self._x + 1, self._y + 1)] = dir_to_resource
+        # print("phéromone posée en :", self._x, self._y, "direction :", dir_to_resource)
 
     def follow_direction_biaised(self, direction, proba=60):
         """Suit une direction ou pas, suivant une probabilité"""
-        # 90% de chances de la suivre
+        # <proba>% de chances de la suivre
         if randint(0, 100) >= proba:
             self._direction = direction
 

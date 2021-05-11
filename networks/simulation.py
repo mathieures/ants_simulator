@@ -67,11 +67,11 @@ class Simulation:
 						# Si elle n'a pas fait trop d'essais
 						if ant.tries < ant.MAX_TRIES:
 							# Elle contourne le mur par la gauche
-							ant.direction += 45
+							ant.direction += 30
 							ant.tries += 1
 						# Sinon elle essaie par la droite
 						else:
-							ant.direction -= 45
+							ant.direction -= 30
 					else:
 						ant.go_to_nest()
 					ant.lay_pheromone()
@@ -81,7 +81,7 @@ class Simulation:
 						ant.direction += 180
 					else:
 						# Si elle est fatiguee, elle contourne par la gauche
-						ant.direction += 45
+						ant.direction += 30
 				# Sinon elle n'a rien trouve
 				elif ant.endurance > 0:
 					ant.seek_resource()
@@ -101,11 +101,12 @@ class Simulation:
 					# Une fourmi a touche une ressource
 					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
-					if self._first_ant:
+					if not self._first_ant:
+						ants[ant_index].append(index_resource)
+					else:
 						ants[ant_index].append([index_resource, "first_ant"])
 						self._first_ant = False
-					else:
-						ants[ant_index].append(index_resource)
+						print("First ant to find resource was color:", ant.color)
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
