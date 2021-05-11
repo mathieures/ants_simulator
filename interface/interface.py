@@ -305,15 +305,21 @@ class Interface:
 						ant.color = 'grey'
 					elif resource_index == "base":
 						ant.color = ant.base_color
+					elif isinstance(resource_index, list):
+						self.shrink_resource(resource_index[0])
+						ant.color = 'grey'
+						self.first_ant(ant.base_color)
 					else:
 						ant.color = resource_index
 
 		for i in range(0, length, step):
 			threading.Thread(target=move_ants_in_thread, args=(i, step), daemon=True).start()
-
-	# def color_ant(self, index, color):
-	# 	""" Fonction pour changer la couleur d'une fourmi """
-	# 	self._ants[index].color = color
+	
+	def first_ant(self, color):
+		w = int(self._canvas["width"])
+		h = int(self._canvas["height"])
+		self._canvas.create_text(w - 200, h - 20, text="La première fourmi est de couleur")
+		self._canvas.create_rectangle(w-50, h-30, w-30, h-10, fill=color)
 
 	def undo(self, event=None):
 		""" Fonction pour annuler un placement """
