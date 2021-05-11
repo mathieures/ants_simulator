@@ -4,7 +4,10 @@ class CustomObject:
 	@property
 	def id(self):
 		return self._id
+<<<<<<< HEAD
 	
+=======
+>>>>>>> 6134ee3db050b403d2a71a44b59253abfd271e76
 
 	@property
 	def coords(self):
@@ -26,8 +29,11 @@ class CustomObject:
 						 coords[1] + size)
 		
 		self._id = self.draw(offset_coords)
+<<<<<<< HEAD
 		# self._id = self._canvas.create_oval(self.get_centre_coords(offset_coords)) # à enlever du coup
 
+=======
+>>>>>>> 6134ee3db050b403d2a71a44b59253abfd271e76
 
 	def get_centre_coords(self, coords):
 		"""

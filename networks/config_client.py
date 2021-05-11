@@ -17,6 +17,7 @@ class ConfigClient:
         return self._port.get()
 
 
+<<<<<<< HEAD
     def __init__(self, root):
         self._root = root
         self._window = tk.Toplevel(self._root)
@@ -29,6 +30,17 @@ class ConfigClient:
         self._labelframe.pack(padx=5)
 
         self._buttonframe = tk.Frame(self._window)
+=======
+    def __init__(self):
+        self._root = tk.Tk()
+        self._root.title('Config client')
+
+        # Frames
+        self._labelframe = tk.LabelFrame(self._root, text="Configure which server to join")
+        self._labelframe.pack(padx=5)
+
+        self._buttonframe = tk.Frame(self._root)
+>>>>>>> 6134ee3db050b403d2a71a44b59253abfd271e76
         self._buttonframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
 
         self._topframe = tk.Frame(self._labelframe)
@@ -59,6 +71,7 @@ class ConfigClient:
         self._join_button = tk.Button(self._buttonframe, text='Join', command=self.connection)
         self._join_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
+<<<<<<< HEAD
     def connection(self):
         if len(self._ip.get()) > 0 and self._port.get() > 0:
             print("Tentative de connexion en cours...")
@@ -66,6 +79,29 @@ class ConfigClient:
             self._root.deiconify() # remet la fenetre principale au premier plan
             self._root.destroy()
 
+=======
+        # Bindings
+        
+        # Pour gerer la touche Entree
+        self._root.bind("<Return>", self.on_return_key)
+        
+        # Pour gerer la fermeture de la fenetre
+        self._root.protocol("WM_DELETE_WINDOW", self.quit_config)
+
+        self._root.mainloop()
+
+    def connection(self):
+        if len(self._ip.get()) > 0 and self._port.get() > 0:
+            self._root.destroy()
+
+    
+    # Bindings
+    def on_return_key(self, event):
+        self._join_button.invoke()
+
+    def quit_config(self):
+        exit(1)
+>>>>>>> 6134ee3db050b403d2a71a44b59253abfd271e76
 
 
 if __name__ == '__main__':
