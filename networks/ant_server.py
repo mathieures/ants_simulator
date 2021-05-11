@@ -58,12 +58,25 @@ class AntServer:
     def endurance(self, new_endur):
         self._endurance = new_endur
 
+    @property
+    def tries(self):
+        """
+        Nombre de tours pendants lesquels la fourmi
+        a essayé de contourner un mur par la gauche
+        """
+        return self._tries
+
+    @tries.setter
+    def tries(self, new_value):
+        self._tries = new_value
+
     ###############################
 
     # Attributs de classe
     ID = 0
     PHEROMONES = {} # dictionnaire de coordonnees, associees a une direction
     MAX_ENDURANCE = 512
+    MAX_TRIES = 256 # nombre d'essais max pour contourner un mur par la gauche
 
 
     def __init__(self, posX, posY, color):
@@ -78,6 +91,7 @@ class AntServer:
 
         self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
         self._endurance = AntServer.MAX_ENDURANCE
+        self._tries = 0
 
 
     # def change_position(self):

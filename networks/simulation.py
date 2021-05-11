@@ -64,14 +64,24 @@ class Simulation:
 					pheromones.append((x, y)) # l'ordre n'est pas important
 					# S'il y a un mur mais que la fourmi porte une ressource,
 					if self.is_wall(x, y):
-						# On contourne le mur par la gauche
-						ant.direction += 45
+						# Si elle n'a pas fait trop d'essais
+						if ant.tries < ant.MAX_TRIES:
+							# Elle contourne le mur par la gauche
+							ant.direction += 45
+							ant.tries += 1
+						# Sinon elle essaie par la droite
+						else:
+							ant.direction -= 45
 					else:
 						ant.go_to_nest()
 					ant.lay_pheromone()
 				# Si elle n'en a pas mais qu'il y a un mur, elle fait demi-tour
 				elif self.is_wall(x, y):
-					ant.direction += 180
+					if ant.endurance > 0:
+						ant.direction += 180
+					else:
+						# Si elle est fatiguee, elle contourne par la gauche
+						ant.direction += 45
 				# Sinon elle n'a rien trouve
 				elif ant.endurance > 0:
 					ant.seek_resource()
@@ -100,6 +110,7 @@ class Simulation:
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
 					ant.endurance = ant.MAX_ENDURANCE
+					ant.tries = 0
 					ants[ant_index].append('base') # Reprendre la couleur d'origine
 				elif ant.endurance <= 0:
 					ants[ant_index].append("black")
