@@ -40,6 +40,7 @@ class Interface:
 	@local_color.setter
 	def local_color(self, new_color):
 		self._local_color = new_color
+		self._objects_frame['bg'] = self._local_color
 
 
 	def __init__(self, client, width, height):
@@ -53,7 +54,7 @@ class Interface:
 		self._canvas.pack(side=tk.BOTTOM)
 
 		# Menus déroulants
-		self._menu_frame = tk.Frame(self._root, bg='red')  # COULEUR À ENLEVER
+		self._menu_frame = tk.Frame(self._root)
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
 		self._menu_file = EasyMenu(self._menu_frame, "File",
@@ -67,7 +68,7 @@ class Interface:
 									("Undo (Ctrl+Z)", self.undo)])
 
 		# Barre de sélection de l'objet
-		self._objects_frame = tk.Frame(self._root, bg='blue')  # COULEUR À ENLEVER
+		self._objects_frame = tk.Frame(self._root)
 		self._objects_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
 		self._objects_buttons = [
@@ -143,6 +144,7 @@ class Interface:
 		for button in self._objects_buttons:
 			button.deselect(exec_command=False)
 		self._current_object_type = None
+		print("mis à None")
 
 	def send_ready(self):
 		for button in self._objects_buttons:
@@ -305,17 +307,18 @@ class Interface:
 						ant.color = 'grey'
 					elif resource_index == "base":
 						ant.color = ant.base_color
+					# Si on a une liste, c'est la premiere fourmi
 					elif isinstance(resource_index, list):
+						self.set_first_ant(ant.base_color)
 						self.shrink_resource(resource_index[0])
 						ant.color = 'grey'
-						self.first_ant(ant.base_color)
 					else:
 						ant.color = resource_index
 
 		for i in range(0, length, step):
 			threading.Thread(target=move_ants_in_thread, args=(i, step), daemon=True).start()
 	
-	def first_ant(self, color):
+	def set_first_ant(self, color):
 		w = int(self._canvas["width"])
 		h = int(self._canvas["height"])
 		self._canvas.create_text(w - 200, h - 20, text="La première fourmi est de couleur")

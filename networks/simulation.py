@@ -23,8 +23,7 @@ class Simulation:
 		self._ants = [] # Liste d'instances de fourmi
 		self._objects = {}
 		
-		self.first_ant = True
-		# self._all_pheromones = [] # Liste de coordonnes qui sera completee par une fourmi qui trouve une ressource
+		self._first_ant = True
 
 	def init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
@@ -92,9 +91,9 @@ class Simulation:
 					# Une fourmi a touche une ressource
 					# On donne aux clients l'index de la ressource touchee
 					ant.has_resource = True
-					if self.first_ant:
+					if self._first_ant:
 						ants[ant_index].append([index_resource, "first_ant"])
-						self.first_ant = False
+						self._first_ant = False
 					else:
 						ants[ant_index].append(index_resource)
 				# Si la fourmi est sur son nid

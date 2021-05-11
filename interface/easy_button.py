@@ -59,7 +59,8 @@ class EasyButton:
         self._command_select = command_select
         self._command_deselect = command_deselect
 
-        self._canvas.pack(side=side)
+        self._pack_side = side
+        self._canvas.pack(side=self._pack_side)
         self._canvas.bind("<Button-1>", self.on_click)
 
         self._enabled = True
@@ -103,15 +104,23 @@ class EasyButton:
             self._command_deselect()
         
         self._selected = False
+        
+        if self._interface.current_object_type is self._object_type:
+            self._interface.current_object_type = None
 
     def hide(self):
-        """Désactive et cache le bouton, le rendant insensible aux clics"""
-        self._canvas['width'] = 0
-        self._canvas['height'] = 0
+        """
+        Désactive et cache le bouton, le rendant insensible aux clics.
+        Change aussi la couleur de fond du canvas, pour être invisible.
+        """
+        self._canvas.pack_forget()
+        # self._canvas['width'] = 0
+        # self._canvas['height'] = 0
         self._enabled = False
 
     def show(self):
         """Réactive et réaffiche le bouton"""
-        self._canvas['width'] = self._active_width
-        self._canvas['height'] = self._active_height
+        self._canvas.pack(side=self._pack_side)
+        # self._canvas['width'] = self._active_width
+        # self._canvas['height'] = self._active_height
         self._enabled = True
