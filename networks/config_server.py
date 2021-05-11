@@ -1,4 +1,5 @@
 import tkinter as tk
+from .ip import get_current_ip
 
 class ConfigServer:
     """
@@ -17,7 +18,7 @@ class ConfigServer:
         if mode == self._modes[0]:
             return '127.0.0.1'
         else:
-            return self.get_current_ip()
+            return get_current_ip()
 
     @property
     def port(self):
@@ -90,20 +91,23 @@ class ConfigServer:
 
 
         # Bouton pour creer le serveur
-        self._create_server_button = tk.Button(self._buttonframe, text="Join", command=self.create_server)
+        self._create_server_button = tk.Button(self._buttonframe, text="Join", command=self._create_server)
         self._create_server_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X, padx=1, pady=1)
 
         # Bindings
 
         # Pour gerer la touche Entree
-        self._root.bind("<Return>", self.enter)
+        self._root.bind("<Return>", self._on_return_key)
         
         # Pour gerer la fermeture de la fenetre
-        self._root.protocol("WM_DELETE_WINDOW", self.quit_config)
+        self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
         
         self._root.mainloop()
 
-    def create_server(self, event=None):
+
+    # Bindings
+
+    def _create_server(self, event=None):
         try:
             if self._max_clients.get() > 0 and self._port.get() > 0:
                 print("Attempting connection…")
@@ -112,19 +116,10 @@ class ConfigServer:
         except tk._tkinter.TclError:
             print("[Error] Wrong port or max clients' number")
 
-    def get_current_ip(self):
-        import socket 
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 1))  # connect() for UDP doesn't send packets
-        local_ip_address = s.getsockname()[0]
-
-        return local_ip_address
-
-    # Bindings
-    def enter(self, event):
+    def _on_return_key(self, event):
         self._create_server_button.invoke()
 
-    def quit_config(self):
+    def _quit_config(self):
         exit(1)
 
 

@@ -1,10 +1,7 @@
-# import commands
-# commands.getoutput("/sbin/ifconfig").split("\n")[1].split()[1][5:]
+import socket
 
-
-import subprocess
-cmd = "ifconfig | grep 255.255.255.0"
-inet = subprocess.check_output(cmd, shell=True).decode()
-inet = inet.split(" ")
-inet_addr = inet[inet.index("inet")+1]
-print(inet_addr)
+def get_current_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('8.8.8.8', 1))  # connect() for UDP doesn't send packets
+    local_ip_address = s.getsockname()[0]
+    return local_ip_address
