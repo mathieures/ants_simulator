@@ -337,6 +337,11 @@ class Interface:
 		print("fonction bidon au rapport")
 
 	def countdown(self):
+		"""Affiche un compte a rebours au milieu de la fenetre"""
+		# On cache tous les boutons ce coup-ci
+		for button in self._objects_buttons:
+			button.hide()
+		# On affiche le compte a rebours
 		h = int(self._canvas["height"]) // 2
 		w = int(self._canvas["width"]) // 2
 		text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Starting in…")
