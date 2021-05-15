@@ -17,6 +17,15 @@ class Simulation:
 	def objects(self, new_objects):
 		self._objects = new_objects
 
+	@property
+	def sleep_time(self):
+		return self._sleep_time
+	
+	@sleep_time.setter
+	def sleep_time(self, new_sleep_time):
+		print("sim : new_sleep_time :", new_sleep_time)
+		self._sleep_time = new_sleep_time
+
 	def __init__(self, server):
 		self._server = server
 
@@ -25,11 +34,13 @@ class Simulation:
 		
 		self._first_ant = True
 
+		self._sleep_time = 0.05
+
 	def init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
 		ants = ["ants"] # liste des fourmis a envoyer au serveur
 		nests = self._objects.get("nest")
-		# Sécurité pour ne pas commencer sans nid
+		# Securite pour ne pas commencer sans nid
 		if nests is not None:
 			for nest in self._objects["nest"]:
 				# nest est un tuple de la forme (coords, size, width, color)
@@ -139,7 +150,7 @@ class Simulation:
 				self._server.send_to_all_clients(ants)
 
 			# print("temps sim :", time() - temps_sim)
-			sleep(0.05) # ajout d'une latence
+			sleep(self._sleep_time) # ajout d'une latence
 		print("[simulation terminee]")
 		# faudra afficher le vainqueur ou quoi par là
 
@@ -205,7 +216,7 @@ class Simulation:
 
 	def add_to_objects(self, str_type, coords, size, width, color):
 		"""Ajoute une entrée au dictionnaire d'objets de la simulation"""
-		# Note : Pour les objets 'wall', les coordonnées sont une liste
+		# Note : Pour les objets 'wall', les coordonnees sont une liste
 		# Si c'est le premier objet de ce type que l'on voit, on init
 		if size is None:
 			size = width
@@ -234,4 +245,4 @@ class Simulation:
 				self._objects[str_type] = []
 			# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
 			self._objects.get(str_type).append((coords, size, width, color))
-			# print("ajouté côté serveur :", str_type, coords, size, width, color)
+			# print("ajoute côte serveur :", str_type, coords, size, width, color)

@@ -26,6 +26,10 @@ class Client:
 	def connected(self):
 		return self._connected
 
+	@property
+	def is_admin(self):
+		return self._is_admin
+
 
 	def __init__(self, ip, port):
 		try:
@@ -43,6 +47,7 @@ class Client:
 		self._connected = True
 
 		self._interface = None
+		self._is_admin = False
 
 
 	def connect(self):
@@ -83,7 +88,7 @@ class Client:
 		à la position donnée.
 		"""
 		str_type = object_type.__name__ # nom de classe de l'objet
-		# print("objet demandé : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
+		# print("objet demande : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
 		data = pickle.dumps([str_type, position, size, width, color])
 		try:
 			self._socket.send(data)
@@ -101,6 +106,13 @@ class Client:
 			print("[Error] fatal error while sending data. Exiting.")
 			sys.exit(1)
 
+	def ask_faster_sim(self):
+		print("ask_faster_sim")
+		self._socket.send("faster".encode())
+	
+	def ask_slower_sim(self):
+		print("ask_slower_sim")
+		self._socket.send("slower".encode())
 
 	def receive(self):
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
@@ -158,4 +170,6 @@ class Client:
 			else:
 				if data == "GO":
 					self._interface.countdown()
+				elif data == "admin":
+					self._admin = True
 			# print("receive :", time() - temps_receive)

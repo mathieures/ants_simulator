@@ -53,7 +53,7 @@ class Interface:
 		self._canvas = tk.Canvas(self._root, width=width, height=height)
 		self._canvas.pack(side=tk.BOTTOM)
 
-		# Menus déroulants
+		# Menus deroulants
 		self._menu_frame = tk.Frame(self._root)
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
@@ -67,11 +67,11 @@ class Interface:
 								   [("Reset yours", self.fonction_bidon),
 									("Undo (Ctrl+Z)", self.undo)])
 
-		# Barre de sélection de l'objet
+		# Barre de selection de l'objet
 		self._objects_frame = tk.Frame(self._root)
 		self._objects_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
-		self._objects_buttons = [
+		self._buttons = [
 			EasyButton(self,
 					   self._objects_frame, 50, 50,
 					   object_type=Nest),
@@ -88,10 +88,22 @@ class Interface:
 					   self._objects_frame, 70, 50, text='Ready',
 					   side=tk.RIGHT,
 					   command_select=self.send_ready,
-					   command_deselect=self.send_notready)
+					   command_deselect=self.send_notready),
+
+			EasyButton(self,
+					   self._objects_frame, 50, 50, text='+',
+					   side=tk.RIGHT,
+					   command_select=self.faster_sim,
+					   toggle=False, hideable=False),
+			
+			EasyButton(self,
+					   self._objects_frame, 50, 50, text='-',
+					   side=tk.RIGHT,
+					   command_select=self.slower_sim,
+					   toggle=False, hideable=False)
 		]
 
-		# Évènements
+		# evènements
 		self._canvas.bind("<Button-1>", self.on_click)
 		self._canvas.bind("<ButtonRelease-1>", self.on_release)
 		self._canvas.bind("<B1-Motion>", self.on_motion)
@@ -100,7 +112,7 @@ class Interface:
 		self._root.bind("<Escape>", self.deselect_buttons)
 		self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-		self._local_color = '' # par défaut, mais sera changé
+		self._local_color = '' # par defaut, mais sera change
 
 		self._current_object_type = None
 		self._current_wall = None
@@ -112,7 +124,7 @@ class Interface:
 
 		# Note : la mainloop est lancee dans un thread, par le main
 
-	## Gestion d'évènements ##
+	## Gestion d'evènements ##
 
 	def on_click(self, event):
 		# print("click ; current :", self._current_object_type)
@@ -125,7 +137,7 @@ class Interface:
 
 		# je crois pas qu'on veuille demander un wall maintenant
 		elif self._current_object_type is Wall:
-			# On le crée directement, pour avoir un visuel
+			# On le cree directement, pour avoir un visuel
 			self._create_wall(event.x, event.y)
 
 	def on_release(self, event):
@@ -141,13 +153,12 @@ class Interface:
 
 	def deselect_buttons(self, event=None):
 		"""Désélectionne tous les boutons des objets, pour libérer le clic"""
-		for button in self._objects_buttons:
+		for button in self._buttons:
 			button.deselect(exec_command=False)
 		self._current_object_type = None
-		print("mis à None")
 
 	def send_ready(self):
-		for button in self._objects_buttons:
+		for button in self._buttons:
 			if button.text != "Ready":
 				button.hide()
 			else:
@@ -156,7 +167,7 @@ class Interface:
 		self._client.set_ready()
 
 	def send_notready(self):
-		for button in self._objects_buttons:
+		for button in self._buttons:
 			if button.text != "Not ready":
 				button.show()
 			else:
@@ -165,7 +176,7 @@ class Interface:
 		self._client.set_notready()
 
 
-	## Demandes de confirmation pour créer les objets ##
+	## Demandes de confirmation pour creer les objets ##
 
 	def ask_nest(self, x, y, size=20):
 		"""
@@ -182,7 +193,7 @@ class Interface:
 		self._client.ask_object(Wall, coords_list, width=width)
 
 
-	## Création d'objets ##
+	## Creation d'objets ##
 
 	def _create_object(self, str_type, coords, size=None, width=None, color=None):
 		"""Instancie l'objet du type reçu par le Client"""
@@ -332,6 +343,12 @@ class Interface:
 			self._canvas.delete(last_object[0])
 			self._client.undo_object(last_object[1])
 
+	def faster_sim(self):
+		self._client.ask_faster_sim()
+
+	def slower_sim(self):
+		self._client.ask_slower_sim()
+
 	def fonction_bidon(self, event=None):
 		# À ENLEVER
 		print("fonction bidon au rapport")
@@ -339,8 +356,9 @@ class Interface:
 	def countdown(self):
 		"""Affiche un compte a rebours au milieu de la fenetre"""
 		# On cache tous les boutons ce coup-ci
-		for button in self._objects_buttons:
-			button.hide()
+		for button in self._buttons:
+			if button.hideable:
+				button.hide()
 		# On affiche le compte a rebours
 		h = int(self._canvas["height"]) // 2
 		w = int(self._canvas["width"]) // 2

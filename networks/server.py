@@ -121,6 +121,10 @@ class Server:
 				if self._window is not None:
 					self._window.clients += 1
 
+				# Si l'IP du client est celle du serveur, il est admin
+				if address[0] == self._ip:
+					self.send_to_client(client, "admin")
+
 		else:
 			print("[Warning] Denied access to a client (max number reached)")
 
@@ -138,30 +142,40 @@ class Server:
 					data = pickle.loads(recv_data)
 				except pickle.UnpicklingError:
 					data = recv_data
-				# Si c'est une liste, on sait que la demande est effectuée pour créer un élément, ou annuler
+				# Si c'est une liste, on sait que la demande est effectuee pour creer un element, ou annuler
 				if isinstance(data, list):
 					if data[0] == "undo":
-						print("Annulation coté serv")
+						print("Canceled last object")
 						str_type = data[1]
 						self._simulation.objects[str_type].pop()
 					else:
 						str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 						self.process_data(str_type, coords, size, width, color)
-				elif data.decode() == "Ready":
-					self._clients_ready += 1
-					self._window.ready_clients += 1
-					if self._clients_ready == len(Server.clients):
-						self.send_to_all_clients("GO")
-						print("GO")
-						sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
-						# Lancement de la simulation (bloquante)
-						self._simulation.start()
-					else:
-						print("Il manque encore {} client(s)".format(len(Server.clients) - self._clients_ready))
-				elif data.decode() == "Not ready":
-					self._clients_ready -= 1
-					self._window.ready_clients -= 1
-					print("Il manque encore {} client(s)".format(len(Server.clients) - self._clients_ready))
+				else:
+					data = data.decode()
+					if data == "Ready":
+						self._clients_ready += 1
+						self._window.ready_clients += 1
+						if self._clients_ready == len(Server.clients):
+							self.send_to_all_clients("GO")
+							print("GO")
+							sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
+							# Lancement de la simulation (bloquante)
+							threading.Thread(target=self._simulation.start, daemon=True).start()
+						else:
+							print("Ready clients: {} / {}".format(self._clients_ready, len(Server.clients)))
+					elif data == "Not ready":
+						self._clients_ready -= 1
+						self._window.ready_clients -= 1
+						print("Ready clients: {} / {}".format(self._clients_ready, len(Server.clients)))
+
+					elif data == "faster":
+						self._simulation.sleep_time /= 2
+						print("faster simulation")
+					elif data == "slower":
+						self._simulation.sleep_time *= 2
+						print("slower simulation")
+
 
 			# Si le client n'avait pas de thread associe, on en cree un
 			if self._receiving_threads[client] is None:
