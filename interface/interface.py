@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import threading
-import time
+from time import sleep
 
 from .easy_menu import EasyMenu
 from .easy_button import EasyButton
@@ -40,18 +40,21 @@ class Interface:
 	@local_color.setter
 	def local_color(self, new_color):
 		self._local_color = new_color
+		self._objects_frame['bg'] = self._local_color
 
 
 	def __init__(self, client, width, height):
 		self._root = tk.Tk()
+		self._root.title("Ant Simulator")
+		
 		self._client = client
 		self._client.interface = self
 
 		self._canvas = tk.Canvas(self._root, width=width, height=height)
 		self._canvas.pack(side=tk.BOTTOM)
 
-		# Menus déroulants
-		self._menu_frame = tk.Frame(self._root, bg='red')  # COULEUR À ENLEVER
+		# Menus deroulants
+		self._menu_frame = tk.Frame(self._root)
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
 		self._menu_file = EasyMenu(self._menu_frame, "File",
@@ -64,11 +67,11 @@ class Interface:
 								   [("Reset yours", self.fonction_bidon),
 									("Undo (Ctrl+Z)", self.undo)])
 
-		# Barre de sélection de l'objet
-		self._objects_frame = tk.Frame(self._root, bg='blue')  # COULEUR À ENLEVER
+		# Barre de selection de l'objet
+		self._objects_frame = tk.Frame(self._root)
 		self._objects_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
-		self._objects_buttons = [
+		self._buttons = [
 			EasyButton(self,
 					   self._objects_frame, 50, 50,
 					   object_type=Nest),
@@ -85,10 +88,22 @@ class Interface:
 					   self._objects_frame, 70, 50, text='Ready',
 					   side=tk.RIGHT,
 					   command_select=self.send_ready,
-					   command_deselect=self.send_notready)
+					   command_deselect=self.send_notready),
+
+			EasyButton(self,
+					   self._objects_frame, 50, 50, text='+',
+					   side=tk.RIGHT,
+					   command_select=self.faster_sim,
+					   toggle=False, hideable=False),
+			
+			EasyButton(self,
+					   self._objects_frame, 50, 50, text='-',
+					   side=tk.RIGHT,
+					   command_select=self.slower_sim,
+					   toggle=False, hideable=False)
 		]
 
-		# Évènements
+		# evènements
 		self._canvas.bind("<Button-1>", self.on_click)
 		self._canvas.bind("<ButtonRelease-1>", self.on_release)
 		self._canvas.bind("<B1-Motion>", self.on_motion)
@@ -97,7 +112,7 @@ class Interface:
 		self._root.bind("<Escape>", self.deselect_buttons)
 		self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-		self._local_color = '' # par défaut, mais sera changé
+		self._local_color = '' # par defaut, mais sera change
 
 		self._current_object_type = None
 		self._current_wall = None
@@ -109,7 +124,7 @@ class Interface:
 
 		# Note : la mainloop est lancee dans un thread, par le main
 
-	## Gestion d'évènements ##
+	## Gestion d'evènements ##
 
 	def on_click(self, event):
 		# print("click ; current :", self._current_object_type)
@@ -122,7 +137,7 @@ class Interface:
 
 		# je crois pas qu'on veuille demander un wall maintenant
 		elif self._current_object_type is Wall:
-			# On le crée directement, pour avoir un visuel
+			# On le cree directement, pour avoir un visuel
 			self._create_wall(event.x, event.y)
 
 	def on_release(self, event):
@@ -138,12 +153,12 @@ class Interface:
 
 	def deselect_buttons(self, event=None):
 		"""Désélectionne tous les boutons des objets, pour libérer le clic"""
-		for button in self._objects_buttons:
+		for button in self._buttons:
 			button.deselect(exec_command=False)
 		self._current_object_type = None
 
 	def send_ready(self):
-		for button in self._objects_buttons:
+		for button in self._buttons:
 			if button.text != "Ready":
 				button.hide()
 			else:
@@ -152,7 +167,7 @@ class Interface:
 		self._client.set_ready()
 
 	def send_notready(self):
-		for button in self._objects_buttons:
+		for button in self._buttons:
 			if button.text != "Not ready":
 				button.show()
 			else:
@@ -161,7 +176,7 @@ class Interface:
 		self._client.set_notready()
 
 
-	## Demandes de confirmation pour créer les objets ##
+	## Demandes de confirmation pour creer les objets ##
 
 	def ask_nest(self, x, y, size=20):
 		"""
@@ -170,15 +185,15 @@ class Interface:
 		"""
 		self._client.ask_object(Nest, (x, y), size, color=self._local_color)
 
-	def ask_resource(self, x, y, size=20):
-		self._client.ask_object(Resource, (x, y), size)
+	def ask_resource(self, x, y, size=20, width=25):
+		self._client.ask_object(Resource, (x, y), size, width)
 
 	def ask_wall(self, coords_list, width=20):
 		"""Demande un mur. Appelé seulement à la fin d'un clic long."""
 		self._client.ask_object(Wall, coords_list, width=width)
 
 
-	## Création d'objets ##
+	## Creation d'objets ##
 
 	def _create_object(self, str_type, coords, size=None, width=None, color=None):
 		"""Instancie l'objet du type reçu par le Client"""
@@ -207,46 +222,45 @@ class Interface:
 		self._canvas.delete(self._current_wall.id)
 		self._current_wall = None
 
-	'''
-	def _create_nest(self, x, y, size, color):
-		#
-		# À modifier avec l'interaction avec le serveur
-		# (demande de validation de la position par ex)
-		#
-		Nest(self._canvas, (x, y), size, color)
-
-	def _create_resource(self, x, y, size=20):
-		#
-		# À modifier avec l'interaction avec le serveur
-		# (demande de validation de la position par ex)
-		#
-		Resource(self._canvas, (x, y), size)
-	'''
-
 	def _create_wall(self, x, y, width=10):
 		"""On crée un objet Wall, qu'on étendra"""
 		self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
 
-	def create_pheromone(self, coords):
-		""" On affiche une phéromone et on l'ajoute dans la liste de phéromones """
-		if coords in self._pheromones:
-			self._pheromones[coords].darken()
-		else:
-			self._pheromones[coords] = Pheromone(self._canvas, coords)
-
 	def create_pheromones(self, coords_list):
-		for coords in coords_list:
-			if coords in self._pheromones:
-				self._pheromones[coords].darken()
-			else:
-				self._pheromones[coords] = Pheromone(self._canvas, coords)
+		"""Crée ou fonce plusieurs phéromones à la fois"""
+		# peut-être que ça va casser vu qu'on modifie le dico alors qu'on le traverse dans d'autres
+		step = 20 # on cree ou fonce tel nombre de fourmis dans chaque thread
+		length = len(coords_list)
+		
+		def create_pheromones_in_thread(start, number):
+			end = start + number
+			if end > len(coords_list):
+				end = len(coords_list)
+
+			for i in range(start, end):
+				coords = coords_list[i]
+				if coords in self._pheromones:
+					self._pheromones[coords].darken()
+				else:
+					self._pheromones[coords] = Pheromone(self._canvas, coords)
+
+		for i in range(0, length, step):
+			threading.Thread(target=create_pheromones_in_thread, args=(i, step)).start()
+
 
 	def shrink_resource(self, index):
-		self._resources[index].shrink()
+		if self._resources[index].max_shrinking == 0:
+			self._resources[index].remove()
+		else:
+			self._resources[index].shrink()
 
-	def create_ant(self, coords, color):
-		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
-		self._ants.append(Ant(self._canvas, coords, color))
+	def create_ants(self, ants_list):
+		"""
+		Crée toutes les fourmis en fonction
+		des coordonnées et couleurs dans la liste
+		"""
+		for ant in ants_list:
+			self._ants.append(Ant(self._canvas, ant[0], ant[1])) # coords, couleur
 
 	def move_ant(self, index, delta_x, delta_y):
 		""" Fonction pour déplacer une fourmi """
@@ -258,77 +272,79 @@ class Interface:
 		Les coordonnées i sont pour la fourmi i.
 		"""
 		step = 20 # on bouge tel nombre de fourmis dans chaque thread
+		length = len(relative_coords)
+
 		def move_ants_in_thread(start, number):
-			for i in range(start, start + number):
+			end = start + number
+			if end > length:
+				end = length
+			
+			for i in range(start, end):
 				ant = self._ants[i]
 				ant.move(relative_coords[i][0], relative_coords[i][1])
 				if len(relative_coords[i]) > 2:
 					resource_index = relative_coords[i][2]
 					# Nous devons rapetisser la ressource
-					if resource_index != -1:
+					if isinstance(resource_index, int):
 						self.shrink_resource(resource_index)
 						ant.color = 'grey'
-					else:
+					elif resource_index == "base":
 						ant.color = ant.base_color
+					# Si on a une liste, c'est la premiere fourmi
+					elif isinstance(resource_index, list):
+						self.set_first_ant(ant.base_color)
+						self.shrink_resource(resource_index[0])
+						ant.color = 'grey'
+					else:
+						ant.color = resource_index
 
-		for i in range(0, len(relative_coords), step):
-			curr_thread = threading.Thread(target=move_ants_in_thread, args=(i, step)) # pas sûr s'il faut daemon
-			curr_thread.start()
-
-		'''
-		for i in range(len(relative_coords)):
-			ant = self._ants[i]
-			ant.move(relative_coords[i][0], relative_coords[i][1])
-
-			# Le dernier element est l'index de la ressource touchee
-			# ou -1, signifiant un retour au nid
-			if len(relative_coords[i]) > 2:
-				resource_index = relative_coords[i][2]
-				# Nous devons rapetisser la ressource
-				if resource_index != -1:
-					self.shrink_resource(resource_index)
-					ant.color = 'grey'
-				else:
-					ant.color = ant.base_color
-		'''
-
-
-	# def color_ant(self, index, color):
-	# 	""" Fonction pour changer la couleur d'une fourmi """
-	# 	self._ants[index].color = color
+		for i in range(0, length, step):
+			threading.Thread(target=move_ants_in_thread, args=(i, step), daemon=True).start()
+	
+	def set_first_ant(self, color):
+		w = int(self._canvas["width"])
+		h = int(self._canvas["height"])
+		self._canvas.create_text(w - 200, h - 20, font="Corbel 15 bold", text="La première fourmi est de couleur")
+		self._canvas.create_rectangle(w-50, h-30, w-30, h-10, fill=color)
 
 	def undo(self, event=None):
 		""" Fonction pour annuler un placement """
-		
-		if len(self._last_objects) > 0:
-			self._client.undo_object(self._last_objects[-1][1])
-
-	def delete_last_object(self):
-		""" Fontcion qui supprime le dernier element placé """
-
 		# last_object est de la forme : [id, str_type]
 		if len(self._last_objects) > 0:
 			last_object = self._last_objects.pop()
 			self._canvas.delete(last_object[0])
+			self._client.undo_object(last_object[1])
+
+	def faster_sim(self):
+		self._client.ask_faster_sim()
+
+	def slower_sim(self):
+		self._client.ask_slower_sim()
 
 	def fonction_bidon(self, event=None):
 		# À ENLEVER
 		print("fonction bidon au rapport")
 
 	def countdown(self):
+		"""Affiche un compte a rebours au milieu de la fenetre"""
+		# On cache tous les boutons ce coup-ci
+		for button in self._buttons:
+			if button.hideable:
+				button.hide()
+		# On affiche le compte a rebours
 		h = int(self._canvas["height"]) // 2
 		w = int(self._canvas["width"]) // 2
-		text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Attention ça commence")
-		time.sleep(1)
+		text = self._canvas.create_text(w,h, font="Corbel 20 bold", text="Starting in…")
+		sleep(1)
 		for i in range(3, 0, -1):
 			self._canvas.itemconfig(text, text=i)
-			time.sleep(1)
+			sleep(1)
 		self._canvas.itemconfig(text, text="Let's go!")
-		time.sleep(1)
-		self._canvas.delete(self._root,text)
+		sleep(1)
+		self._canvas.delete(self._root, text)
 
-	def quit_app(self):
-		if messagebox.askyesno('Quit', 'Are you sure to quit?'):
+	def quit_app(self, force=False):
+		if force or messagebox.askyesno('Quit', 'Are you sure to quit?'):
 			self._root.quit()
 
 

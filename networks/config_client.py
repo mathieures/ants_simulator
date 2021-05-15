@@ -1,4 +1,5 @@
 import tkinter as tk
+from .ip import get_current_ip # on a une fonction ip deja
 
 class ConfigClient:
     """
@@ -42,40 +43,49 @@ class ConfigClient:
 
         # Entrées de texte
 
+        # IP
         tk.Label(self._topframe, text='IP:', width=10).pack(side=tk.LEFT)
-        self._ip_entry = tk.Entry(self._topframe, textvariable=self._ip)
-        self._ip_entry.pack(side=tk.RIGHT)
+        self._ip_entry = tk.Entry(self._topframe, textvariable=self._ip, width=15)
+        self._ip_entry.pack(side=tk.LEFT)
 
+        # PORT
         tk.Label(self._centerframe, text='PORT:', width=10).pack(side=tk.LEFT)
-        self._port_entry = tk.Entry(self._centerframe, textvariable=self._port)
+        self._port_entry = tk.Entry(self._centerframe, textvariable=self._port, width=26)
         self._port_entry.pack(side=tk.RIGHT)
 
+        # Bouton pour obtenir l'IP de la machine
+        self._current_ip_button = tk.Button(self._topframe, text='Current IP', command=self._set_to_current_ip)
+        self._current_ip_button.pack(side=tk.RIGHT)
 
         # Bouton pour rejoindre
 
-        self._join_button = tk.Button(self._buttonframe, text='Join', command=self.connection)
+        self._join_button = tk.Button(self._buttonframe, text='Join', command=self._connection)
         self._join_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
         # Bindings
         
         # Pour gerer la touche Entree
-        self._root.bind("<Return>", self.on_return_key)
+        self._root.bind("<Return>", self._on_return_key)
         
         # Pour gerer la fermeture de la fenetre
-        self._root.protocol("WM_DELETE_WINDOW", self.quit_config)
+        self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
 
         self._root.mainloop()
 
-    def connection(self):
+    
+    # Bindings
+
+    def _connection(self):
         if len(self._ip.get()) > 0 and self._port.get() > 0:
             self._root.destroy()
 
-    
-    # Bindings
-    def on_return_key(self, event):
+    def _on_return_key(self, event):
         self._join_button.invoke()
 
-    def quit_config(self):
+    def _set_to_current_ip(self):
+        self._ip.set(get_current_ip())
+
+    def _quit_config(self):
         exit(1)
 
 

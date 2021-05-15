@@ -1,4 +1,5 @@
 import tkinter as tk
+from ip import get_current_ip
 
 class ConfigServer:
     """
@@ -17,7 +18,7 @@ class ConfigServer:
         if mode == self._modes[0]:
             return '127.0.0.1'
         else:
-            return self.get_current_ip()
+            return get_current_ip()
 
     @property
     def port(self):
@@ -27,14 +28,19 @@ class ConfigServer:
     def max_clients(self):
         return self._max_clients.get()
 
+    @property
+    def create_window(self):
+        return bool(self._create_window.get())
+    
+
 
     def __init__(self):
         self._root = tk.Tk()
-        self._root.title('Server config')
+        self._root.title("Server config")
 
         # Frames
         self._labelframe = tk.LabelFrame(self._root, text="Configure the server to create")
-        self._labelframe.pack(padx=5)
+        self._labelframe.pack(padx=10, ipadx=10)
 
         self._buttonframe = tk.Frame(self._root)
         self._buttonframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
@@ -58,57 +64,63 @@ class ConfigServer:
         self._port = tk.IntVar()
         self._port.set(15555)
 
+        self._create_window = tk.IntVar()
+        self._create_window.set(1)
+
 
         # Liste deroulante
-        tk.Label(self._topframe, text='Mode:', width=10).pack(side=tk.LEFT)
+        tk.Label(self._topframe, text="Mode:", width=10).pack(side=tk.LEFT)
         self._mode_option_menu = tk.OptionMenu(self._topframe, self._current_mode, *self._modes)
         self._mode_option_menu.pack(side=tk.RIGHT)
 
         # Entrees de texte
-        tk.Label(self._centerframe, text='PORT:', width=10).pack(side=tk.LEFT)
+        tk.Label(self._centerframe, text="PORT:", width=10).pack(side=tk.LEFT)
         self._port_entry = tk.Entry(self._centerframe, textvariable=self._port)
         self._port_entry.pack(side=tk.RIGHT)
 
-        tk.Label(self._bottomframe, text='Max clients:', width=10).pack(side=tk.LEFT)
+        tk.Label(self._bottomframe, text="Max clients:", width=10).pack(side=tk.LEFT)
         self._max_clients_sb = tk.Spinbox(self._bottomframe, from_=1, to=999, increment=1,
                                           width=18, textvariable=self._max_clients)
         self._max_clients_sb.pack(side=tk.RIGHT)
 
+        
+
+        self._create_window_cb = tk.Checkbutton(self._buttonframe, text="Create window?", variable=self._create_window)
+        self._create_window_cb.pack(side=tk.TOP)
+
+
+
         # Bouton pour creer le serveur
-        self._create_server_button = tk.Button(self._buttonframe, text='Join', command=self.create_server)
-        self._create_server_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
+        self._create_server_button = tk.Button(self._buttonframe, text="Join", command=self._create_server)
+        self._create_server_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X, padx=1, pady=1)
 
         # Bindings
 
         # Pour gerer la touche Entree
-        self._root.bind("<Return>", self.enter)
+        self._root.bind("<Return>", self._on_return_key)
         
         # Pour gerer la fermeture de la fenetre
-        self._root.protocol("WM_DELETE_WINDOW", self.quit_config)
+        self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
         
         self._root.mainloop()
 
-    def create_server(self, event=None):
-        if self._max_clients.get() > 0 and self._port.get() > 0:
-            print("Tentative de connexion en cours...")
-
-            self._root.destroy()
-
-    def get_current_ip(self):
-        import socket 
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 1))  # connect() for UDP doesn't send packets
-        local_ip_address = s.getsockname()[0]
-
-        return local_ip_address
 
     # Bindings
-    def enter(self, event):
+
+    def _create_server(self, event=None):
+        try:
+            if self._max_clients.get() > 0 and self._port.get() > 0:
+                print("Attempting connection…")
+
+                self._root.destroy()
+        except tk._tkinter.TclError:
+            print("[Error] Wrong port or max clients' number")
+
+    def _on_return_key(self, event):
         self._create_server_button.invoke()
 
-    def quit_config(self):
+    def _quit_config(self):
         exit(1)
-
 
 
 if __name__ == '__main__':
