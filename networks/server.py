@@ -142,12 +142,13 @@ class Server:
 					data = pickle.loads(recv_data)
 				except pickle.UnpicklingError:
 					data = recv_data
-				# Si c'est une liste, on sait que la demande est effectuee pour creer un element, ou annuler
+				# Si c'est une liste, on sait que la demande est effectuee pour
+				# creer un element, ou annuler un placement, ou supprimer une ressource
 				if isinstance(data, list):
 					if data[0] == "undo":
-						print("Canceled last object")
 						str_type = data[1]
 						self._simulation.objects[str_type].pop()
+						print("Canceled last object")
 					else:
 						str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 						self.process_data(str_type, coords, size, width, color)

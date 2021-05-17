@@ -7,7 +7,9 @@ class Resource(CustomObject):
         Instancie une ressource.
         Note : ni le paramètre width ni le paramètre color n'ont d'effet ici.
         """
+        self._max_shrinking = 23
         super().__init__(canvas, coords, size=size)
+
 
     def draw(self, offset_coords):
         """Override la méthode d'origine"""
@@ -17,3 +19,8 @@ class Resource(CustomObject):
     def shrink(self):
         """ Fonction pour rapetisser une ressource """
         self._canvas.scale(self._id, *self.centre_coords[2:4], 0.95, 0.95)
+        self._max_shrinking -= 1
+
+    def remove(self):
+        """ Pour faire disparaitre une ressource """
+        self._canvas.delete(self.id)

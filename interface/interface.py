@@ -88,7 +88,19 @@ class Interface:
 					   self._objects_frame, 70, 50, text='Ready',
 					   side=tk.RIGHT,
 					   command_select=self.send_ready,
-					   command_deselect=self.send_notready)
+					   command_deselect=self.send_notready),
+
+			EasyButton(self,
+					   self._objects_frame, 50, 50, text='+',
+					   side=tk.RIGHT,
+					   command_select=self.faster_sim,
+					   toggle=False, hideable=False),
+			
+			EasyButton(self,
+					   self._objects_frame, 50, 50, text='-',
+					   side=tk.RIGHT,
+					   command_select=self.slower_sim,
+					   toggle=False, hideable=False)
 		]
 
 		# evènements
@@ -173,8 +185,8 @@ class Interface:
 		"""
 		self._client.ask_object(Nest, (x, y), size, color=self._local_color)
 
-	def ask_resource(self, x, y, size=20):
-		self._client.ask_object(Resource, (x, y), size)
+	def ask_resource(self, x, y, size=20, width=25):
+		self._client.ask_object(Resource, (x, y), size, width)
 
 	def ask_wall(self, coords_list, width=20):
 		"""Demande un mur. Appelé seulement à la fin d'un clic long."""
@@ -210,34 +222,9 @@ class Interface:
 		self._canvas.delete(self._current_wall.id)
 		self._current_wall = None
 
-	'''
-	def _create_nest(self, x, y, size, color):
-		#
-		# À modifier avec l'interaction avec le serveur
-		# (demande de validation de la position par ex)
-		#
-		Nest(self._canvas, (x, y), size, color)
-
-	def _create_resource(self, x, y, size=20):
-		#
-		# À modifier avec l'interaction avec le serveur
-		# (demande de validation de la position par ex)
-		#
-		Resource(self._canvas, (x, y), size)
-	'''
-
 	def _create_wall(self, x, y, width=10):
 		"""On crée un objet Wall, qu'on étendra"""
 		self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
-
-	'''
-	def create_pheromone(self, coords):
-		""" On affiche une phéromone et on l'ajoute dans la liste de phéromones """
-		if coords in self._pheromones:
-			self._pheromones[coords].darken()
-		else:
-			self._pheromones[coords] = Pheromone(self._canvas, coords)
-	'''
 
 	def create_pheromones(self, coords_list):
 		"""Crée ou fonce plusieurs phéromones à la fois"""
@@ -262,13 +249,10 @@ class Interface:
 
 
 	def shrink_resource(self, index):
-		self._resources[index].shrink()
-
-	'''
-	def create_ant(self, coords, color):
-		""" On affiche une fourmi et on l'ajoute dans la liste de fourmis """
-		self._ants.append(Ant(self._canvas, coords, color))
-	'''
+		if self._resources[index].max_shrinking == 0:
+			self._resources[index].remove()
+		else:
+			self._resources[index].shrink()
 
 	def create_ants(self, ants_list):
 		"""
@@ -320,7 +304,7 @@ class Interface:
 	def set_first_ant(self, color):
 		w = int(self._canvas["width"])
 		h = int(self._canvas["height"])
-		self._canvas.create_text(w - 200, h - 20, text="La première fourmi est de couleur")
+		self._canvas.create_text(w - 200, h - 20, font="Corbel 15 bold", text="La première fourmi est de couleur")
 		self._canvas.create_rectangle(w-50, h-30, w-30, h-10, fill=color)
 
 	def undo(self, event=None):

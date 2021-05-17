@@ -98,7 +98,6 @@ class Client:
 
 	def undo_object(self, str_type):
 		""" Demande au serveur d'annuler le placement d'un objet """
-		print("Demande d'annulation objet {}".format(str_type))
 		data = pickle.dumps(["undo", str_type])
 		try:
 			self._socket.send(data)

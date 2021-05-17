@@ -108,9 +108,12 @@ class Simulation:
 
 				index_resource = self.is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
-				if not ant.has_resource and index_resource is not None:
+				if (not ant.has_resource) and (
+					index_resource is not None) and (
+					self._objects["resource"][index_resource][2] != 0):
 					# Une fourmi a touche une ressource
 					# On donne aux clients l'index de la ressource touchee
+					self._objects["resource"][index_resource][2] -= 1 # On diminue la taille de la ressource
 					ant.has_resource = True
 					if not self._first_ant:
 						ants[ant_index].append(index_resource)
@@ -160,14 +163,6 @@ class Simulation:
 		if "wall" not in self._objects:
 			return False
 		return (x, y) in self._objects["wall"]
-		# for wall in self._objects["wall"]:
-		# 	coords_wall, width = wall[0], wall[2]
-		# 	offset = width // 2 + 1 # +1 pour l'outline
-		# 	for i in range(0, len(coords_wall), 2):
-		# 		if (coords_wall[i] - offset <= x <= coords_wall[i] + offset) and (
-		# 			coords_wall[i+1] - offset <= y <= coords_wall[i+1] + offset):
-		# 			return True
-		# return False
 
 	def is_resource(self, x, y):
 		""" Retourne l'indice de la ressource à cette position ou None s'il n'y en a pas """
@@ -179,7 +174,8 @@ class Simulation:
 			offset = size // 2 + 1 # +1 pour l'outline
 			if (coords_resource[0] - offset <= x <= coords_resource[0] + offset) and (
 				coords_resource[1] - offset <= y <= coords_resource[1] + offset):
-					return i # On retourne l'index de la ressource
+					if resource[2] != 0:
+						return i # On retourne l'index de la ressource
 			i += 1
 		return None
 
@@ -230,19 +226,19 @@ class Simulation:
 				# On remplit toutes les cases alentour
 				x, y = coords[i], coords[i+1]
 				for j in range(1, size // 2):
-					# peut-être mettre +1 (mais je crois que nan)
-					self._objects[str_type].add((x - j, y - j))
-					self._objects[str_type].add((x - j, y))
-					self._objects[str_type].add((x - j, y + j))
-					self._objects[str_type].add((x, y - j))
-					self._objects[str_type].add((x, y))
-					self._objects[str_type].add((x, y + j))
-					self._objects[str_type].add((x + j, y - j))
-					self._objects[str_type].add((x + j, y))
-					self._objects[str_type].add((x + j, y + j))
+					# peut-être mettre +1 (mais je crois que non)
+					self._objects["wall"].add((x - j, y - j))
+					self._objects["wall"].add((x - j, y))
+					self._objects["wall"].add((x - j, y + j))
+					self._objects["wall"].add((x, y - j))
+					self._objects["wall"].add((x, y))
+					self._objects["wall"].add((x, y + j))
+					self._objects["wall"].add((x + j, y - j))
+					self._objects["wall"].add((x + j, y))
+					self._objects["wall"].add((x + j, y + j))
 		else:
 			if self._objects.get(str_type) is None:
 				self._objects[str_type] = []
 			# Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-			self._objects.get(str_type).append((coords, size, width, color))
+			self._objects.get(str_type).append([coords, size, width, color])
 			# print("ajoute côte serveur :", str_type, coords, size, width, color)
