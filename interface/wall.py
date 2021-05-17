@@ -2,6 +2,7 @@ from .custom_object import CustomObject
 
 
 class Wall(CustomObject):
+    """ Objet Mur représenté graphiquement """ 
 
     @property
     def size(self):
@@ -14,8 +15,8 @@ class Wall(CustomObject):
     
     
     
-# Peut-être qu'on peut faire en sorte que width soit positionnel (et remplacé par size dans le bouton) et que size soit par défaut un truc
-# le if len(coords) peut nous aider à déterminer qu'il faut utiliser size
+    # Peut-être qu'on peut faire en sorte que width soit positionnel (et remplacé par size dans le bouton) et que size soit par défaut un truc
+    # le if len(coords) peut nous aider à déterminer qu'il faut utiliser size
     def __init__(self, canvas, coords, width=15, size=37.5):
         """
         Crée une ligne de taille size et de largeur width.

@@ -16,6 +16,7 @@ from networks import client
 
 
 class Interface:
+	""" Classe qui comportera tous les éléments graphiques """
 
 	@property
 	def root(self):
@@ -57,15 +58,11 @@ class Interface:
 		self._menu_frame = tk.Frame(self._root)
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
-		self._menu_file = EasyMenu(self._menu_frame, "File",
-								   [("Save", self.fonction_bidon),
-									("Load", self.fonction_bidon),
-									None,
-									("Disconnect", self.fonction_bidon)])
+		self._menu_file = EasyMenu(self._menu_frame, "Network", 
+									[("Disconnect", self._disconnect_client)], width=8)
 
 		self._menu_edit = EasyMenu(self._menu_frame, "Edit",
-								   [("Reset yours", self.fonction_bidon),
-									("Undo (Ctrl+Z)", self.undo)])
+								   [("Undo (Ctrl+Z)", self._undo)])
 
 		# Barre de selection de l'objet
 		self._objects_frame = tk.Frame(self._root)
@@ -89,18 +86,6 @@ class Interface:
 					   side=tk.RIGHT,
 					   command_select=self.send_ready,
 					   command_deselect=self.send_notready),
-
-			EasyButton(self,
-					   self._objects_frame, 50, 50, text='+',
-					   side=tk.RIGHT,
-					   command_select=self.faster_sim,
-					   toggle=False, hideable=False),
-			
-			EasyButton(self,
-					   self._objects_frame, 50, 50, text='-',
-					   side=tk.RIGHT,
-					   command_select=self.slower_sim,
-					   toggle=False, hideable=False)
 		]
 
 		# evènements
@@ -108,7 +93,7 @@ class Interface:
 		self._canvas.bind("<ButtonRelease-1>", self.on_release)
 		self._canvas.bind("<B1-Motion>", self.on_motion)
 
-		self._root.bind("<Control-z>", self.undo)
+		self._root.bind("<Control-z>", self._undo)
 		self._root.bind("<Escape>", self.deselect_buttons)
 		self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
@@ -307,13 +292,16 @@ class Interface:
 		self._canvas.create_text(w - 200, h - 20, font="Corbel 15 bold", text="La première fourmi est de couleur")
 		self._canvas.create_rectangle(w-50, h-30, w-30, h-10, fill=color)
 
-	def undo(self, event=None):
+	def _undo(self, event=None):
 		""" Fonction pour annuler un placement """
 		# last_object est de la forme : [id, str_type]
 		if len(self._last_objects) > 0:
 			last_object = self._last_objects.pop()
 			self._canvas.delete(last_object[0])
 			self._client.undo_object(last_object[1])
+
+	def _disconnect_client(self):
+		self._client.disconnect()
 
 	def show_admin_buttons(self):
 		self._buttons.append(EasyButton(self,

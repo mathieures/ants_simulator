@@ -11,11 +11,6 @@ import color
 from config_server import ConfigServer
 from server_window import ServerWindow
 
-
-# pour le debug
-from time import time
-
-
 class Server:
 	"""
 	Application du serveur.
@@ -159,7 +154,6 @@ class Server:
 						self._window.ready_clients += 1
 						if self._clients_ready == len(Server.clients):
 							self.send_to_all_clients("GO")
-							print("GO")
 							sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
 							# Lancement de la simulation (bloquante)
 							threading.Thread(target=self._simulation.start, daemon=True).start()

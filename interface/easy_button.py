@@ -19,17 +19,6 @@ class EasyButton:
     def text(self, new_text):
         self._canvas.itemconfig(self._text_id, text=new_text)
 
-    # N'a pas l'air d'etre utilise
-    '''
-    @property
-    def enabled(self):
-        return self._enabled
-    
-    @enabled.setter
-    def enabled(self, new_value: bool):
-        self._enabled = new_value
-    '''
-
     @property
     def hideable(self):
         return self._hideable

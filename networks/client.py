@@ -4,11 +4,6 @@ import socket
 import pickle
 import threading
 
-
-# pour le debug
-from time import time
-
-
 class Client:
 	"""
 	Classe responsable de la réception, la distribution
@@ -72,13 +67,10 @@ class Client:
 
 	def set_ready(self):
 		"""Informe le serveur que ce client est prêt"""
-		print("Ready envoyé")
 		self._socket.send("Ready".encode())
 
 	def set_notready(self):
-		"""Informe le serveur que ce client n'est plus prêt"""
-		print("À FAIRE : NOT READY")
-		print("Not ready envoyé")
+		"""Informe le serveur que ce client n'est plus prêt (a faire)"""
 		self._socket.send("Not ready".encode())
 
 	def ask_object(self, object_type, position, size=None, width=None, color=None):
@@ -88,7 +80,6 @@ class Client:
 		à la position donnée.
 		"""
 		str_type = object_type.__name__ # nom de classe de l'objet
-		# print("objet demande : str_type :", str_type, "position :", position, "size :", size, "width :", width, "color :", color)
 		data = pickle.dumps([str_type, position, size, width, color])
 		try:
 			self._socket.send(data)
@@ -113,11 +104,14 @@ class Client:
 		print("ask_slower_sim")
 		self._socket.send("slower".encode())
 
+	def disconnect(self):
+		self._socket.close()
+		sys.exit(1)
+
 	def receive(self):
 		"""Reçoit les signaux envoyés par les clients pour les objets créés"""
 		# Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
 		while True:
-			temps_attente = time()
 			try:
 				recv_data = self._socket.recv(10240)
 			except ConnectionResetError:
@@ -128,8 +122,6 @@ class Client:
 				data = pickle.loads(recv_data)
 			except pickle.UnpicklingError:
 				data = recv_data
-			temps_receive = time()
-			# print("temps d'attente :", time() - temps_attente, end=' ; ')
 
 			# Si on doit bouger des fourmis
 			if isinstance(data, list) or isinstance(data, tuple):
@@ -172,4 +164,3 @@ class Client:
 				elif data == "admin":
 					self._admin = True
 					self._interface.show_admin_buttons()
-			# print("receive :", time() - temps_receive)

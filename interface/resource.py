@@ -2,6 +2,12 @@ from .custom_object import CustomObject
 
 
 class Resource(CustomObject):
+    """ Objet Ressource représenté graphiquement """ 
+
+    @property
+    def max_shrinking(self):
+        return self._max_shrinking
+
     def __init__(self, canvas, coords, size=20):
         """
         Instancie une ressource.

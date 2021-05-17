@@ -189,7 +189,6 @@ class AntServer:
         AntServer.PHEROMONES[(self._x + 1, self._y - 1)] = dir_to_resource
         AntServer.PHEROMONES[(self._x + 1, self._y)] = dir_to_resource
         AntServer.PHEROMONES[(self._x + 1, self._y + 1)] = dir_to_resource
-        # print("phéromone posée en :", self._x, self._y, "direction :", dir_to_resource)
 
     def follow_direction_biaised(self, direction, proba=60):
         """Suit une direction ou pas, suivant une probabilité"""

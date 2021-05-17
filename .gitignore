@@ -5,9 +5,6 @@
 desktop.ini
 backup*
 
-# Pour Baptiste
-__init__.py
-
 # Si vous voulez ignorer d'autres trucs
 # mais pas pour tout le monde, vous pouvez
 # ignorer .gitignore lui-même avec :

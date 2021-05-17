@@ -7,7 +7,7 @@ class EasyMenu:
     (texte_sous_menu, callback)
     ou None s'il faut insérer un séparateur
     """
-    def __init__(self, parent, text, sub_menus_list, width=5):
+    def __init__(self, parent, text, sub_menus_list, width=6):
         self._menu = tk.Menubutton(parent, text=text, relief="raised", width=width)
         self._deroul = tk.Menu(self._menu, tearoff=False)
 
