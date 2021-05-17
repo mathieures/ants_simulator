@@ -36,7 +36,7 @@ class Simulation:
 
 		self._sleep_time = 0.05
 
-	def init_ants(self):
+	def _init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
 		ants = ["ants"] # liste des fourmis a envoyer au serveur
 		nests = self._objects.get("nest")
@@ -55,7 +55,7 @@ class Simulation:
 
 	def start(self):
 		""" Fonction principale qui lance la simulation et calcule le déplacement de chaque fourmi """
-		self.init_ants()
+		self._init_ants()
 
 		length = len(self._ants)
 
@@ -74,7 +74,7 @@ class Simulation:
 				if ant.has_resource:
 					pheromones.append((x, y)) # l'ordre n'est pas important
 					# S'il y a un mur mais que la fourmi porte une ressource,
-					if self.is_wall(x, y):
+					if self._is_wall(x, y):
 						# Si elle n'a pas fait trop d'essais
 						if ant.tries < ant.MAX_TRIES:
 							# Elle contourne le mur par la gauche
@@ -87,7 +87,7 @@ class Simulation:
 						ant.go_to_nest()
 					ant.lay_pheromone()
 				# Si elle n'en a pas mais qu'il y a un mur, elle fait demi-tour
-				elif self.is_wall(x, y):
+				elif self._is_wall(x, y):
 					if ant.endurance > 0:
 						ant.direction += 180
 					else:
@@ -106,7 +106,7 @@ class Simulation:
 				delta_y = new_y - y
 				ants[ant_index] = [delta_x, delta_y] # les fourmis sont toujours dans le meme ordre
 
-				index_resource = self.is_resource(new_x, new_y)
+				index_resource = self._is_resource(new_x, new_y)
 				# Si la fourmi touche une ressource
 				if (not ant.has_resource) and (
 					index_resource is not None) and (
@@ -157,14 +157,14 @@ class Simulation:
 		print("[simulation terminee]")
 		# faudra afficher le vainqueur ou quoi par là
 
-	def is_wall(self, x, y):
+	def _is_wall(self, x, y):
 		""" Retourne True s'il y a un mur à cette position, False sinon """
 		# Note : peu optimal
 		if "wall" not in self._objects:
 			return False
 		return (x, y) in self._objects["wall"]
 
-	def is_resource(self, x, y):
+	def _is_resource(self, x, y):
 		""" Retourne l'indice de la ressource à cette position ou None s'il n'y en a pas """
 		if "resource" not in self._objects:
 			return None
