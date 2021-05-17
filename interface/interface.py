@@ -90,18 +90,6 @@ class Interface:
 					   command_select=self.send_ready,
 					   command_deselect=self.send_notready)
 		]
-		if self._client.is_admin:
-			self._buttons.append(EasyButton(self,
-					   self._objects_frame, 50, 50, text='+',
-					   side=tk.RIGHT,
-					   command_select=self.faster_sim,
-					   toggle=False, hideable=False))
-			
-			self._buttons.append(EasyButton(self,
-					   self._objects_frame, 50, 50, text='-',
-					   side=tk.RIGHT,
-					   command_select=self.slower_sim,
-					   toggle=False, hideable=False))
 
 		# evènements
 		self._canvas.bind("<Button-1>", self.on_click)
@@ -342,6 +330,19 @@ class Interface:
 			last_object = self._last_objects.pop()
 			self._canvas.delete(last_object[0])
 			self._client.undo_object(last_object[1])
+
+	def show_admin_buttons(self):
+		self._buttons.append(EasyButton(self,
+				   self._objects_frame, 50, 50, text='+',
+				   side=tk.RIGHT,
+				   command_select=self.faster_sim,
+				   toggle=False, hideable=False))
+		
+		self._buttons.append(EasyButton(self,
+				   self._objects_frame, 50, 50, text='-',
+				   side=tk.RIGHT,
+				   command_select=self.slower_sim,
+				   toggle=False, hideable=False))
 
 	def faster_sim(self):
 		self._client.ask_faster_sim()

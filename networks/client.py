@@ -172,4 +172,5 @@ class Client:
 					self._interface.countdown()
 				elif data == "admin":
 					self._admin = True
+					self._interface.show_admin_buttons()
 			# print("receive :", time() - temps_receive)
