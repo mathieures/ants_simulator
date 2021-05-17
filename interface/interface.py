@@ -88,20 +88,20 @@ class Interface:
 					   self._objects_frame, 70, 50, text='Ready',
 					   side=tk.RIGHT,
 					   command_select=self.send_ready,
-					   command_deselect=self.send_notready),
-
-			EasyButton(self,
+					   command_deselect=self.send_notready)
+		]
+		if self._client.is_admin:
+			self._buttons.append(EasyButton(self,
 					   self._objects_frame, 50, 50, text='+',
 					   side=tk.RIGHT,
 					   command_select=self.faster_sim,
-					   toggle=False, hideable=False),
+					   toggle=False, hideable=False))
 			
-			EasyButton(self,
+			self._buttons.append(EasyButton(self,
 					   self._objects_frame, 50, 50, text='-',
 					   side=tk.RIGHT,
 					   command_select=self.slower_sim,
-					   toggle=False, hideable=False)
-		]
+					   toggle=False, hideable=False))
 
 		# evènements
 		self._canvas.bind("<Button-1>", self.on_click)
