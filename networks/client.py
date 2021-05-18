@@ -48,7 +48,6 @@ class Client:
 		try:
 			self._socket.connect((self._ip, self._port))
 			self._connected = True
-			print("connected true")
 			self.receive()
 		except ConnectionRefusedError:
 			print("[Error] No server found")
