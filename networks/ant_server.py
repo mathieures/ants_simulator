@@ -86,10 +86,10 @@ class AntServer:
         self._x = posX
         self._y = posY
         self._color = color
-        self._direction = randint(0,360)
+        self._direction = randint(0, 360)
         self._nest = (posX, posY) # couple de coordonnees : (x, y)
 
-        self._has_resource = False # Booleen pour indiquer si une fourmi possede une ressource
+        self._has_resource = False # indique si la fourmi possede une ressource
         self._endurance = AntServer.MAX_ENDURANCE
         self._tries = 0
 

@@ -2,9 +2,7 @@ import threading
 from time import sleep
 import ant_server
 
-# pour le debug
 from time import time
-
 
 class Simulation:
 	""" Classe qui lance toute la simulation de fourmis a partir du dico d'objets defini par le serveur """
@@ -26,6 +24,7 @@ class Simulation:
 		print("sim : new_sleep_time :", new_sleep_time)
 		self._sleep_time = new_sleep_time
 
+
 	def __init__(self, server):
 		self._server = server
 
@@ -35,6 +34,7 @@ class Simulation:
 		self._first_ant = True
 
 		self._sleep_time = 0.05
+
 
 	def _init_ants(self):
 		""" Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
@@ -152,9 +152,8 @@ class Simulation:
 			else:
 				self._server.send_to_all_clients(ants)
 
-			# print("temps sim :", time() - temps_sim)
 			sleep(self._sleep_time) # ajout d'une latence
-		print("[simulation terminee]")
+		print("End of the simulation.")
 		# faudra afficher le vainqueur ou quoi par là
 
 	def _is_wall(self, x, y):

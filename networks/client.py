@@ -38,7 +38,7 @@ class Client:
 		self._ip = ip
 		self._port = port
 
-		self._connected = True
+		self._connected = False
 
 		self._interface = None
 		self._is_admin = False
@@ -48,6 +48,7 @@ class Client:
 		try:
 			self._socket.connect((self._ip, self._port))
 			self._connected = True
+			print("connected true")
 			self.receive()
 		except ConnectionRefusedError:
 			print("[Error] No server found")
