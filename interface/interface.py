@@ -180,7 +180,7 @@ class Interface:
 
 	## Creation d'objets ##
 
-	def _create_object(self, str_type, coords, size=None, width=None, color=None):
+	def create_object(self, str_type, coords, size=None, width=None, color=None):
 		"""Instancie l'objet du type reçu par le Client"""
 		str_type = str_type.lower()
 		if str_type == "resource":

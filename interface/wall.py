@@ -13,8 +13,6 @@ class Wall(CustomObject):
     def width(self):
         return self._width
     
-    
-    
     # Peut-être qu'on peut faire en sorte que width soit positionnel (et remplacé par size dans le bouton) et que size soit par défaut un truc
     # le if len(coords) peut nous aider à déterminer qu'il faut utiliser size
     def __init__(self, canvas, coords, width=15, size=37.5):

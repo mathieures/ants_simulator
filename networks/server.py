@@ -119,9 +119,22 @@ class Server:
 				# Si l'IP du client est celle du serveur, il est admin
 				if address[0] == self._ip:
 					self.send_to_client(client, "admin")
-
+				self.sync_objects(client)
 		else:
 			print("[Warning] Denied access to a client (max number reached)")
+
+	def sync_objects(self, client):
+		sleep(0.01)
+		if self._simulation.objects.get("nest") is not None:
+			for nest in self._simulation.objects["nest"]:
+				data = ["nest", *nest]
+				self.send_to_client(client, data)
+				sleep(0.01)
+		if self._simulation.objects.get("resource") is not None:
+			for resource in self._simulation.objects["resource"]:
+				data = ["resource", *resource]
+				self.send_to_client(client, data)
+				sleep(0.01)
 
 	def receive(self):
 		"""
@@ -143,7 +156,6 @@ class Server:
 					if data[0] == "undo":
 						str_type = data[1]
 						self._simulation.objects[str_type].pop()
-						print("Canceled last object")
 					else:
 						str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
 						self.process_data(str_type, coords, size, width, color)
@@ -180,8 +192,6 @@ class Server:
 			if not self._receiving_threads[client].is_alive():
 				self._receiving_threads[client] = threading.Thread(target=under_receive, daemon=True)
 				self._receiving_threads[client].start()
-
-			# print("threads courants :", threading.active_count())
 
 	def process_data(self, str_type, coords, size, width, color):
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
