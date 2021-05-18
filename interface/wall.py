@@ -13,8 +13,6 @@ class Wall(CustomObject):
     def width(self):
         return self._width
     
-    
-    
     # Peut-être qu'on peut faire en sorte que width soit positionnel (et remplacé par size dans le bouton) et que size soit par défaut un truc
     # le if len(coords) peut nous aider à déterminer qu'il faut utiliser size
     def __init__(self, canvas, coords, width=15, size=37.5):
@@ -35,18 +33,19 @@ class Wall(CustomObject):
         if len(coords) > 4:
             self._id = self.draw(coords)
         else:
-            offset_coords = (coords[0],
-                             coords[1],
-                             coords[0] + size,
-                             coords[1])
-            self._id = self.draw(self.get_centre_coords(offset_coords))
+            self._coords = (coords[0],
+                            coords[1],
+                            coords[0] + size,
+                            coords[1])
+            self._id = self.draw(self.centre_coords)
 
-        self._coords = self._canvas.coords(self._id)
+        self._coords = self._canvas.coords(self._id) # habituellement dans le constructeur de base
 
     def draw(self, coords):
         """Crée le tout premier mur ; Override la méthode d'origine"""
         return self._canvas.create_line(coords,
-                                        width=self._width, fill=self._color)
+                                        width=self._width,
+                                        fill=self._color)
 
     def expand(self, x, y):
         """Étend le mur au point donné en paramètre"""

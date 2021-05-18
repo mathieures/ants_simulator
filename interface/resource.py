@@ -17,9 +17,9 @@ class Resource(CustomObject):
         super().__init__(canvas, coords, size=size)
 
 
-    def draw(self, offset_coords):
+    def draw(self):
         """Override la méthode d'origine"""
-        return self._canvas.create_rectangle(self.get_centre_coords(offset_coords),
+        return self._canvas.create_rectangle(self.centre_coords,
                                              fill='#777')
 
     def shrink(self):

@@ -25,7 +25,6 @@ class Client:
 	def is_admin(self):
 		return self._is_admin
 
-
 	def __init__(self, ip, port):
 		try:
 			assert isinstance(ip, str), "[Error] the server IP is not a valid string"
@@ -155,7 +154,7 @@ class Client:
 					else:
 						str_type, pos, size, width, color = data[0], data[1], data[2], data[3], data[4]
 						# Communique l'information d'un nouvel objet à l'interface
-						self._interface._create_object(str_type, pos, size=size, width=width, color=color)
+						self._interface.create_object(str_type, pos, size=size, width=width, color=color)
 
 				else:
 					if data == "GO":

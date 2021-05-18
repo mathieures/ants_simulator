@@ -1,5 +1,7 @@
 # Dossier cache python
 *__pycache__/
+*~
+*.autosave
 
 # Pour Mathieu
 desktop.ini

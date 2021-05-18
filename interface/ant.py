@@ -26,8 +26,8 @@ class Ant(CustomObject):
         self._base_color = color
 
 
-    def draw(self, offset_coords):
-        return self._canvas.create_oval(self.get_centre_coords(offset_coords),
+    def draw(self):
+        return self._canvas.create_oval(self.centre_coords,
                                         fill=self._color, outline='')
 
     def move(self, delta_x, delta_y):

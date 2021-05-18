@@ -14,9 +14,9 @@ class Pheromone(CustomObject):
 		self._tints = ["#FFDFDB", "#FBBFB8", "#F79F95", "#F38071", "#F0604D"]
 		self._curr_tint = 0 # Index de la teinte qui correspond a la couleur courante
 
-	def draw(self, offset_coords):
+	def draw(self):
 		""" Cree la premiere pheromone, override la methode d'origine """
-		id = self._canvas.create_rectangle(self.get_centre_coords(offset_coords), 
+		id = self._canvas.create_rectangle(self.centre_coords, 
 										   fill=self._color, outline='')
 		self._canvas.tag_lower(id) # On met les pheromones en arriere-plan
 		return id

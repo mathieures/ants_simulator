@@ -110,16 +110,16 @@ class Server:
 				pass
 			else:
 				self._send_to_client(client, ("color", color.random_rgb()))
-				print("Accepted client. Total: {}".format(len(Server.clients)))
 				# On lui reserve une entree dans le dictionnaire
 				Server.clients[client] = { 'ready':False, 'thread': None }
+				print("Accepted client. Total: {}".format(len(Server.clients)))
 				if self._window is not None:
 					self._window.clients += 1
 
 				# Si l'IP du client est celle du serveur, il est admin
 				if address[0] == self._ip:
 					self._send_to_client(client, "admin")
-
+				self._sync_objects(client)
 		else:
 			print("[Warning] Denied access to a client (max number reached)")
 
@@ -127,7 +127,20 @@ class Server:
 		"""Retourne le nombre de clients prêts en faisant la somme des booléens"""
 		return sum([ Server.clients[client]['ready'] for client in Server.clients ])
 
-	def receive(self):
+	def _sync_objects(self, client):
+		nests = self._simulation.objects.get("nest")
+		if nests is not None:
+			for nest in nests:
+				data = ["nest", *nest]
+				self._send_to_client(client, data)
+				sleep(0.01)
+		resources = self._simulation.objects.get("resource")
+		if resources is not None:
+			for resource in resources:
+				data = ["resource", *resource]
+				self._send_to_client(client, data)
+
+	def _receive(self):
 		"""
 		Fonction qui sert à réceptionner les
 		données envoyées depuis chaque client.
@@ -215,7 +228,7 @@ class Server:
 		accepting_thread.start()
 		accepting_thread.join(0.2)
 
-		receiving_thread = threading.Thread(target=self.receive, daemon=True)
+		receiving_thread = threading.Thread(target=self._receive, daemon=True)
 		receiving_thread.start()
 		receiving_thread.join(0.2)
 
@@ -227,7 +240,7 @@ class Server:
 			accepting_thread.join(0.2)
 
 			if not receiving_thread.is_alive():
-				receiving_thread = threading.Thread(target=self.receive, daemon=True)
+				receiving_thread = threading.Thread(target=self._receive, daemon=True)
 				receiving_thread.start()
 			receiving_thread.join(0.2)
 
