@@ -53,17 +53,6 @@ class Client:
 			print("[Error] No server found")
 			sys.exit(1)
 
-	def send(self, element, pos, data):
-		"""
-		Fonction d'envoi au serveur
-		element:  type de donnée
-		pos: liste de position [x, y]
-		data: taille de l'objet
-		"""
-		all = pickle.dumps([element, pos, data])
-		self._socket.send(all)
-
-
 	def send_ready(self):
 		"""Informe le serveur que ce client est prêt"""
 		self._socket.send("Ready".encode())
