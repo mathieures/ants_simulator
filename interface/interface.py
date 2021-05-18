@@ -58,8 +58,8 @@ class Interface:
 		self._menu_frame = tk.Frame(self._root)
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
-		self._menu_file = EasyMenu(self._menu_frame, "Network", 
-									[("Disconnect", self._disconnect_client)], width=8)
+		self._menu_network = EasyMenu(self._menu_frame, "Network", 
+									  [("Disconnect", self._disconnect_client)], width=8)
 
 		self._menu_edit = EasyMenu(self._menu_frame, "Edit",
 								   [("Undo (Ctrl+Z)", self._undo)])
@@ -88,7 +88,7 @@ class Interface:
 					   command_deselect=self._set_notready),
 		]
 
-		# evènements
+		# Evenements
 		self._canvas.bind("<Button-1>", self._on_click)
 		self._canvas.bind("<ButtonRelease-1>", self._on_release)
 		self._canvas.bind("<B1-Motion>", self._on_motion)
@@ -120,7 +120,6 @@ class Interface:
 		elif self._current_object_type is Resource:
 			self._ask_resource(event.x, event.y)
 
-		# je crois pas qu'on veuille demander un wall maintenant
 		elif self._current_object_type is Wall:
 			# On le cree directement, pour avoir un visuel
 			self._create_wall(event.x, event.y)
@@ -171,7 +170,11 @@ class Interface:
 		self._client.ask_object(Nest, (x, y), size, color=self._local_color)
 
 	def _ask_resource(self, x, y, size=20, width=25):
-		self._client.ask_object(Resource, (x, y), size, width)
+		"""
+		Ici la width représente le nombre de fois que des fourmis
+		pourront toucher la ressource avant qu'elle disparaisse.
+		"""
+		self._client.ask_object(Resource, (x, y), size, width=width)
 
 	def _ask_wall(self, coords_list, width=20):
 		"""Demande un mur. Appelé seulement à la fin d'un clic long."""
@@ -317,10 +320,6 @@ class Interface:
 
 	def slower_sim(self):
 		self._client.ask_slower_sim()
-
-	def fonction_bidon(self, event=None):
-		# À ENLEVER
-		print("fonction bidon au rapport")
 
 	def countdown(self):
 		"""Affiche un compte a rebours au milieu de la fenetre"""
