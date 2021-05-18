@@ -31,7 +31,6 @@ class ConfigServer:
     @property
     def create_window(self):
         return bool(self._create_window.get())
-    
 
 
     def __init__(self):

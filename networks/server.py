@@ -65,8 +65,6 @@ class Server:
 
 		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-		self._clients_ready = 0
-
 		self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
 
 		if create_window:
@@ -128,6 +126,11 @@ class Server:
 		return sum([ Server.clients[client]['ready'] for client in Server.clients ])
 
 	def _sync_objects(self, client):
+		"""
+		Envoie tous les objets déjà
+		posés au client en paramètre.
+		Note : n'envoie pas les murs
+		"""
 		nests = self._simulation.objects.get("nest")
 		if nests is not None:
 			for nest in nests:
