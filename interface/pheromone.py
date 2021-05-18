@@ -22,7 +22,6 @@ class Pheromone(CustomObject):
 		self._canvas.tag_lower(id) # On met les pheromones en arriere-plan
 		return id
 
-
 	def darken(self):
 		if self._curr_tint < 4:
 			self._curr_tint += 1
