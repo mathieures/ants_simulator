@@ -1,5 +1,6 @@
 import tkinter as tk
 import threading
+import gc
 
 class ServerWindow(threading.Thread):
     """
@@ -102,11 +103,16 @@ class ServerWindow(threading.Thread):
 
     def quit_window(self):
         """Ferme la fenêtre. Méthode utilisée par le serveur."""
+        print("dans quit window")
         self._root.destroy()
 
     def _quit_server(self):
         """Notifie au serveur qu'il doit s'arrêter"""
-        self._server.quit()
+        print("dans quit server")
+        try:
+            self._server.quit()
+        except:
+            print("ERREUR")
 
 
 if __name__ == '__main__':
