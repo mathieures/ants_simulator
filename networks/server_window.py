@@ -48,6 +48,8 @@ class ServerWindow(threading.Thread):
         self._ip = server.ip
         self._port = str(server.port)
         self._max_clients = str(server.max_clients)
+        self._clients = None
+        self._ready_clients = None
         
         self._server = server # on le garde pour pouvoir le quitter
         self._server.window = self
