@@ -272,11 +272,9 @@ class Server:
 			self._send_to_client(client, data)
 
 	def quit(self):
-		print("appel de quit")
 		self._online = False
 		if self._window is not None:
 			self._window.quit_window()
-		print("après quit window")
 		self._socket.close()
 		sys.exit(0)
 
