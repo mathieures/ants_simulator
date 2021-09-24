@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 class EasyButton:
     """
     Crée un bouton avec du texte et/ou une icône à afficher
@@ -58,13 +59,13 @@ class EasyButton:
 
         self._pack_side = side
         self._canvas.pack(side=self._pack_side)
-        self._canvas.bind("<Button-1>", self._on_click)
+        self._canvas.bind("<Button-1>", self.on_click)
 
         self._enabled = True
         self._selected = False
         self._hideable = hideable
 
-    def _on_click(self, event):
+    def on_click(self, event):
         """Gère le clic sur le canvas qui sert de bouton"""
         if self._enabled:
             if not self._selected:

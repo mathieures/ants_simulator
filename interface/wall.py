@@ -33,19 +33,18 @@ class Wall(CustomObject):
         if len(coords) > 4:
             self._id = self.draw(coords)
         else:
-            self._coords = (coords[0],
-                            coords[1],
-                            coords[0] + size,
-                            coords[1])
-            self._id = self.draw(self.centre_coords)
+            offset_coords = (coords[0],
+                             coords[1],
+                             coords[0] + size,
+                             coords[1])
+            self._id = self.draw(self.get_centre_coords(offset_coords))
 
-        self._coords = self._canvas.coords(self._id) # habituellement dans le constructeur de base
+        self._coords = self._canvas.coords(self._id)
 
     def draw(self, coords):
         """Crée le tout premier mur ; Override la méthode d'origine"""
         return self._canvas.create_line(coords,
-                                        width=self._width,
-                                        fill=self._color)
+                                        width=self._width, fill=self._color)
 
     def expand(self, x, y):
         """Étend le mur au point donné en paramètre"""

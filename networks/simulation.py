@@ -1,5 +1,6 @@
 import threading
 from time import sleep
+from math import sqrt
 import ant_server
 
 from time import time
@@ -9,6 +10,10 @@ class Simulation:
 
 	@property
 	def objects(self):
+		"""
+		Dictionnaire qui peut être de la forme :
+			"resource": ()
+		"""
 		return self._objects
 
 	@objects.setter
@@ -59,7 +64,7 @@ class Simulation:
 
 		length = len(self._ants)
 
-		ants = ["move_ants"] + [None] * len(self._ants) # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis
+		ants = ["move_ants"] + len(self._ants) * [None] # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis
 
 		def simulate_ants_in_thread(start, number):
 			end = start + number
@@ -111,16 +116,16 @@ class Simulation:
 				if (not ant.has_resource) and (
 					index_resource is not None) and (
 					self._objects["resource"][index_resource][2] != 0):
-					# Une fourmi a touche une ressource
-					# On donne aux clients l'index de la ressource touchee
-					self._objects["resource"][index_resource][2] -= 1 # On diminue la taille de la ressource
-					ant.has_resource = True
-					if not self._first_ant:
-						ants[ant_index].append(index_resource)
-					else:
-						ants[ant_index].append([index_resource, "first_ant"])
-						self._first_ant = False
-						print("First ant to find resource was color:", ant.color)
+						# Une fourmi a touche une ressource
+						# On donne aux clients l'index de la ressource touchee
+						self._objects["resource"][index_resource][2] -= 1 # On diminue la taille de la ressource
+						ant.has_resource = True
+						if not self._first_ant:
+							ants[ant_index].append(index_resource)
+						else:
+							ants[ant_index].append([index_resource, "first_ant"])
+							self._first_ant = False
+							print("First ant to find resource was color:", ant.color)
 				# Si la fourmi est sur son nid
 				elif ant.coords == ant.nest:
 					ant.has_resource = False
@@ -189,13 +194,21 @@ class Simulation:
 					return False
 			else:
 				for properties in self._objects[str_type]:
-					coords_obj, size_obj, width_obj, color_obj = properties
-					offset = size_obj
-					# On teste un espace autour des coords
-					for i in range(0, len(coords_obj) - 1, 2):
-						if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
-							coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
-							return False
+					# properties de la forme : coords_obj, size_obj, width_obj, color_obj
+					coords_obj, size_obj = properties[:2]
+
+					# On calcule la distance entre l'objet et la position
+					# ( <=> tester si le point est dans un cercle de rayon size_obj)
+					dist = sqrt((x - coords_obj[0])**2 + (y - coords_obj[1])**2)
+					if dist <= size_obj:
+						return False
+
+					# offset = size_obj
+					# # On teste un espace autour des coords
+					# for i in range(0, len(coords_obj) - 1, 2):
+					# 	if (coords_obj[i] - offset <= x <= coords_obj[i] + offset) and (
+					# 		coords_obj[i+1] - offset <= y <= coords_obj[i+1] + offset):
+					# 		return False
 		return True
 
 	def check_all_coords(self, coords_list, size):
@@ -222,15 +235,16 @@ class Simulation:
 				x, y = coords[i], coords[i+1]
 				for j in range(1, size // 2):
 					# peut-être mettre +1 (mais je crois que non)
-					self._objects["wall"].add((x - j, y - j))
-					self._objects["wall"].add((x - j, y))
-					self._objects["wall"].add((x - j, y + j))
-					self._objects["wall"].add((x, y - j))
-					self._objects["wall"].add((x, y))
-					self._objects["wall"].add((x, y + j))
-					self._objects["wall"].add((x + j, y - j))
-					self._objects["wall"].add((x + j, y))
-					self._objects["wall"].add((x + j, y + j))
+					self._objects["wall"].update(
+						{(x - j, y - j),
+						 (x - j, y),
+						 (x - j, y + j),
+						 (x, y - j),
+						 (x, y),
+						 (x, y + j),
+						 (x + j, y - j),
+						 (x + j, y),
+						 (x + j, y + j)})
 		else:
 			if self._objects.get(str_type) is None:
 				self._objects[str_type] = []

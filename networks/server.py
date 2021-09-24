@@ -21,8 +21,8 @@ class Server:
 		ouverte pendant le fonctionnement du serveur, et l'utilisateur devra
 		terminer le script par ses propres moyens.
 	"""
-	clients = {} # dictionnaire qui associe un client a un dict { 'ready': bool, 'thread': thread_reception }
-	# Note : on est obliges de garder une trace de quel client est pret pour mettre a jour la window
+	clients = {} # dictionnaire qui associe un client (socket) a un dict { 'ready': bool, 'thread': thread_reception }
+	# Note : on est oblige de garder une trace de quel client est pret pour mettre a jour la window
 
 	@property
 	def online(self):
@@ -109,7 +109,7 @@ class Server:
 			else:
 				self._send_to_client(client, ("color", color.random_rgb()))
 				# On lui reserve une entree dans le dictionnaire
-				Server.clients[client] = { 'ready':False, 'thread': None }
+				Server.clients[client] = { 'ready': False, 'thread': None }
 				print("Accepted client. Total: {}".format(len(Server.clients)))
 				if self._window is not None:
 					self._window.clients += 1
@@ -122,8 +122,11 @@ class Server:
 			print("[Warning] Denied access to a client (max number reached)")
 
 	def _get_ready_clients(self):
-		"""Retourne le nombre de clients prêts en faisant la somme des booléens"""
-		return sum([ Server.clients[client]['ready'] for client in Server.clients ])
+		"""
+		Retourne le nombre de clients prêts en faisant la somme des booléens.
+		Utilise un generator, d'où les parenthèses
+		"""
+		return sum( ( Server.clients[client]['ready'] for client in Server.clients ))
 
 	def _sync_objects(self, client):
 		"""
@@ -131,17 +134,23 @@ class Server:
 		posés au client en paramètre.
 		Note : n'envoie pas les murs
 		"""
+		data = ["create"]
 		nests = self._simulation.objects.get("nest")
 		if nests is not None:
-			for nest in nests:
-				data = ["nest", *nest]
-				self._send_to_client(client, data)
-				sleep(0.01)
+			data.append(("nest", nests))
+			# for nest in nests:
+			# 	data = ["nest", *nest]
+			# 	self._send_to_client(client, data)
+			# 	sleep(0.01)
 		resources = self._simulation.objects.get("resource")
 		if resources is not None:
-			for resource in resources:
-				data = ["resource", *resource]
-				self._send_to_client(client, data)
+			data.append(("resource", resources))
+			# for resource in resources:
+			# 	data = ["resource", *resource]
+			# 	self._send_to_client(client, data)
+		print("Prêt à sync :", data)
+		if len(data) > 1:
+			self._send_to_client(client, data)
 
 	def _receive(self):
 		"""
@@ -150,11 +159,13 @@ class Server:
 		Utilise une sous-fonction 'under_receive' qui
 		va manipuler dans un thread les données reçues.
 		"""
-		# Note : faire une copie permet d'enlever un client sans RuntimeError
+		# Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
 		for client in tuple(Server.clients):
 			def under_receive():
 				try:
 					recv_data = client.recv(10240)
+					print("received de :", client) # AU BOUT D'UN MOMENT, AFFICHE TOUJOURS LE MÊME, POURQUOI ????
+
 				except ConnectionResetError:
 					self._disconnect_client(client)
 				else:
@@ -168,24 +179,28 @@ class Server:
 						if data[0] == "undo":
 							str_type = data[1]
 							self._simulation.objects[str_type].pop()
-							print("Cancelled last object.")
+							# print("Cancelled last object.")
 						else:
-							str_type, coords, size, width, color = data[0], data[1], data[2], data[3], data[4]
+							str_type, coords, size, width, color = data[:5]
 							self._process_data(str_type, coords, size, width, color)
 					else:
 						data = data.decode()
-						if data == "Ready":
+						if data == "ready":
+							# print("reçu ready de :", client)
 							Server.clients[client]['ready'] = True
+							# print("	client ready ? :", Server.clients[client]["ready"])
+							# print("	Server.clients :", Server.clients)
 							ready_clients = self._get_ready_clients()
+							# print("	ready clients :", ready_clients)
 							self._window.ready_clients = ready_clients
 							if ready_clients == len(Server.clients):
 								self.send_to_all_clients("GO")
-								sleep(5) # On attend 5 secondes le temps que le countdown de interface finisse
+								sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
 								# Lancement de la simulation
 								threading.Thread(target=self._simulation.start, daemon=True).start()
 							else:
 								print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
-						elif data == "Not ready":
+						elif data == "not ready":
 							Server.clients[client]['ready'] = False
 							ready_clients = self._get_ready_clients()
 							self._window.ready_clients = ready_clients
@@ -193,10 +208,10 @@ class Server:
 
 						elif data == "faster":
 							self._simulation.sleep_time /= 2
-							print("Faster simulation")
+							# print("Faster simulation")
 						elif data == "slower":
 							self._simulation.sleep_time *= 2
-							print("Slower simulation")
+							# print("Slower simulation")
 
 
 			# Si le client n'avait pas de thread associe, on en cree un
@@ -219,8 +234,8 @@ class Server:
 		if self._simulation.check_all_coords(coords, size):
 			self._simulation.add_to_objects(str_type, coords, size, width, color)
 
-			data = [str_type, coords, size, width, color]
-			self.send_to_all_clients(data)
+			data = (str_type, coords, size, width, color)
+			self.send_to_all_clients(("create", data))
 
 	def _condition(self):
 		"""
@@ -240,12 +255,12 @@ class Server:
 			if not accepting_thread.is_alive():
 				accepting_thread = threading.Thread(target=self._accept, daemon=True)
 				accepting_thread.start()
-			accepting_thread.join(0.2)
+			# accepting_thread.join(0.2)
 
 			if not receiving_thread.is_alive():
 				receiving_thread = threading.Thread(target=self._receive, daemon=True)
 				receiving_thread.start()
-			receiving_thread.join(0.2)
+			# receiving_thread.join(0.2)
 
 	def _send_to_client(self, client, data):
 		"""Envoie des données à un seul client"""

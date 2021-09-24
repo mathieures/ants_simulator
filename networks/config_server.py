@@ -31,6 +31,7 @@ class ConfigServer:
     @property
     def create_window(self):
         return bool(self._create_window.get())
+    
 
 
     def __init__(self):
@@ -47,8 +48,8 @@ class ConfigServer:
 
         self._topframe = tk.Frame(self._labelframe)
         self._topframe.pack(side=tk.TOP, expand=True, fill=tk.X)
-        self._centreframe = tk.Frame(self._labelframe)
-        self._centreframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
+        self._centerframe = tk.Frame(self._labelframe)
+        self._centerframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
         self._bottomframe = tk.Frame(self._labelframe)
         self._bottomframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
 
@@ -73,8 +74,8 @@ class ConfigServer:
         self._mode_option_menu.pack(side=tk.RIGHT)
 
         # Entrees de texte
-        tk.Label(self._centreframe, text="PORT:", width=10).pack(side=tk.LEFT)
-        self._port_entry = tk.Entry(self._centreframe, textvariable=self._port)
+        tk.Label(self._centerframe, text="PORT:", width=10).pack(side=tk.LEFT)
+        self._port_entry = tk.Entry(self._centerframe, textvariable=self._port)
         self._port_entry.pack(side=tk.RIGHT)
 
         tk.Label(self._bottomframe, text="Max clients:", width=10).pack(side=tk.LEFT)

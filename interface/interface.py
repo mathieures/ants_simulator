@@ -58,8 +58,8 @@ class Interface:
 		self._menu_frame = tk.Frame(self._root)
 		self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
-		self._menu_network = EasyMenu(self._menu_frame, "Network", 
-									  [("Disconnect", self._disconnect_client)], width=8)
+		self._menu_file = EasyMenu(self._menu_frame, "Network", 
+									[("Disconnect", self._disconnect_client)], width=8)
 
 		self._menu_edit = EasyMenu(self._menu_frame, "Edit",
 								   [("Undo (Ctrl+Z)", self._undo)])
@@ -84,14 +84,14 @@ class Interface:
 			EasyButton(self,
 					   self._objects_frame, 70, 50, text='Ready',
 					   side=tk.RIGHT,
-					   command_select=self._set_ready,
-					   command_deselect=self._set_notready),
+					   command_select=self.send_ready,
+					   command_deselect=self.send_notready),
 		]
 
-		# Evenements
-		self._canvas.bind("<Button-1>", self._on_click)
-		self._canvas.bind("<ButtonRelease-1>", self._on_release)
-		self._canvas.bind("<B1-Motion>", self._on_motion)
+		# evènements
+		self._canvas.bind("<Button-1>", self.on_click)
+		self._canvas.bind("<ButtonRelease-1>", self.on_release)
+		self._canvas.bind("<B1-Motion>", self.on_motion)
 
 		self._root.bind("<Control-z>", self._undo)
 		self._root.bind("<Escape>", self.deselect_buttons)
@@ -111,26 +111,27 @@ class Interface:
 
 	## Gestion d'evènements ##
 
-	def _on_click(self, event):
+	def on_click(self, event):
 		# print("click ; current :", self._current_object_type)
 		# Normalement c'est la bonne manière de tester, mais faut voir
 		if self._current_object_type is Nest:
-			self._ask_nest(event.x, event.y)
+			self.ask_nest(event.x, event.y)
 
 		elif self._current_object_type is Resource:
-			self._ask_resource(event.x, event.y)
+			self.ask_resource(event.x, event.y)
 
+		# je crois pas qu'on veuille demander un wall maintenant
 		elif self._current_object_type is Wall:
 			# On le cree directement, pour avoir un visuel
 			self._create_wall(event.x, event.y)
 
-	def _on_release(self, event):
+	def on_release(self, event):
 		if self._current_wall is not None:
 			wall_coords, wall_width = self._current_wall.coords, self._current_wall.width
-			self._ask_wall(wall_coords, wall_width)
+			self.ask_wall(wall_coords, wall_width)
 			self._delete_current_wall()
 
-	def _on_motion(self, event):
+	def on_motion(self, event):
 		if self._current_wall is not None:
 			self._current_wall.expand(event.x, event.y)
 
@@ -141,42 +142,38 @@ class Interface:
 			button.deselect(exec_command=False)
 		self._current_object_type = None
 
-	def _set_ready(self):
+	def send_ready(self):
 		for button in self._buttons:
 			if button.text != "Ready":
 				button.hide()
 			else:
 				# On laisse le bouton Ready toujours actif
 				button.text = "Not ready"
-		self._client.send_ready()
+		self._client.set_ready()
 
-	def _set_notready(self):
+	def send_notready(self):
 		for button in self._buttons:
 			if button.text != "Not ready":
 				button.show()
 			else:
 				# Le bouton Ready est toujours actif
 				button.text = "Ready"
-		self._client.send_notready()
+		self._client.set_notready()
 
 
 	## Demandes de confirmation pour creer les objets ##
 
-	def _ask_nest(self, x, y, size=20):
+	def ask_nest(self, x, y, size=20):
 		"""
 		Demande au serveur s'il peut créer un nid à l'endroit donné.
 		La couleur est obligatoirement la couleur locale
 		"""
 		self._client.ask_object(Nest, (x, y), size, color=self._local_color)
 
-	def _ask_resource(self, x, y, size=20, width=25):
-		"""
-		Ici la width représente le nombre de fois que des fourmis
-		pourront toucher la ressource avant qu'elle disparaisse.
-		"""
-		self._client.ask_object(Resource, (x, y), size, width=width)
+	def ask_resource(self, x, y, size=20, width=25):
+		self._client.ask_object(Resource, (x, y), size, width)
 
-	def _ask_wall(self, coords_list, width=20):
+	def ask_wall(self, coords_list, width=20):
 		"""Demande un mur. Appelé seulement à la fin d'un clic long."""
 		self._client.ask_object(Wall, coords_list, width=width)
 
@@ -236,7 +233,7 @@ class Interface:
 			threading.Thread(target=create_pheromones_in_thread, args=(i, step)).start()
 
 
-	def _shrink_resource(self, index):
+	def shrink_resource(self, index):
 		if self._resources[index].max_shrinking == 0:
 			self._resources[index].remove()
 		else:
@@ -249,6 +246,10 @@ class Interface:
 		"""
 		for ant in ants_list:
 			self._ants.append(Ant(self._canvas, ant[0], ant[1])) # coords, couleur
+
+	def move_ant(self, index, delta_x, delta_y):
+		""" Fonction pour déplacer une fourmi """
+		self._ants[index].move(delta_x, delta_y)
 
 	def move_ants(self, relative_coords):
 		"""
@@ -270,14 +271,14 @@ class Interface:
 					resource_index = relative_coords[i][2]
 					# Nous devons rapetisser la ressource
 					if isinstance(resource_index, int):
-						self._shrink_resource(resource_index)
+						self.shrink_resource(resource_index)
 						ant.color = 'grey'
 					elif resource_index == "base":
 						ant.color = ant.base_color
 					# Si on a une liste, c'est la premiere fourmi
 					elif isinstance(resource_index, list):
 						self.set_first_ant(ant.base_color)
-						self._shrink_resource(resource_index[0])
+						self.shrink_resource(resource_index[0])
 						ant.color = 'grey'
 					else:
 						ant.color = resource_index
@@ -288,7 +289,7 @@ class Interface:
 	def set_first_ant(self, color):
 		w = int(self._canvas["width"])
 		h = int(self._canvas["height"])
-		self._canvas.create_text(w - 240, h - 20, font="Corbel 15 bold", text="The first ant to find a resource is colored as:")
+		self._canvas.create_text(w - 200, h - 20, font="Corbel 15 bold", text="La première fourmi est de couleur")
 		self._canvas.create_rectangle(w-50, h-30, w-30, h-10, fill=color)
 
 	def _undo(self, event=None):
@@ -320,6 +321,10 @@ class Interface:
 
 	def slower_sim(self):
 		self._client.ask_slower_sim()
+
+	def fonction_bidon(self, event=None):
+		# À ENLEVER
+		print("fonction bidon au rapport")
 
 	def countdown(self):
 		"""Affiche un compte a rebours au milieu de la fenetre"""
