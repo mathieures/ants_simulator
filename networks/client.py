@@ -78,7 +78,7 @@ class Client:
 		un élément d'un type et d'une taille donnés
 		à la position donnée.
 		"""
-		str_type = object_type.__name__ # nom de classe de l'objet
+		str_type = object_type.__name__ # Nom de classe de l'objet
 		data = pickle.dumps([str_type, position, size, width, color])
 		try:
 			self._socket.send(data)
@@ -148,16 +148,31 @@ class Client:
 
 				# Si on reçoit la couleur locale de l'interface
 				elif data[0] == "color":
+					# print("reçu couleur :", data[1])
 					self._interface.local_color = data[1]
 
-				# Si c'est un objet cree par un client
+				# Si c'est un objet cree par un client,
 				elif data[0] == "create":
-					print("data :", data)
-					str_type, pos, size, width, color = data[1]
-					# Communique l'information d'un nouvel objet à l'interface
-					self._interface.create_object(str_type, pos, size=size, width=width, color=color)
+					# data est un tuple de la forme
+					'''
+					('create',
+						[
+							('str_type', [[(x, y), size, width, 'color'],
+										   [(x2, y2), …]]),
+							('str_type2', [[(x3, y3), size3, width3, 'color3'],
+										   [(…)]])
+						]
+					)
+					'''
+					for creation_type in data[1:]:
+						# On a un tuple ('str_type', [[…],[…]])
+						str_type = creation_type[0]
+						for creation_properties in creation_type[1]:
+							pos, size, width, color = creation_properties
+							# Communique l'information d'un nouvel objet a l'interface
+							self._interface.create_object(str_type, pos, size=size, width=width, color=color)
 				else:
-					print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ERREUR")
+					# Si on arrive ici c'est qu'il manque le type de data qu'il faut analyser
 					raise
 
 			else:

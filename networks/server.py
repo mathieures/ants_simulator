@@ -118,6 +118,7 @@ class Server:
 				# Si l'IP du client est celle du serveur, il est admin
 				if address[0] == self._ip:
 					self._send_to_client(client, "admin")
+				sleep(0.1)
 				self._sync_objects(client)
 		else:
 			print("[Warning] Denied access to a client (max number reached)")
@@ -145,6 +146,7 @@ class Server:
 		print("Prêt à sync :", data)
 		if len(data) > 1:
 			self._send_to_client(client, data)
+			print("envoyé")
 
 	def _receive(self):
 		"""
@@ -219,7 +221,7 @@ class Server:
 		if self._simulation.check_all_coords(coords, size):
 			self._simulation.add_to_objects(str_type, coords, size, width, color)
 
-			data = (str_type, coords, size, width, color)
+			data = (str_type, [[coords, size, width, color]]) # syntaxe de l'envoi groupe
 			self.send_to_all_clients(("create", data))
 
 	def _condition(self):
@@ -268,7 +270,7 @@ class Server:
 
 	def send_to_all_clients(self, data):
 		"""Envoie des informations à tous les clients"""
-		for client in Server.clients:
+		for client in tuple(Server.clients):
 			self._send_to_client(client, data)
 
 	def quit(self):
