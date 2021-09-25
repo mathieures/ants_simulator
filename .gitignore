@@ -1,0 +1,14 @@
+# Dossier cache python
+*__pycache__/
+*~
+*.autosave
+
+# Pour Mathieu
+desktop.ini
+backup*
+%SystemDrive%
+
+# Si vous voulez ignorer d'autres trucs
+# mais pas pour tout le monde, vous pouvez
+# ignorer .gitignore lui-même avec :
+#.gitignore
