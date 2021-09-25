@@ -201,7 +201,6 @@ class Server:
 
 		# Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
 		for client in tuple(Server.clients):
-			print("counts :", [ Server.clients[c]["count"] for c in Server.clients ])
 			# Si le client n'avait pas de thread associe, on en cree un
 			if Server.clients[client]["thread"] is None:
 				Server.clients[client]["thread"] = threading.Thread(target=receive_in_thread, args=(client,), daemon=True)
