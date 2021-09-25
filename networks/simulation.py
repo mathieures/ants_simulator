@@ -131,7 +131,7 @@ class Simulation:
 					ant.has_resource = False
 					ant.endurance = ant.MAX_ENDURANCE
 					ant.tries = 0
-					ants[ant_index].append('base') # Reprendre la couleur d'origine
+					ants[ant_index].append("base") # Reprendre la couleur d'origine
 				elif ant.endurance <= 0:
 					ants[ant_index].append("black")
 

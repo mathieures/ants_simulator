@@ -21,7 +21,7 @@ class Server:
 		ouverte pendant le fonctionnement du serveur, et l'utilisateur devra
 		terminer le script par ses propres moyens.
 	"""
-	clients = {} # dictionnaire qui associe un client (socket) a un dict { 'ready': bool, 'thread': thread_reception }
+	clients = {} # dictionnaire qui associe un client (socket) a un dict { "ready": bool, "thread": thread_reception }
 	# Note : on est oblige de garder une trace de quel client est pret pour mettre a jour la window
 
 	@property
@@ -104,12 +104,13 @@ class Server:
 			try:
 				client, address = self._socket.accept()
 			except OSError:
-				# levee quand la connexion est coupee pendant l'attente d'accept
+				# Exception levee quand la connexion est coupee pendant l'attente d'accept
 				pass
 			else:
-				self._send_to_client(client, ("color", color.random_rgb()))
+				random_color = color.random_rgb()
+				self._send_to_client(client, ("color", random_color))
 				# On lui reserve une entree dans le dictionnaire
-				Server.clients[client] = { 'ready': False, 'thread': None }
+				Server.clients[client] = { "ready": False, "thread": None }
 				print("Accepted client. Total: {}".format(len(Server.clients)))
 				if self._window is not None:
 					self._window.clients += 1
@@ -126,7 +127,7 @@ class Server:
 		Retourne le nombre de clients prêts en faisant la somme des booléens.
 		Utilise un generator, d'où les parenthèses
 		"""
-		return sum( ( Server.clients[client]['ready'] for client in Server.clients ))
+		return sum( ( Server.clients[client]["ready"] for client in Server.clients ))
 
 	def _sync_objects(self, client):
 		"""
@@ -138,16 +139,9 @@ class Server:
 		nests = self._simulation.objects.get("nest")
 		if nests is not None:
 			data.append(("nest", nests))
-			# for nest in nests:
-			# 	data = ["nest", *nest]
-			# 	self._send_to_client(client, data)
-			# 	sleep(0.01)
 		resources = self._simulation.objects.get("resource")
 		if resources is not None:
 			data.append(("resource", resources))
-			# for resource in resources:
-			# 	data = ["resource", *resource]
-			# 	self._send_to_client(client, data)
 		print("Prêt à sync :", data)
 		if len(data) > 1:
 			self._send_to_client(client, data)
@@ -156,74 +150,66 @@ class Server:
 		"""
 		Fonction qui sert à réceptionner les
 		données envoyées depuis chaque client.
-		Utilise une sous-fonction 'under_receive' qui
+		Utilise une sous-fonction 'receive_in_thread' qui
 		va manipuler dans un thread les données reçues.
 		"""
+		def receive_in_thread(receiving_client):
+			try:
+				recv_data = receiving_client.recv(10240)
+			except ConnectionResetError:
+				self._disconnect_client(receiving_client)
+			else:
+				try:
+					data = pickle.loads(recv_data)
+				except pickle.UnpicklingError:
+					data = recv_data
+				# Si c'est une liste, on sait que la demande est effectuee pour
+				# creer un element, ou annuler un placement, ou supprimer une ressource
+				if isinstance(data, list):
+					if data[0] == "undo":
+						str_type = data[1]
+						self._simulation.objects[str_type].pop()
+						# print("Cancelled last object.")
+					else:
+						str_type, coords, size, width, color = data[:5]
+						self._process_data(str_type, coords, size, width, color)
+				else:
+					data = data.decode()
+					if data == "ready":
+						Server.clients[receiving_client]["ready"] = True
+						ready_clients = self._get_ready_clients()
+						self._window.ready_clients = ready_clients
+						if ready_clients == len(Server.clients):
+							self.send_to_all_clients("GO")
+							sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
+							# Lancement de la simulation
+							threading.Thread(target=self._simulation.start, daemon=True).start()
+						else:
+							print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
+					elif data == "not ready":
+						Server.clients[receiving_client]["ready"] = False
+						ready_clients = self._get_ready_clients()
+						self._window.ready_clients = ready_clients
+						print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
+
+					elif data == "faster":
+						self._simulation.sleep_time /= 2
+						# print("Faster simulation")
+					elif data == "slower":
+						self._simulation.sleep_time *= 2
+						# print("Slower simulation")
+
 		# Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
 		for client in tuple(Server.clients):
-			def under_receive():
-				try:
-					recv_data = client.recv(10240)
-					print("received de :", client) # AU BOUT D'UN MOMENT, AFFICHE TOUJOURS LE MÊME, POURQUOI ????
-
-				except ConnectionResetError:
-					self._disconnect_client(client)
-				else:
-					try:
-						data = pickle.loads(recv_data)
-					except pickle.UnpicklingError:
-						data = recv_data
-					# Si c'est une liste, on sait que la demande est effectuee pour
-					# creer un element, ou annuler un placement, ou supprimer une ressource
-					if isinstance(data, list):
-						if data[0] == "undo":
-							str_type = data[1]
-							self._simulation.objects[str_type].pop()
-							# print("Cancelled last object.")
-						else:
-							str_type, coords, size, width, color = data[:5]
-							self._process_data(str_type, coords, size, width, color)
-					else:
-						data = data.decode()
-						if data == "ready":
-							# print("reçu ready de :", client)
-							Server.clients[client]['ready'] = True
-							# print("	client ready ? :", Server.clients[client]["ready"])
-							# print("	Server.clients :", Server.clients)
-							ready_clients = self._get_ready_clients()
-							# print("	ready clients :", ready_clients)
-							self._window.ready_clients = ready_clients
-							if ready_clients == len(Server.clients):
-								self.send_to_all_clients("GO")
-								sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
-								# Lancement de la simulation
-								threading.Thread(target=self._simulation.start, daemon=True).start()
-							else:
-								print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
-						elif data == "not ready":
-							Server.clients[client]['ready'] = False
-							ready_clients = self._get_ready_clients()
-							self._window.ready_clients = ready_clients
-							print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
-
-						elif data == "faster":
-							self._simulation.sleep_time /= 2
-							# print("Faster simulation")
-						elif data == "slower":
-							self._simulation.sleep_time *= 2
-							# print("Slower simulation")
-
-
+			print("counts :", [ Server.clients[c]["count"] for c in Server.clients ])
 			# Si le client n'avait pas de thread associe, on en cree un
-			if Server.clients[client]['thread'] is None:
-				Server.clients[client]['thread'] = threading.Thread(target=under_receive, daemon=True)
-				Server.clients[client]['thread'].start()
+			if Server.clients[client]["thread"] is None:
+				Server.clients[client]["thread"] = threading.Thread(target=receive_in_thread, args=(client,), daemon=True)
+				Server.clients[client]["thread"].start()
 			# Si le thread associe a ce client est termine (on a recu de lui), on en refait un
-			if not Server.clients[client]['thread'].is_alive():
-				Server.clients[client]['thread'] = threading.Thread(target=under_receive, daemon=True)
-				Server.clients[client]['thread'].start()
-
-			# print("threads courants :", threading.active_count())
+			if not Server.clients[client]["thread"].is_alive():
+				Server.clients[client]["thread"] = threading.Thread(target=receive_in_thread, args=(client,), daemon=True)
+				Server.clients[client]["thread"].start()
 
 	def _process_data(self, str_type, coords, size, width, color):
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
@@ -255,12 +241,12 @@ class Server:
 			if not accepting_thread.is_alive():
 				accepting_thread = threading.Thread(target=self._accept, daemon=True)
 				accepting_thread.start()
-			# accepting_thread.join(0.2)
+			accepting_thread.join(0.2)
 
 			if not receiving_thread.is_alive():
 				receiving_thread = threading.Thread(target=self._receive, daemon=True)
 				receiving_thread.start()
-			# receiving_thread.join(0.2)
+			receiving_thread.join(0.2)
 
 	def _send_to_client(self, client, data):
 		"""Envoie des données à un seul client"""
