@@ -83,7 +83,7 @@ class EasyButton:
         self._canvas['bg'] = '#999'
 
         if self._object_type is not None:
-            print("selected", self._object_type)
+            # print("selected", self._object_type)
             self._interface.current_object_type = self._object_type
 
         if exec_command and self._command_select is not None:
