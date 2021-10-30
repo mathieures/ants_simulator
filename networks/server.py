@@ -40,13 +40,13 @@ class Server:
 	def max_clients(self):
 		return self._max_clients
 
-	@property
-	def window(self):
-		return self._window
+	# @property
+	# def window(self):
+	# 	return self._window
 
-	@window.setter
-	def window(self, new_window):
-		self._window = new_window
+	# @window.setter
+	# def window(self, new_window):
+	# 	self._window = new_window
 
 
 	def __init__(self, ip, port, max_clients):
@@ -68,10 +68,10 @@ class Server:
 		self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
 
 		if create_window:
-			self._window = ServerWindow(self, daemon=True) # daemon precise pour lisibilite
-			self._window.start()
+			self.window = ServerWindow(self, daemon=True) # daemon precise pour lisibilite
+			self.window.start()
 		else:
-			self._window = None
+			self.window = None
 
 		self._online = False
 		self._connect()
@@ -112,8 +112,8 @@ class Server:
 				# On lui reserve une entree dans le dictionnaire
 				Server.clients[client] = { "ready": False, "thread": None }
 				print("Accepted client. Total: {}".format(len(Server.clients)))
-				if self._window is not None:
-					self._window.clients += 1
+				if self.window is not None:
+					self.window.clients += 1
 
 				# Si l'IP du client est celle du serveur, il est admin
 				if address[0] == self._ip:
@@ -130,6 +130,7 @@ class Server:
 		"""
 		return sum( ( Server.clients[client]["ready"] for client in Server.clients ))
 
+	# À transformer en classmethod ? Ça veut dire mettre simulation en cls attr
 	def _sync_objects(self, client):
 		"""
 		Envoie tous les objets déjà
@@ -137,16 +138,21 @@ class Server:
 		Note : n'envoie pas les murs
 		"""
 		data = ["create"]
-		nests = self._simulation.objects.get("nest")
-		if nests is not None:
-			data.append(("nest", nests))
-		resources = self._simulation.objects.get("resource")
-		if resources is not None:
-			data.append(("resource", resources))
-		print("Prêt à sync :", data)
+		if len(self._simulation.objects["nest"]):
+			data.append(("nest", self._simulation.objects["nest"]))
+		if len(self._simulation.objects["resource"]):
+			data.append(("resource", self._simulation.objects["resource"])) # À CHANGER AVEC RESOURCESERVER (IL FAUT TRANSFORMER TOUTES LES RESOURCESERVER EN UN DICO)
 		if len(data) > 1:
 			self._send_to_client(client, data)
-			print("envoyé")
+
+		# On envoie les murs separement car ils sont gros
+		if len(self._simulation.objects["wall"]):
+			data.clear()
+			for wall in self._simulation.objects["wall"]:
+				data = ["create", ("wall", wall)]
+				print("data des murs :", data)
+				self._send_to_client(client, data)
+			print("envoyé murs")
 
 	def _receive(self):
 		"""
@@ -180,7 +186,7 @@ class Server:
 					if data == "ready":
 						Server.clients[receiving_client]["ready"] = True
 						ready_clients = self._get_ready_clients()
-						self._window.ready_clients = ready_clients
+						self.window.ready_clients = ready_clients
 						if ready_clients == len(Server.clients):
 							self.send_to_all_clients("GO")
 							sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
@@ -191,7 +197,7 @@ class Server:
 					elif data == "not ready":
 						Server.clients[receiving_client]["ready"] = False
 						ready_clients = self._get_ready_clients()
-						self._window.ready_clients = ready_clients
+						self.window.ready_clients = ready_clients
 						print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
 
 					elif data == "faster":
@@ -216,6 +222,25 @@ class Server:
 		# print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
 		coords = tuple(coords) # normalement, deja un tuple, mais au cas ou
 		str_type = str_type.lower() # normalement, deja en minuscules, mais au cas ou
+
+		if str_type == "wall":
+			# On nettoie le mur de ses points très proches pour alleger les tests
+			current_point = (coords[0], coords[1])
+			opti_coords = [*current_point]
+			for i in range(2, len(coords), 2):
+				# On compare un point avec le point actuel, et si c'est bon on l'ajoute
+				next_point = (coords[i], coords[i+1])
+
+				# TEST AVEC 2 POUR VOIR SI ÇA COMPRESSE BIEN, ET ON REMET À 1 APRÈS EN CAS
+
+
+
+				if (abs(current_point[0] - next_point[0]) > 2) and (
+					abs(current_point[1] - next_point[1]) > 2):
+						opti_coords.extend(current_point)
+						current_point = next_point
+			opti_coords.extend(current_point) # il faut rajouter le dernier
+			coords = opti_coords
 
 		# Si l'endroit est libre
 		if self._simulation.check_all_coords(coords, size):
@@ -264,9 +289,9 @@ class Server:
 		print("[Warning] Client disconnected. Closing associated connection.")
 		client.close()
 		del Server.clients[client]
-		if self._window is not None:
-			self._window.clients -= 1
-			self._window.ready_clients = self._get_ready_clients()
+		if self.window is not None:
+			self.window.clients -= 1
+			self.window.ready_clients = self._get_ready_clients()
 
 	def send_to_all_clients(self, data):
 		"""Envoie des informations à tous les clients"""
@@ -275,8 +300,8 @@ class Server:
 
 	def quit(self):
 		self._online = False
-		if self._window is not None:
-			self._window.quit_window()
+		if self.window is not None:
+			self.window.quit_window()
 		self._socket.close()
 		sys.exit(0)
 
@@ -286,7 +311,7 @@ if __name__ == "__main__":
 	if "-nowindow" in sys.argv:
 		create_window = False
 		sys.argv.pop(sys.argv.index("-nowindow"))
-		print("new args :", sys.argv)
+		# print("new args :", sys.argv)
 	else:
 		create_window = True
 

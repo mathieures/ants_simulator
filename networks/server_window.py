@@ -39,7 +39,6 @@ class ServerWindow(threading.Thread):
     @ready_clients.setter
     def ready_clients(self, new_number):
         self._ready_clients.set(new_number)
-        print("new ready_clients :", new_number)
     
 
     def __init__(self, server, daemon):
