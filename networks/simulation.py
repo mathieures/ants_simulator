@@ -1,6 +1,3 @@
-# TODO: trouver pourquoi ça affiche plus rien
-
-
 import threading
 from time import sleep
 from math import sqrt
@@ -9,6 +6,7 @@ from collections import namedtuple
 from AntServer import AntServer
 from ResourceServer import ResourceServer
 from NestServer import NestServer
+from WallServer import WallServer
 
 
 import tracemalloc
@@ -32,17 +30,7 @@ def timer(func):
 class Simulation:
     """ Classe qui lance toute la simulation de fourmis a partir du dico d'objets defini par le serveur """
 
-    __slots__ = ("objects", "_sleep_time", "_first_ant", "_server")
-    # @property
-    # def objects(self):
-    #     """
-    #     Dictionnaire de tous les objets
-    #     """
-    #     return self._objects
-
-    # @objects.setter
-    # def objects(self, new_objects):
-    #     self._objects = new_objects
+    __slots__ = ["objects", "_sleep_time", "_first_ant", "_server", "_timeline"]
 
     @property
     def sleep_time(self):
@@ -56,31 +44,16 @@ class Simulation:
     def __init__(self, server):
         self._server = server
 
-        # self._ants = []  # Liste d'instances AntServer
         self.objects = {
-            "nest": set(),  # ça serait cool que les NestServer contiennent leurs fourmis
+            "nest": set(),
             "resource": set(),  # remplace par ResourceServer.resources
             "wall": set()
         }  # Dictionnaire de tous les objets
+        self._timeline = []
 
         self._first_ant = True
 
         self._sleep_time = 0.05
-
-    # def _init_ants(self, number=20):
-    #     """ Fonction qui ajoute les fourmis dans chaque nid (envoi des donnees aux clients)"""
-    #     ants = ["ants"]  # liste des fourmis a envoyer au serveur
-    #     # Securite pour ne pas commencer sans nid
-    #     if "nest" in self.objects:
-    #         for nest in self.objects["nest"]:
-    #             # nest est un tuple de la forme (coords, size, width, color)
-    #             x, y = nest[0]
-    #             color = nest[3]
-    #             for i in range(number):
-    #                 curr_ant = AntServer(x, y, color)
-    #                 self._ants.append(curr_ant)
-    #                 ants.append(((x, y), color))
-    #         self._server.send_to_all_clients(ants)
 
     def start(self):
         """
@@ -89,10 +62,7 @@ class Simulation:
         """
         all_ants = NestServer.get_all_ants_as_list()
         number_of_ants = len(all_ants)
-        # number_of_ants = len(self._ants)
 
-        # self._ants = AntServer.init_ants(
-        #     self.objects["nest"], ants_per_nest=20)
         self._server.send_to_all_clients(["ants", *(a.to_tuple() for a in all_ants)])
 
         # liste [delta_x, delta_y] (et parfois une couleur) pour bouger les fourmis
@@ -110,8 +80,8 @@ class Simulation:
                 x, y = ant.coords_centre  # position actuelle
                 if ant.has_resource:
                     pheromones.append((x, y))  # l'ordre n'est pas important
-                    # S'il y a un mur mais que la fourmi porte une ressource,
-                    if self._is_wall(x, y):
+                    # S'il y a un mur mais que la fourmi porte une ressource
+                    if WallServer.get_wall(x, y) is not None:
                         # Si elle n'a pas fait trop d'essais
                         if ant.tries < ant.MAX_TRIES:
                             # Elle contourne le mur par la gauche
@@ -124,7 +94,7 @@ class Simulation:
                         ant.go_to_nest()
                     ant.lay_pheromone()
                 # Si elle n'en a pas mais qu'il y a un mur, elle fait demi-tour
-                elif self._is_wall(x, y):
+                elif WallServer.get_wall(x, y) is not None:
                     if ant.endurance > 0:
                         ant.direction += 180
                     else:
@@ -147,21 +117,19 @@ class Simulation:
                 spotted_resource = ResourceServer.get_resource(new_x, new_y)
                 # Si la fourmi touche une ressource
                 if (not ant.has_resource) and (
-                        spotted_resource is not None) and (
-                        spotted_resource.size != 0):
+                    spotted_resource is not None) and (
+                    spotted_resource.size != 0):
                         # Une fourmi a touche une ressource
-                    spotted_resource.shrink_resource()  # On reduit la ressource
-                    # self.objects["resource"][index_resource] = (resource[0], resource[1] - 1)
-                    # self.objects["resource"][index_resource][1] -= 1 # On diminue la taille de la ressource
-                    ant.has_resource = True
-                    # On donne aux clients l'index de la ressource touchee
-                    if not self._first_ant:
-                        move_ants[ant_index].append(spotted_resource.index)
-                    else:
-                        move_ants[ant_index].append(
-                            [spotted_resource.index, "first_ant"])
-                        self._first_ant = False
-                        print("First ant to find resource was color:", ant.color)
+                        spotted_resource.shrink_resource() # On reduit la ressource
+                        ant.has_resource = True
+                        # On donne aux clients l'index de la ressource touchee
+                        if not self._first_ant:
+                            move_ants[ant_index].append(spotted_resource.index)
+                        else:
+                            move_ants[ant_index].append(
+                                [spotted_resource.index, "first_ant"])
+                            self._first_ant = False
+                            print("First ant to find resource was color:", ant.color)
                 # Si la fourmi est sur son nid
                 elif ant.coords_centre == ant.nest:
                     ant.has_resource = False
@@ -174,25 +142,7 @@ class Simulation:
 
         step = 20
 
-        tracemalloc.start()
-        TRACEMALLOC_CPT = 0
-        TRACEMALLOC_TRIGGER1 = 150
-        TRACEMALLOC_TRIGGER2 = 350
-        snapshot1 = None
-        snapshot2 = None
-        top_stats = None
-
         while self._server.online:
-
-            TRACEMALLOC_CPT += 1
-            if TRACEMALLOC_CPT == TRACEMALLOC_TRIGGER1:
-                snapshot1 = tracemalloc.take_snapshot()
-            elif TRACEMALLOC_CPT == TRACEMALLOC_TRIGGER2:
-                snapshot2 = tracemalloc.take_snapshot()
-                top_stats = snapshot2.compare_to(snapshot1, "lineno")
-                print("[[[[[[[[[[ TOP DIFFERENCES ]]]]]]]]]]")
-                for stat in top_stats[:20]:
-                    print(stat)
 
             # temps_sim = perf_counter()
 
@@ -207,8 +157,9 @@ class Simulation:
                     target=simulate_ants_in_thread, args=(i, step), daemon=True)
                 curr_thread.start()
             if curr_thread is not None:
-                # On donne 1s maximum au dernier pour finir
-                curr_thread.join(1)
+                # On donne un timeout maximum au dernier pour finir
+                curr_thread.join(0.5)
+                # curr_thread.join(1)
 
             # il y a bien un ralentissement dans le comportement des fourmis
             print(f"temps_ants : {perf_counter() - temps_ants}")
@@ -226,19 +177,19 @@ class Simulation:
 
             sleep(self._sleep_time)  # ajout d'une latence
         print("End of the simulation.")
-        # faudra afficher le vainqueur ou quoi par là
+        # TODO: afficher la couleur vainqueure a la fin
 
-    def _is_wall(self, x, y):
-        """ Retourne True s'il y a un mur à cette position, False sinon """
-        return (x, y) in self.objects["wall"]
-        # Si on fait un dico associant les sizes avec un set de murs qui font cette size, on peut boucler dessus
-        # if "wall" in self.objects:
-        #     return (x, y) in self.objects["wall"]
-        # return False
-        # for wall_size in self.objects["wall"]:
-        #   if (x, y) in self.objects["wall"][wall_size]:
-        #       return True
-        # return False
+    # def _is_wall(self, x, y):
+    #     """ Retourne True s'il y a un mur à cette position, False sinon """
+    #     return (x, y) in self.objects["wall"]
+    #     # Si on fait un dico associant les sizes avec un set de murs qui font cette size, on peut boucler dessus
+    #     # if "wall" in self.objects:
+    #     #     return (x, y) in self.objects["wall"]
+    #     # return False
+    #     # for wall_size in self.objects["wall"]:
+    #     #   if (x, y) in self.objects["wall"][wall_size]:
+    #     #       return True
+    #     # return False
 
     # def _is_resource(self, x, y):
     #     """ Retourne l'indice de la ressource à cette position ou None s'il n'y en a pas """
@@ -280,31 +231,20 @@ class Simulation:
                     dico { distance: objet }
                 """
 
-                # TEMPORAIRE, AVANT DE FAIRE UN WALLSERVER :
-                if str_type != "wall":
-                    # Associe une distance a un objet
-                    dist_to_obj = {squared_distance(
-                        (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}
-                else:
-                    dist_to_obj = {squared_distance(
-                        (x, y), obj[0]): obj for obj in self.objects[str_type]}
-               
+                # Associe une distance a un objet
+                dist_to_obj = {squared_distance(
+                    (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}               
 
-                print(f"{dist_to_obj=}")
+                # print(f"{dist_to_obj=}")
 
                 min_dist_squared = min(dist_to_obj)
                 closest_obj = dist_to_obj[min_dist_squared]
 
                 min_dist = sqrt(min_dist_squared)
                 # print(f"{min_dist=}")
-                if str_type != "wall":
-                    size_closest_obj = closest_obj.size
-                    print(f"{size_closest_obj=}")
-                    # size_closest_obj = self.objects[str_type][min_dist_index][1]
-                else:
-                    # IL FAUT POUVOIR RETROUVER LA SIZE ASSOCIÉE AU MUR DE DISTANCE MINIMALE
-                    # => on pourra le faire quand on aura des objets WallServer
-                    size_closest_obj = 10
+                size_closest_obj = closest_obj.size
+                # print(f"{size_closest_obj=}")
+
                 if min_dist <= size_closest_obj:
                     return False
         return True
@@ -316,44 +256,48 @@ class Simulation:
                 return False
         return True
 
-    def add_to_objects(self, str_type, coords, size, width, color):
+    def add_to_objects(self, str_type, coords, size, color):
         """Ajoute une entrée au dictionnaire d'objets de la simulation"""
         # Note : Pour les objets 'wall', les coordonnees sont une liste de couples
         # Si c'est le premier objet de ce type que l'on voit, on init
-        if size is None:
-            size = width
+        new_obj = None
 
-        # Impossible d'avoir le meme algorithme pour les murs : les coordonnees sont de formes differentes
-        # '''
         if str_type == "wall":
-            # Generator de couple ((x, y), size)
-            self.objects[str_type].update(
-                (((coords[i], coords[i + 1]), size) for i in range(0, len(coords), 2)))
-            '''
-            # On parcourt les coordonnees deux a deux
+            new_obj = []
             for i in range(0, len(coords), 2):
-                # On remplit toutes les cases alentour
-                x, y = coords[i], coords[i+1]
-                for j in range(1, size // 2):
-                    # peut-être mettre +1 (mais je crois que non)
-                    self.objects["wall"].update(
-                        {(x - j, y - j),
-                         (x - j, y),
-                         (x - j, y + j),
-                         (x, y - j),
-                         (x, y),
-                         (x, y + j),
-                         (x + j, y - j),
-                         (x + j, y),
-                         (x + j, y + j)})
-            '''
+                couple = coords[i], coords[i+1]
+                new_obj.append(WallServer(couple, size, color))
+            self.objects[str_type].update(new_obj)
         elif str_type == "resource":
-            self.objects[str_type].add(
-                ResourceServer(coords, size, width, color))
+            new_obj = ResourceServer(coords, size, color)
+            self.objects[str_type].add(new_obj)
         elif str_type == "nest":
-            self.objects[str_type].add(NestServer(coords, size, width, color))
+            new_obj = NestServer(coords, size, color)
+            self.objects[str_type].add(new_obj)
         else:
             print(f"[Erreur] le type '{str_type}' n'existe pas")
             raise TypeError
-            # Dans tous les cas, on ajoute les nouvelles coords, taille et couleur
-            # self.objects[str_type].append((coords, size, width, color))
+
+        self._timeline.append(new_obj)
+
+    def cancel_last_object(self):
+        raise NotImplementedError("to do: handle walls in the timeline")
+    #     if len(self._timeline):
+    #         last_object = self._timeline.pop()
+
+    #         object_type = last_object.__class__
+    #         print(f"{object_type=}")
+    #         if object_type is list:
+    #             # On sait que c'est un mur, il faut supprimer tous les objets
+    #             # présents dans la liste de l'ensemble WallServer.walls
+    #             # (avec une différence ça peut être très facile)
+
+    #         str_type = object_type.__name__[:last_object.__class__.__name__.index("Server")].lower()
+    #         print(f"{str_type=}")
+
+    #         objects_set = getattr(object_type, str_type + "s", None)
+    #         print(f"{objects_set=}")
+
+    #         objects_set.remove(last_object)
+
+    #         self.objects[str_type].remove(last_object)

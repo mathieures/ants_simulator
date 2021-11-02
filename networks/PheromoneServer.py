@@ -31,6 +31,6 @@ class PheromoneServer(SizedServerObject):
         self.direction = direction
         self.size = 1
 
-        self.zone = self._init_zone()
+        self._init_zone()
 
         self.pheromones.add(self)

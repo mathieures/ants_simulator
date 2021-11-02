@@ -53,16 +53,15 @@ class Client:
             print("[Error] No server found")
             sys.exit(1)
 
-    def send(self, element, pos, data):
-        """
-        Fonction d'envoi au serveur
-        element:  type de donnée
-        pos: liste de position [x, y]
-        data: taille de l'objet
-        """
-        all = pickle.dumps([element, pos, data])
-        self._socket.send(all)
-
+    # def send(self, element, pos, data):
+    #     """
+    #     Fonction d'envoi au serveur
+    #     element:  type de donnée
+    #     pos: liste de position [x, y]
+    #     data: taille de l'objet
+    #     """
+    #     all = pickle.dumps([element, pos, data])
+    #     self._socket.send(all)
 
     def set_ready(self):
         """Informe le serveur que ce client est prêt"""
@@ -72,14 +71,14 @@ class Client:
         """Informe le serveur que ce client n'est plus prêt (a faire)"""
         self._socket.send("not ready".encode())
 
-    def ask_object(self, object_type, position, size=None, width=None, color=None):
+    def ask_object(self, object_type, position, size=None, color=None):
         """
         Demande au serveur si on peut placer
         un élément d'un type et d'une taille donnés
         à la position donnée.
         """
         str_type = object_type.__name__ # Nom de classe de l'objet
-        data = pickle.dumps([str_type, position, size, width, color])
+        data = pickle.dumps([str_type, position, size, color])
         try:
             self._socket.send(data)
         except BrokenPipeError:
@@ -112,7 +111,7 @@ class Client:
         # Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
         while True:
             try:
-                recv_data = self._socket.recv(10240)
+                recv_data = self._socket.recv(102400)
             except ConnectionResetError:
                 print("[Error] server disconnected.")
                 self._interface.quit_app(force=True)
@@ -131,12 +130,9 @@ class Client:
                     self._interface.show_admin_buttons()
             else:
                 '''
-                data est de la forme : ["move_ants", [x_fourmi1, y_fourmi1], [x_fourmi2, y_fourmi2]...]
-                data peut aussi etre de la forme [["move_ants", [x...]], ["pheromones", (fourmi1x, fourmi1y)...]]
-                
-                # data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
-                # data peut aussi etre de la forme [["move_ants", [deltax...]], ["pheromones", (fourmi1x, fourmi1y)...]]
-                Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
+                data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
+                ou alors : [["move_ants", [deltax...]], ["pheromones", (fourmi1x, fourmi1y)...]]
+                # Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
                 '''
 
                 # Si on a les mouvements des fourmis et les pheromones en meme temps
@@ -169,20 +165,18 @@ class Client:
                 elif data[0] == "create":
                     # data est un tuple de la forme
                     '''
-                    ('create',
-                        [('str_type', [[(x, y), size, width, 'color'],
-                                       [(x2, y2), …]]),
-                         ('str_type2', [[(x3, y3), size3, width3, 'color3'],
-                                        [(…)]])]
-                    )
+                    ('create', [('str_type', [[(x, y), size, width, 'color'],
+                                              [(x2, y2), …]]),
+                                ('str_type2', [[(x3, y3), size3, width3, 'color3'],
+                                               [(…)]])])
                     '''
                     for creation_type in data[1:]:
-                        # On a un tuple ('str_type', [[…],[…]])
+                        # creation_type est un tuple ('str_type', [[…],[…]])
                         str_type = creation_type[0]
                         for creation_properties in creation_type[1]:
-                            pos, size, width, color = creation_properties
+                            pos, size, color = creation_properties
                             # Communique l'information d'un nouvel objet a l'interface
-                            self._interface.create_object(str_type, pos, size=size, width=width, color=color)
+                            self._interface.create_object(str_type, pos, size=size, color=color)
                 else:
                     # Si on arrive ici c'est qu'il manque le type de data qu'il faut analyser
                     raise TypeError("[Error] Cannot process received data: parsing hint is missing")
