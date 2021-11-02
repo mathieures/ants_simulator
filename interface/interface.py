@@ -5,11 +5,12 @@ from time import sleep
 
 from .easy_menu import EasyMenu
 from .easy_button import EasyButton
-from .nest import Nest
-from .resource import Resource
-from .wall import Wall
-from .pheromone import Pheromone
-from .ant import Ant
+
+from .Ant import Ant
+from .Nest import Nest
+from .Pheromone import Pheromone
+from .Resource import Resource
+from .Wall import Wall
 
 
 from networks import client
@@ -17,6 +18,11 @@ from networks import client
 
 class Interface:
     """ Classe qui comportera tous les éléments graphiques """
+
+    @staticmethod
+    def get_centre(p1, p2):
+        """Retourne un point au milieu des deux passés en paramètres"""
+        return ()
 
     @property
     def root(self):
@@ -41,7 +47,7 @@ class Interface:
     @local_color.setter
     def local_color(self, new_color):
         self._local_color = new_color
-        self._objects_frame['bg'] = self._local_color
+        self._objects_frame["bg"] = self._local_color
 
     def __init__(self, client, width, height):
         self._root = tk.Tk()
@@ -82,7 +88,7 @@ class Interface:
                        object_type=Wall),
 
             EasyButton(self,
-                       self._objects_frame, 70, 50, text='Ready',
+                       self._objects_frame, 70, 50, text="Ready",
                        side=tk.RIGHT,
                        command_select=self.send_ready,
                        command_deselect=self.send_notready)
@@ -97,7 +103,7 @@ class Interface:
         self._root.bind("<Escape>", self.deselect_buttons)
         self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-        self._local_color = ''  # par defaut, mais sera change
+        self._local_color = ""  # par defaut, mais sera change
 
         self.current_object_type = None
         self._current_wall = None
@@ -110,7 +116,7 @@ class Interface:
 
         # Note : la mainloop est lancee dans un thread, par le main
 
-    ## Gestion d'evènements ##
+    ## Gestion d'evenements ##
 
     def on_click(self, event):
         # print("click ; current :", self.current_object_type)
@@ -128,7 +134,7 @@ class Interface:
 
     def on_release(self, event):
         if self._current_wall is not None:
-            wall_coords, wall_width = self._current_wall.coords, self._current_wall.width
+            wall_coords, wall_width = self._current_wall.drawn_coords, self._current_wall.width
             self.ask_wall(wall_coords, wall_width)
             self._delete_current_wall()
 
@@ -169,12 +175,12 @@ class Interface:
         """
         self._client.ask_object(Nest, (x, y), size, color=self._local_color)
 
-    def ask_resource(self, x, y, size=20, width=25):
-        self._client.ask_object(Resource, (x, y), size, width)
+    def ask_resource(self, x, y, size=20):
+        self._client.ask_object(Resource, (x, y), size)
 
-    def ask_wall(self, coords_list, width=20):
+    def ask_wall(self, coords_list, size=20):
         """Demande un mur. Appelé seulement à la fin d'un clic long."""
-        self._client.ask_object(Wall, coords_list, width=width)
+        self._client.ask_object(Wall, coords_list, size)
 
     ## Creation d'objets ##
 
@@ -191,10 +197,10 @@ class Interface:
             obj = Nest(self._canvas, coords, size=size, color=color)
             self._last_objects.append([obj.id, "nest"])
         elif str_type == "wall":
-            obj = Wall(self._canvas, coords, width=width, size=0)
+            obj = Wall(self._canvas, coords, size=0, width=size) # bizarrerie ; à revoir
             self._last_objects.append([obj.id, "wall"])
         elif str_type == "ant":
-            Ant(self._canvas, coords, size=size, color=color)
+            Ant(self._canvas, coords, size, color)
         elif str_type == "pheromone":
             Pheromone(self._canvas, coords)
         else:
@@ -207,7 +213,7 @@ class Interface:
 
     def _create_wall(self, x, y, width=10):
         """On crée un objet Wall, qu'on étendra"""
-        self._current_wall = Wall(self._canvas, (x, y), width=width, size=0)
+        self._current_wall = Wall(self._canvas, (x, y), size=0, width=width)
 
     def create_pheromones(self, coords_list):
         """Crée ou fonce plusieurs phéromones à la fois"""
@@ -232,10 +238,10 @@ class Interface:
                              args=(i, step)).start()
 
     def shrink_resource(self, index):
-        if self._resources[index].max_shrinking == 0:
-            self._resources[index].remove()
-        else:
+        if self._resources[index].current_size:
             self._resources[index].shrink()
+        else:
+            self._resources[index].remove()
 
     def create_ants(self, ants_list):
         """
@@ -244,8 +250,8 @@ class Interface:
         """
         self._ants.extend(
             Ant(self._canvas,
-                ant[0],  # coords
-                ant[1]  # couleur
+                origin_coords=ant[0],
+                color=ant[1]
                 ) for ant in ants_list)
         # for ant in ants_list:
         # 	self._ants.append(Ant(self._canvas, ant[0], ant[1])) # coords, couleur
@@ -275,16 +281,16 @@ class Interface:
                     # Nous devons rapetisser la ressource
                     if isinstance(resource_index, int):
                         self.shrink_resource(resource_index)
-                        ant.color = 'grey'
+                        ant.change_color("grey")
                     elif resource_index == "base":
-                        ant.color = ant.base_color
+                        ant.change_color(ant.base_color)
                     # Si on a une liste, c'est la premiere fourmi
                     elif isinstance(resource_index, list):
                         self.set_first_ant(ant.base_color)
                         self.shrink_resource(resource_index[0])
-                        ant.color = 'grey'
+                        ant.change_color("grey")
                     else:
-                        ant.color = resource_index
+                        ant.change_color(resource_index)
 
         for i in range(0, length, step):
             threading.Thread(target=move_ants_in_thread,
@@ -311,13 +317,13 @@ class Interface:
 
     def show_admin_buttons(self):
         self._buttons.append(EasyButton(self,
-                                        self._objects_frame, 50, 50, text='+',
+                                        self._objects_frame, 50, 50, text="+",
                                         side=tk.RIGHT,
                                         command_select=self.faster_sim,
                                         toggle=False, hideable=False))
 
         self._buttons.append(EasyButton(self,
-                                        self._objects_frame, 50, 50, text='-',
+                                        self._objects_frame, 50, 50, text="-",
                                         side=tk.RIGHT,
                                         command_select=self.slower_sim,
                                         toggle=False, hideable=False))
@@ -348,9 +354,9 @@ class Interface:
         self._canvas.delete(self._root, text)
 
     def quit_app(self, force=False):
-        if force or messagebox.askyesno('Quit', 'Are you sure to quit?'):
+        if force or messagebox.askyesno("Quit", "Are you sure to quit?"):
             self._root.quit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     interface = Interface(1050, 750)

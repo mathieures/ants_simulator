@@ -1,12 +1,14 @@
-from .custom_object import CustomObject
+from .InterfaceObject import InterfaceObject
 
 
-class Nest(CustomObject):
-    def __init__(self, canvas, coords, size=15, color=''):
-        """Instancie un nid. Note : le paramètre width n'a pas d'effet ici."""
-        super().__init__(canvas, coords, size=size, color=color)
+class Nest(InterfaceObject):
+    def __init__(self, canvas, coords, size=15, color=""):
+        """Instancie un nid."""
+        super().__init__(canvas, coords, size, color)
 
-    def draw(self, offset_coords):
-        """Override la méthode d'origine"""
-        return self._canvas.create_oval(self.get_centre_coords(offset_coords),
-                                        fill=self._color)
+        self.draw()
+
+    def draw(self):
+        """Écrase la méthode d'origine"""
+        self._id = self._canvas.create_oval(self.drawn_coords,
+                                            fill=self.color)

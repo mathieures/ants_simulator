@@ -1,4 +1,5 @@
 import tkinter as tk
+from math import sqrt
 
 
 class EasyButton:
@@ -11,9 +12,9 @@ class EasyButton:
     @property
     def text(self):
         if self._text_id is not None:
-            return self._canvas.itemcget(self._text_id, 'text')
+            return self._canvas.itemcget(self._text_id, "text")
         else:
-            return ''
+            return ""
     
     @text.setter
     def text(self, new_text):
@@ -22,7 +23,6 @@ class EasyButton:
     @property
     def hideable(self):
         return self._hideable
-
 
     def __init__(self, interface, parent, width, height, toggle=True,
                  text=None, object_type=None, no_icon=False, large=False,
@@ -35,14 +35,24 @@ class EasyButton:
         self._active_height = height
 
         self._canvas = tk.Canvas(parent, width=width, height=height)
-        self._default_bg_color = self._canvas['bg'] # on sauvegarde la couleur par defaut
+        self._default_bg_color = self._canvas["bg"] # on sauvegarde la couleur par defaut
 
         # L'icône
         self._object_type = object_type
         # S'il y a bien un type et que l'on veut une icône
-        if self._object_type is not None and not no_icon:
+        if (self._object_type is not None) and (not no_icon):
             # On instancie l'objet
-            self._icon_object = self._object_type(self._canvas, (width//2, height//2), width//2)
+            size = width // 2 + 1
+            try:
+                self._icon_object = self._object_type(self._canvas,
+                                                      [size / 2 + 1, size],
+                                                      size=size,
+                                                      width=size * 0.8)
+            except TypeError:
+                # S'il n'y a pas de parametre "width"
+                self._icon_object = self._object_type(self._canvas,
+                                                      [sqrt(size**2)] * 2,
+                                                      size=size)
         else:
             self._icon_object = None
 
@@ -79,8 +89,8 @@ class EasyButton:
         de celui-ci et change l'objet courant de l'interface
         """
         self._interface.deselect_buttons() # on deselectionne tous les boutons
-        # self._canvas['relief'] = 'raised' # ne fonctionne pas, je ne sais pas pourquoi
-        self._canvas['bg'] = '#999'
+        # self._canvas["relief"] = "raised" # ne fonctionne pas, je ne sais pas pourquoi
+        self._canvas["bg"] = "#999"
 
         if self._object_type is not None:
             # print("selected", self._object_type)
@@ -99,8 +109,8 @@ class EasyButton:
         Désélectionne le bouton, mais seulement visuellement :
         on modifie l'objet sélectionné dans l'interface
         """
-        # self._canvas['relief'] = 'flat' # ne fonctionne pas, je ne sais pas pourquoi
-        self._canvas['bg'] = self._default_bg_color
+        # self._canvas["relief"] = "flat" # ne fonctionne pas, je ne sais pas pourquoi
+        self._canvas["bg"] = self._default_bg_color
 
         if exec_command and self._command_deselect is not None:
             self._command_deselect()
@@ -117,14 +127,14 @@ class EasyButton:
         """
         if self._hideable:
             self._canvas.pack_forget()
-            # self._canvas['width'] = 0
-            # self._canvas['height'] = 0
+            # self._canvas["width"] = 0
+            # self._canvas["height"] = 0
             self._enabled = False
 
     def show(self):
         """Réactive et réaffiche le bouton"""
         if self._hideable:
             self._canvas.pack(side=self._pack_side)
-            # self._canvas['width'] = self._active_width
-            # self._canvas['height'] = self._active_height
+            # self._canvas["width"] = self._active_width
+            # self._canvas["height"] = self._active_height
             self._enabled = True
