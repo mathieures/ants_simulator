@@ -9,16 +9,7 @@ class ResourceServer(SizedServerObject):
 
     __slots__ = ["index"]
 
-    resources = set()
     INDEX_GEN = get_new_index()
-
-    @classmethod
-    def get_resource(cls, x, y):
-        """Retourne l'objet ResourceServer à cette position ou None s'il n'y en a pas"""
-        for resource in cls.resources:
-            if (x, y) in resource.zone:
-                return resource
-        return None
 
     def __init__(self, coords_centre, size, color):
         self.index = next(self.INDEX_GEN)
@@ -28,8 +19,6 @@ class ResourceServer(SizedServerObject):
         self.color = color
 
         self._init_zone()
-
-        self.resources.add(self)
 
     def shrink_resource(self):
         self.size -= 1

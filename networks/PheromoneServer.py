@@ -5,9 +5,7 @@ class PheromoneServer(SizedServerObject):
 
     __slots__ = ["direction"]
 
-    pheromones = set()  # ensemble de toutes les pheromones
-    # pheromones = []  # liste de toutes les pheromones
-    # pheromones = {} # dictionnaire de toutes les pheromones
+    pheromones = set() # Ensemble d'objets PheromoneServer
 
     @classmethod
     def get_pheromone(cls, x, y):
@@ -22,7 +20,7 @@ class PheromoneServer(SizedServerObject):
     def remove_pheromone(cls, pheromone):
         """Supprime une phéromone de l'ensemble"""
         try:
-            cls.pheromones.remove(pheromone)
+            cls.objects["pheromones"].remove(pheromone)
         except KeyError:
             pass
 
