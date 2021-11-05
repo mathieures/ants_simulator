@@ -24,7 +24,7 @@ class ResourceServer(SizedServerObject):
         self.size -= 1
         # On supprime les pixels de la zone qui sont en dehors de la nouvelle size
         x, y = self.coords_centre
-        self.zone -= set(
+        self.zone.difference_update(
             (x + self.size * off[0], y + self.size * off[1])
             for off in self.OFFSETS)
         # Je crois que ca ne supprime rien au 1er tour, mais pas sur d'ou cela vient
