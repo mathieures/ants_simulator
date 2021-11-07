@@ -172,10 +172,8 @@ class Client:
                     '''
                     for creation_type in data[1:]:
                         # creation_type est un tuple ('str_type', (…),(…), …)
-                        print(f"{creation_type=}")
                         str_type = creation_type[0]
                         for creation_properties in creation_type[1]:
-                            print(f"    {creation_properties=}")
                             pos, size, color = creation_properties
                             # Communique l'information d'un nouvel objet a l'interface
                             self._interface.create_object(str_type, pos, size=size, color=color)

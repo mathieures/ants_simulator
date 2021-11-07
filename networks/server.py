@@ -141,9 +141,9 @@ class Server:
             data.clear()
             for wall in (w.to_tuple() for w in self._simulation.objects["wall"]):
                 data = ["create", ("wall", (wall,))]
-                print("data du mur :", data)
+                # print("data du mur :", data)
                 self._send_to_client(client, data)
-            print("envoyé murs")
+            # print("envoyé murs")
 
     def _receive(self):
         """
