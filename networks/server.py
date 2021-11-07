@@ -140,17 +140,16 @@ class Server:
         if len(self._simulation.objects["wall"]):
             data.clear()
             for wall in (w.to_tuple() for w in self._simulation.objects["wall"]):
-                data = ["create", ("wall", wall)]
-                print("data des murs :", data)
+                data = ["create", ("wall", (wall,))]
+                print("data du mur :", data)
                 self._send_to_client(client, data)
             print("envoyé murs")
 
     def _receive(self):
         """
-        Fonction qui sert à réceptionner les
-        données envoyées depuis chaque client.
-        Utilise une sous-fonction 'receive_in_thread' qui
-        va manipuler dans un thread les données reçues.
+        Fonction qui sert à réceptionner les données envoyées depuis
+        chaque client. Utilise une sous-fonction 'receive_in_thread'
+        qui va manipuler dans un thread les données reçues.
         """
         def receive_in_thread(receiving_client):
             try:
@@ -178,6 +177,7 @@ class Server:
                         ready_clients = self._get_ready_clients()
                         self.window.ready_clients = ready_clients
                         if len(Server.clients) and ready_clients == len(Server.clients):
+                            print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
                             self.send_to_all_clients("GO")
                             sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
                             # Lancement de la simulation

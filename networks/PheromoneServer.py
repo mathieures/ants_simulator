@@ -19,10 +19,7 @@ class PheromoneServer(SizedServerObject):
     @classmethod
     def remove_pheromone(cls, pheromone):
         """Supprime une phéromone de l'ensemble"""
-        try:
-            cls.objects["pheromones"].remove(pheromone)
-        except KeyError:
-            pass
+        cls.pheromones.discard(pheromone)
 
     def __init__(self, coords_centre: tuple, direction: int):
         self.coords_centre = coords_centre

@@ -80,7 +80,7 @@ class Simulation:
                 if ant.has_resource:
                     pheromones.append((x, y))  # l'ordre n'est pas important
                     # S'il y a un mur mais que la fourmi porte une ressource
-                    if WallServer.get_wall(x, y) is not None:
+                    if self._get_wall(x, y) is not None:
                         # Si elle n'a pas fait trop d'essais
                         if ant.tries < ant.MAX_TRIES:
                             # Elle contourne le mur par la gauche
@@ -93,7 +93,7 @@ class Simulation:
                         ant.go_to_nest()
                     ant.lay_pheromone()
                 # Si elle n'en a pas mais qu'il y a un mur, elle fait demi-tour
-                elif WallServer.get_wall(x, y) is not None:
+                elif self._get_wall(x, y) is not None:
                     if ant.endurance > 0:
                         ant.direction += 180
                     else:
@@ -113,7 +113,7 @@ class Simulation:
                 # les fourmis sont toujours dans le meme ordre
                 move_ants[ant_index] = [delta_x, delta_y]
 
-                spotted_resource = ResourceServer.get_resource(new_x, new_y)
+                spotted_resource = self._get_resource(new_x, new_y)
                 # Si la fourmi touche une ressource
                 if (not ant.has_resource) and (
                     spotted_resource is not None) and (
@@ -213,17 +213,14 @@ class Simulation:
             # S'il y a au moins un objet
             if len(self.objects[str_type]):
                 # On associe une distance au carre a un objet
-                dist_to_obj = {squared_distance(
+                dist_to_obj = {self.squared_distance(
                     (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}
-                # print(f"{dist_to_obj=}")
 
                 min_dist_squared = min(dist_to_obj)
                 closest_obj = dist_to_obj[min_dist_squared]
 
                 min_dist = sqrt(min_dist_squared)
-                # print(f"{min_dist=}")
                 size_closest_obj = closest_obj.size
-                # print(f"{size_closest_obj=}")
 
                 if min_dist <= size_closest_obj:
                     return False
@@ -236,16 +233,9 @@ class Simulation:
                 return False
         return True
 
-    def _get_all_ants_as_list(self):
-        # On ne peut pas unpack dans une comprehension
-        for nest in self.objects["nest"]:
-            all_ants.extend(nest.ants)
-        return all_ants
-
     def add_to_objects(self, str_type, coords, size, color):
         """Ajoute une entrée au dictionnaire d'objets de la simulation"""
         # Note : Pour les objets 'wall', les coordonnees sont une liste de couples
-        # Si c'est le premier objet de ce type que l'on voit, on init
         new_obj = None
 
         if str_type == "wall":
@@ -265,6 +255,29 @@ class Simulation:
             
 
         self._timeline.append(new_obj)
+
+    def _get_all_ants_as_list(self):
+        """
+        Retourne la liste de toutes les fourmis
+        (contenues dans les objets NestServer)
+        """
+        all_ants = []
+        for nest in self.objects["nest"]:
+            all_ants.extend(nest.ants)
+        return all_ants
+
+    def _get_resource(self, x, y):
+        """Retourne l'objet ResourceServer à cette position ou None s'il n'y en a pas"""
+        for resource in self.objects["resource"]:
+            if (x, y) in resource.zone:
+                return resource
+        return None
+
+    def _get_wall(self, x, y):
+        for wall in self.objects["wall"]:
+            if (x, y) in wall.zone:
+                return wall
+        return None
 
     def cancel_last_object(self):
         raise NotImplementedError("to do: handle walls in the timeline")
