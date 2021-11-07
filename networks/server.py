@@ -129,9 +129,9 @@ class Server:
         """
         data = ["create"]
         if len(self._simulation.objects["nest"]):
-            data.append(("nest", *(n.to_tuple() for n in self._simulation.objects["nest"])))
+            data.append(("nest", [n.to_tuple() for n in self._simulation.objects["nest"]]))
         if len(self._simulation.objects["resource"]):
-            data.append(("resource", *(r.to_tuple() for r in self._simulation.objects["resource"])))
+            data.append(("resource", [r.to_tuple() for r in self._simulation.objects["resource"]]))
 
         if len(data) > 1:
             self._send_to_client(client, data)
