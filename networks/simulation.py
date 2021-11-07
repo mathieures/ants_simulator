@@ -30,37 +30,36 @@ def timer(func):
 class Simulation:
     """ Classe qui lance toute la simulation de fourmis a partir du dico d'objets defini par le serveur """
 
-    __slots__ = ["objects", "_sleep_time", "_first_ant", "_server", "_timeline"]
+    __slots__ = ["objects", "sleep_time", "_first_ant", "_server", "_timeline"]
 
-    @property
-    def sleep_time(self):
-        return self._sleep_time
-
-    @sleep_time.setter
-    def sleep_time(self, new_sleep_time):
-        # print("sim : new_sleep_time :", new_sleep_time)
-        self._sleep_time = new_sleep_time
+    @staticmethod
+    def squared_distance(p1, p2):
+        """
+        Retourne la distance au carré entre
+        les deux points (couples (x, y)).
+        """
+        return (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2
 
     def __init__(self, server):
         self._server = server
 
         self.objects = {
             "nest": set(),
-            "resource": set(),  # remplace par ResourceServer.resources
+            "resource": set(),
             "wall": set()
         }  # Dictionnaire de tous les objets
         self._timeline = []
 
         self._first_ant = True
 
-        self._sleep_time = 0.05
+        self.sleep_time = 0.05
 
     def start(self):
         """
         Fonction principale qui lance la simulation
         et calcule le déplacement de chaque fourmi
         """
-        all_ants = NestServer.get_all_ants_as_list()
+        all_ants = self._get_all_ants_as_list()
         number_of_ants = len(all_ants)
 
         self._server.send_to_all_clients(["ants", *(a.to_tuple() for a in all_ants)])
@@ -175,7 +174,7 @@ class Simulation:
 
             # print("temps_sim :", perf_counter() - temps_sim)
 
-            sleep(self._sleep_time)  # ajout d'une latence
+            sleep(self.sleep_time)  # ajout d'une latence
         print("End of the simulation.")
         # TODO: afficher la couleur vainqueure a la fin
 
@@ -208,33 +207,14 @@ class Simulation:
         Retourne True si les coordonnées données en paramètre sont
         disponibles en fonction de la taille donnée, False sinon
         """
-        def squared_distance(p1, p2):
-            """
-            Retourne la distance au carré entre
-            les deux points (couples (x, y)).
-            """
-            return (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2
-
         for str_type in self.objects:
             # idée : mettre dans des threads pour calculer les distances au carré parallèlement
 
-
             # S'il y a au moins un objet
             if len(self.objects[str_type]):
-
-                # # Generator contenant des tuples de coords
-                # all_coords = (obj.coords_centre
-                #               for obj in self.objects[str_type])
-
-                """
-                Nouvelle idée de logique :
-                    dico { distance: objet }
-                """
-
-                # Associe une distance a un objet
+                # On associe une distance au carre a un objet
                 dist_to_obj = {squared_distance(
-                    (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}               
-
+                    (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}
                 # print(f"{dist_to_obj=}")
 
                 min_dist_squared = min(dist_to_obj)
@@ -251,10 +231,16 @@ class Simulation:
 
     def check_all_coords(self, coords_list, size):
         """Vérifie que toutes les coordonnées de la liste sont valides"""
-        for i in range(0, len(coords_list) - 1, 2):
-            if not self._is_good_spot(coords_list[i], coords_list[i + 1], size):
+        for i in range(0, len(coords_list), 2):
+            if not self._is_good_spot(coords_list[i], coords_list[i+1], size):
                 return False
         return True
+
+    def _get_all_ants_as_list(self):
+        # On ne peut pas unpack dans une comprehension
+        for nest in self.objects["nest"]:
+            all_ants.extend(nest.ants)
+        return all_ants
 
     def add_to_objects(self, str_type, coords, size, color):
         """Ajoute une entrée au dictionnaire d'objets de la simulation"""
@@ -275,8 +261,8 @@ class Simulation:
             new_obj = NestServer(coords, size, color)
             self.objects[str_type].add(new_obj)
         else:
-            print(f"[Erreur] le type '{str_type}' n'existe pas")
-            raise TypeError
+           raise TypeError(f"[Erreur] le type '{str_type}' n'existe pas")
+            
 
         self._timeline.append(new_obj)
 
