@@ -9,7 +9,6 @@ from NestServer import NestServer
 from WallServer import WallServer
 
 
-import tracemalloc
 from time import perf_counter
 
 # Pour le debug
@@ -139,7 +138,8 @@ class Simulation:
                 elif ant.endurance <= 0:
                     move_ants[ant_index].append("black")
 
-        step = 20
+        # step = 20
+        step = 40 # test pour voir la diff de perf
 
         while self._server.online:
 

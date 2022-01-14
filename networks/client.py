@@ -4,6 +4,10 @@ import socket
 import pickle
 import threading
 
+from time import perf_counter
+import tracemalloc
+
+
 class Client:
     """
     Classe responsable de la réception, la distribution
@@ -138,13 +142,28 @@ class Client:
                 # Si on a les mouvements des fourmis et les pheromones en meme temps
                 if len(data) == 2 and data[0][0] == "move_ants":
                     # On bouge les fourmis
-                    self._interface.move_ants(data[0][1:])
+                    temps_move = perf_counter()
+
+                    # TODO: Il faut faire les trucs dans des threads pour libérer l'input des boutons etc.
+                    thread_move = threading.Thread(target=self._interface.move_ants, args=(data[0][1:],), daemon=True)
+                    thread_move.start()
+                    thread_move.join(0.5)
+
+                    # self._interface.move_ants(data[0][1:])
 
                     # On cree ou fonce les pheromones
-                    self._interface.create_pheromones(data[1][1:])
+
+                    thread_phero = threading.Thread(target=self._interface.create_pheromones, args=(data[1][1:],), daemon=True)
+                    thread_phero.start()
+                    thread_phero.join(0.5)
+                    # self._interface.create_pheromones(data[1][1:])
+                    print("temps move_ants :", perf_counter() - temps_move)
 
                 elif data[0] == "move_ants":
-                    self._interface.move_ants(data[1:])
+                    thread_move = threading.Thread(target=self._interface.move_ants, args=(data[1:],), daemon=True)
+                    thread_move.start()
+                    thread_move.join(0.5)
+                    # self._interface.move_ants(data[1:])
 
                 # Si on doit creer des fourmis
                 elif data[0] == "ants":
@@ -154,7 +173,10 @@ class Client:
                         [coords_fourmi1, couleur_fourmi1],
                         [coords_fourmi2, couleur_fourmi2], …]
                     """
-                    self._interface.create_ants(data[1:])
+                    thread_create = threading.Thread(target=self._interface.create_ants, args=(data[1:],))
+                    thread_create.start()
+                    thread_create.join() # On attend qu'il finisse, quoi qu'il arrive
+                    # self._interface.create_ants(data[1:])
 
                 # Si on reçoit la couleur locale de l'interface
                 elif data[0] == "color":

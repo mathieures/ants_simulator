@@ -248,17 +248,45 @@ class Interface:
         Crée toutes les fourmis en fonction
         des coordonnées et couleurs dans la liste
         """
-        self._ants.extend(
+        self._ants = [
             Ant(self._canvas,
                 origin_coords=ant[0],
                 color=ant[1]
-                ) for ant in ants_list)
+                ) for ant in ants_list]
         # for ant in ants_list:
         # 	self._ants.append(Ant(self._canvas, ant[0], ant[1])) # coords, couleur
 
     # def move_ant(self, index, delta_x, delta_y):
     #     """ Fonction pour déplacer une fourmi """
     #     self._ants[index].move(delta_x, delta_y)
+    
+    # TODO: RÉUSSIR À TRANSFORMER _move_ants_in_thread EN MÉTHODE DÉTACHÉE DE move_ants
+    # POUR ÉVITER DE REDÉFINIR LA FONCTION À CHAQUE APPEL DE move_ants
+
+    def _move_ants_in_thread(self, start, number, relative_coords):
+        end = start + number
+        if end > length:
+            end = length
+
+        for i in range(start, end):
+            ant = self._ants[i]
+            ant.move(relative_coords[i][0], relative_coords[i][1])
+            if len(relative_coords[i]) > 2:
+                resource_data = relative_coords[i][2]
+                if isinstance(resource_data, int):
+                    # Si c'est l'index de la ressource, on la rapetisse
+                    self.shrink_resource(resource_data)
+                    ant.change_color("grey")
+                # Si c'est une couleur
+                elif resource_data == "base":
+                    ant.change_color(ant.base_color)
+                # Si on a une liste, c'est la premiere fourmi
+                elif isinstance(resource_data, list):
+                    self.set_first_ant(ant.base_color)
+                    self.shrink_resource(resource_data[0])
+                    ant.change_color("grey")
+                else:
+                    ant.change_color(resource_data)
 
     def move_ants(self, relative_coords):
         """
@@ -268,33 +296,11 @@ class Interface:
         step = 20  # on bouge tel nombre de fourmis dans chaque thread
         length = len(relative_coords)
 
-        def move_ants_in_thread(start, number):
-            end = start + number
-            if end > length:
-                end = length
-
-            for i in range(start, end):
-                ant = self._ants[i]
-                ant.move(relative_coords[i][0], relative_coords[i][1])
-                if len(relative_coords[i]) > 2:
-                    resource_index = relative_coords[i][2]
-                    # Nous devons rapetisser la ressource
-                    if isinstance(resource_index, int):
-                        self.shrink_resource(resource_index)
-                        ant.change_color("grey")
-                    elif resource_index == "base":
-                        ant.change_color(ant.base_color)
-                    # Si on a une liste, c'est la premiere fourmi
-                    elif isinstance(resource_index, list):
-                        self.set_first_ant(ant.base_color)
-                        self.shrink_resource(resource_index[0])
-                        ant.change_color("grey")
-                    else:
-                        ant.change_color(resource_index)
-
         for i in range(0, length, step):
-            threading.Thread(target=move_ants_in_thread,
-                             args=(i, step), daemon=True).start()
+            thread_move = threading.Thread(target=self._move_ants_in_thread,
+                                           args=(i, step, relative_coords), daemon=True)
+            thread_move.start()
+        thread_move.join(0.5)
 
     def set_first_ant(self, color):
         w = int(self._canvas["width"])

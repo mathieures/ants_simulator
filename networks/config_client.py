@@ -1,5 +1,5 @@
 import tkinter as tk
-from .ip import get_current_ip # on a une fonction ip deja
+from ip import get_current_ip # on a une fonction ip deja
 
 class ConfigClient:
     """
@@ -90,8 +90,4 @@ class ConfigClient:
 
 
 if __name__ == '__main__':
-    root = tk.Tk()
-
-    c = ConfigClient(root)
-
-    root.mainloop()
+    c = ConfigClient()
