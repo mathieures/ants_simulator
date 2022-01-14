@@ -1,15 +1,15 @@
 import sys
 import socket
 import pickle
-import threading
+from threading import Thread
 from time import sleep
+from math import dist as distance
 
-import simulation
+from color import random_color
 
-import color
-
-from config_server import ConfigServer
-from server_window import ServerWindow
+from Simulation import Simulation
+from ConfigServer import ConfigServer
+from ServerWindow import ServerWindow
 
 class Server:
     """
@@ -21,7 +21,7 @@ class Server:
         ouverte pendant le fonctionnement du serveur, et l'utilisateur devra
         terminer le script par ses propres moyens.
     """
-    clients = {} # dictionnaire qui associe un client (socket) a un dict { "ready": bool, "thread": thread_reception }
+    clients = {} # dictionnaire qui associe un socket a un dict { "ready": bool, "thread": Thread }
     # Note : on est oblige de garder une trace de quel client est pret pour mettre a jour la window
 
     @property
@@ -40,15 +40,15 @@ class Server:
     def max_clients(self):
         return self._max_clients
 
-    def __init__(self, ip, port, max_clients):
+    def __init__(self, ip, port, max_clients, create_window):
         try:
             assert isinstance(ip, str), "[Error] IP is not a valid string"
             assert isinstance(port, int), "[Error] PORT is not a valid integer"
             assert isinstance(max_clients, int), "[Error] MAX_CLIENTS number is not a valid integer"
-        except AssertionError as e:
-            print("[Error]", e)
+        except AssertionError as error:
+            print("[Error]", error)
             sys.exit(1)
-        
+
         # S'il n'y a pas eu d'erreur
         self._ip = ip
         self._port = port
@@ -56,7 +56,7 @@ class Server:
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
+        self._simulation = Simulation(self) # on lui passe une reference au serveur
 
         if create_window:
             self.window = ServerWindow(self, daemon=True) # daemon precise pour lisibilite
@@ -98,8 +98,8 @@ class Server:
                 # Exception levee quand la connexion est coupee pendant l'attente d'accept
                 pass
             else:
-                random_color = color.random_rgb()
-                self._send_to_client(client, ("color", random_color))
+                client_color = random_color()
+                self._send_to_client(client, ("color", client_color))
                 # On lui reserve une entree dans le dictionnaire
                 Server.clients[client] = { "ready": False, "thread": None }
                 print("Accepted client. Total: {}".format(len(Server.clients)))
@@ -119,7 +119,7 @@ class Server:
         Retourne le nombre de clients prêts en faisant la somme des booléens.
         Utilise un generator, d'où les parenthèses
         """
-        return sum( ( Server.clients[client]["ready"] for client in Server.clients ))
+        return sum(client["ready"] for client in Server.clients.values())
 
     # À transformer en classmethod ? Ça veut dire mettre simulation en cls attr
     def _sync_objects(self, client):
@@ -128,16 +128,16 @@ class Server:
         posés au client en paramètre.
         """
         data = ["create"]
-        if len(self._simulation.objects["nest"]):
+        if len(self._simulation.objects["nest"]) > 0:
             data.append(("nest", [n.to_tuple() for n in self._simulation.objects["nest"]]))
-        if len(self._simulation.objects["resource"]):
+        if len(self._simulation.objects["resource"]) > 0:
             data.append(("resource", [r.to_tuple() for r in self._simulation.objects["resource"]]))
 
         if len(data) > 1:
             self._send_to_client(client, data)
 
         # On envoie les murs separement car ils sont gros
-        if len(self._simulation.objects["wall"]):
+        if len(self._simulation.objects["wall"]) > 0:
             data.clear()
             for wall in (w.to_tuple() for w in self._simulation.objects["wall"]):
                 data = ["create", ("wall", (wall,))]
@@ -181,14 +181,14 @@ class Server:
                             self.send_to_all_clients("GO")
                             sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
                             # Lancement de la simulation
-                            threading.Thread(target=self._simulation.start, daemon=True).start()
+                            Thread(target=self._simulation.start, daemon=True).start()
                         else:
-                            print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
+                            print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
                     elif data == "not ready":
                         Server.clients[receiving_client]["ready"] = False
                         ready_clients = self._get_ready_clients()
                         self.window.ready_clients = ready_clients
-                        print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
+                        print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
 
                     elif data == "faster":
                         self._simulation.sleep_time /= 2
@@ -201,11 +201,17 @@ class Server:
         for client in tuple(Server.clients):
             # Si le client n'avait pas de thread associe, on en cree un
             if Server.clients[client]["thread"] is None:
-                Server.clients[client]["thread"] = threading.Thread(target=receive_in_thread, args=(client,), daemon=True)
+                Server.clients[client]["thread"] = Thread(
+                    target=receive_in_thread,
+                    args=(client,),
+                    daemon=True)
                 Server.clients[client]["thread"].start()
             # Si le thread associe a ce client est termine (on a recu de lui), on en refait un
             if not Server.clients[client]["thread"].is_alive():
-                Server.clients[client]["thread"] = threading.Thread(target=receive_in_thread, args=(client,), daemon=True)
+                Server.clients[client]["thread"] = Thread(
+                    target=receive_in_thread,
+                    args=(client,),
+                    daemon=True)
                 Server.clients[client]["thread"].start()
 
     def _process_data(self, str_type, coords, size, color):
@@ -214,18 +220,17 @@ class Server:
 
         if str_type == "wall":
             # On nettoie le mur de ses points tres proches pour alleger les calculs
-            min_squared_distance = 16 # Distance minimale (au carre) a avoir entre deux points du mur
+            min_distance = 4 # Distance minimale a avoir entre deux points du mur
 
             current_point = (coords[0], coords[1])
             opti_coords = [*current_point]
             for i in range(2, len(coords), 2):
                 # On compare un point avec le point actuel, et si c'est bon on l'ajoute
-                next_point = (coords[i], coords[i+1])
+                next_point = (coords[i], coords[i + 1])
 
-                diff_x = (current_point[0] - next_point[0])**2
-                diff_y = (current_point[1] - next_point[1])**2
+                current_distance = distance(current_point, next_point)
 
-                if (diff_x + diff_y > min_squared_distance):
+                if current_distance > min_distance:
                     opti_coords.extend(current_point)
                     current_point = next_point
             opti_coords.extend(current_point) # il faut rajouter le dernier
@@ -235,7 +240,7 @@ class Server:
         if self._simulation.check_all_coords(coords, size):
             self._simulation.add_to_objects(str_type, coords, size, color)
 
-            data = (str_type, [[coords, size, color]]) # syntaxe de l'envoi groupe
+            data = (str_type, [[coords, size, color]]) # syntaxe de l'envoi de groupe
             self.send_to_all_clients(("create", data))
         # else:
         #     print("[Warning] there is already an object here.")
@@ -245,33 +250,33 @@ class Server:
         Fonction indispensable, elle permet au serveur d'accepter
         des connexions et de recevoir des données en même temps.
         """
-        accepting_thread = threading.Thread(target=self._accept, daemon=True)
+        accepting_thread = Thread(target=self._accept, daemon=True)
         accepting_thread.start()
-        accepting_thread.join(0.2)
+        # accepting_thread.join(0.2)
 
-        receiving_thread = threading.Thread(target=self._receive, daemon=True)
+        receiving_thread = Thread(target=self._receive, daemon=True)
         receiving_thread.start()
-        receiving_thread.join(0.2)
+        # receiving_thread.join(0.2)
 
         while self._online:
             # S'ils sont morts, quelque chose a ete recu, donc on en recree
             if not accepting_thread.is_alive():
-                accepting_thread = threading.Thread(target=self._accept, daemon=True)
+                accepting_thread = Thread(target=self._accept, daemon=True)
                 accepting_thread.start()
-            accepting_thread.join(0.2)
+            # accepting_thread.join(0.2)
 
             if not receiving_thread.is_alive():
-                receiving_thread = threading.Thread(target=self._receive, daemon=True)
+                receiving_thread = Thread(target=self._receive, daemon=True)
                 receiving_thread.start()
-            receiving_thread.join(0.2)
+            # receiving_thread.join(0.2)
 
     def _send_to_client(self, client, data):
         """Envoie des données à un seul client"""
         data = pickle.dumps(data)
         try:
             client.sendall(data)
-        except BrokenPipeError as e:
-            print(e)
+        except BrokenPipeError as error:
+            print(error)
             sys.exit(1)
         except ConnectionResetError:
             self._disconnect_client(client)
@@ -279,7 +284,10 @@ class Server:
     def _disconnect_client(self, client):
         print("[Warning] Client disconnected. Closing associated connection.")
         client.close()
-        del Server.clients[client]
+        try:
+            del Server.clients[client]
+        except KeyError:
+            pass
         if self.window is not None:
             self.window.clients -= 1
             self.window.ready_clients = self._get_ready_clients()
@@ -290,6 +298,7 @@ class Server:
             self._send_to_client(client, data)
 
     def quit(self):
+        """Termine le programme proprement"""
         self._online = False
         if self.window is not None:
             self.window.quit_window()
@@ -297,7 +306,7 @@ class Server:
         sys.exit(0)
 
 
-if __name__ == "__main__":
+def main():
     # On regarde d'abord si l'utilisateur veut une fenetre
     if "-nowindow" in sys.argv:
         create_window = False
@@ -325,4 +334,7 @@ if __name__ == "__main__":
             print("Syntax:\n\tpython3 server.py <IP> <PORT> <NB_MAX_CLIENTS> [-nowindow]")
             sys.exit(1)
 
-    server = Server(ip, port, max_clients)
+    Server(ip, port, max_clients, create_window)
+
+if __name__ == "__main__":
+    main()

@@ -1,17 +1,12 @@
 import threading
 from time import sleep
-from math import sqrt
-from collections import namedtuple
+from time import perf_counter # Pour le debug
+from math import dist as distance
 
 from AntServer import AntServer
 from ResourceServer import ResourceServer
 from NestServer import NestServer
 from WallServer import WallServer
-
-
-from time import perf_counter
-
-# Pour le debug
 
 
 def timer(func):
@@ -31,13 +26,6 @@ class Simulation:
 
     __slots__ = ["objects", "sleep_time", "_first_ant", "_server", "_timeline"]
 
-    @staticmethod
-    def squared_distance(p1, p2):
-        """
-        Retourne la distance au carré entre
-        les deux points (couples (x, y)).
-        """
-        return (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2
 
     def __init__(self, server):
         self._server = server
@@ -67,9 +55,7 @@ class Simulation:
         move_ants = ["move_ants"] + number_of_ants * [None]
 
         def simulate_ants_in_thread(start, number):
-            end = start + number
-            if end > number_of_ants:
-                end = number_of_ants
+            end = min(start + number, number_of_ants)
 
             for i in range(start, end):
                 ant = all_ants[i]
@@ -148,7 +134,7 @@ class Simulation:
             # liste de coordonnees (x, y), qu'on remet a zero
             pheromones = ["pheromones"]
 
-            temps_ants = perf_counter()
+            # temps_ants = perf_counter() # assez rapide
 
             curr_thread = None
             for i in range(0, number_of_ants, step):
@@ -161,7 +147,7 @@ class Simulation:
                 # curr_thread.join(1)
 
             # il y a bien un ralentissement dans le comportement des fourmis
-            print(f"temps_ants : {perf_counter() - temps_ants}")
+            # print(f"temps_ants : {perf_counter() - temps_ants}")
 
             # S'il y a de nouvelles pheromones
             if len(pheromones) > 1:
@@ -207,19 +193,18 @@ class Simulation:
         Retourne True si les coordonnées données en paramètre sont
         disponibles en fonction de la taille donnée, False sinon
         """
-        for str_type in self.objects:
-            # idée : mettre dans des threads pour calculer les distances au carré parallèlement
+        # Pour chaque liste d'objets
+        for objects in self.objects.values():
+            # idée : mettre dans des threads pour calculer les distances parallèlement
 
             # S'il y a au moins un objet
-            if len(self.objects[str_type]):
+            if len(objects) > 0:
                 # On associe une distance au carre a un objet
-                dist_to_obj = {self.squared_distance(
-                    (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}
+                all_distances = {distance((x, y), obj.coords_centre): obj for obj in objects}
 
-                min_dist_squared = min(dist_to_obj)
-                closest_obj = dist_to_obj[min_dist_squared]
+                min_dist = min(all_distances)
+                closest_obj = all_distances[min_dist]
 
-                min_dist = sqrt(min_dist_squared)
                 size_closest_obj = closest_obj.size
 
                 if min_dist <= size_closest_obj:
@@ -251,8 +236,8 @@ class Simulation:
             new_obj = NestServer(coords, size, color)
             self.objects[str_type].add(new_obj)
         else:
-           raise TypeError(f"[Erreur] le type '{str_type}' n'existe pas")
-            
+            raise TypeError(f"[Error] type '{str_type}' does not exist")
+
 
         self._timeline.append(new_obj)
 
@@ -266,10 +251,10 @@ class Simulation:
             all_ants.extend(nest.ants)
         return all_ants
 
-    def _get_resource(self, x, y):
+    def _get_resource(self, target_x, target_y):
         """Retourne l'objet ResourceServer à cette position ou None s'il n'y en a pas"""
         for resource in self.objects["resource"]:
-            if (x, y) in resource.zone:
+            if (target_x, target_y) in resource.zone:
                 return resource
         return None
 
