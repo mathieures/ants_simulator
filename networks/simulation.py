@@ -24,8 +24,15 @@ def timer(func):
 class Simulation:
     """ Classe qui lance toute la simulation de fourmis a partir du dico d'objets defini par le serveur """
 
-    __slots__ = ["objects", "sleep_time", "_first_ant", "_server", "_timeline"]
+    __slots__ = ["objects", "_sleep_time", "_first_ant", "_server", "_timeline"]
 
+    @property
+    def sleep_time(self):
+        return self._sleep_time
+
+    @sleep_time.setter
+    def sleep_time(self, new_time):
+        self._sleep_time = round(new_time, 3)
 
     def __init__(self, server):
         self._server = server
@@ -39,7 +46,7 @@ class Simulation:
 
         self._first_ant = True
 
-        self.sleep_time = 0.05
+        self._sleep_time = 0.05
 
     def start(self):
         """
@@ -160,7 +167,7 @@ class Simulation:
 
             # print("temps_sim :", perf_counter() - temps_sim)
 
-            sleep(self.sleep_time)  # ajout d'une latence
+            sleep(self._sleep_time)  # ajout d'une latence
         print("End of the simulation.")
         # TODO: afficher la couleur vainqueure a la fin
 
