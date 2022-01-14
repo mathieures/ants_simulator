@@ -1,5 +1,7 @@
 import tkinter as tk
-from ip import get_current_ip # on a une fonction ip deja
+from .ip import get_current_ip
+# Note : il ne faut pas confondre le module ip et l'attribut
+
 
 class ConfigClient:
     """
@@ -9,12 +11,12 @@ class ConfigClient:
 
     @property
     def ip(self):
-        # print("type de ip :", type(self._ip.get()))
+        """Attribut ip de la fenêtre, récupéré par le main.py"""
         return self._ip.get()
 
     @property
     def port(self):
-        # print("type de port :", type(self._port.get()))
+        """Attribut port de la fenêtre, récupéré par le main.py"""
         return self._port.get()
 
 
@@ -23,16 +25,16 @@ class ConfigClient:
         self._root.title('Config client')
 
         # Frames
-        self._labelframe = tk.LabelFrame(self._root, text="Configure which server to join")
-        self._labelframe.pack(padx=5)
+        labelframe = tk.LabelFrame(self._root, text="Configure which server to join")
+        labelframe.pack(padx=5)
 
-        self._buttonframe = tk.Frame(self._root)
-        self._buttonframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
+        buttonframe = tk.Frame(self._root)
+        buttonframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X, anchor='s')
 
-        self._topframe = tk.Frame(self._labelframe)
-        self._topframe.pack(side=tk.TOP, expand=True, fill=tk.X)
-        self._centerframe = tk.Frame(self._labelframe)
-        self._centerframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
+        topframe = tk.Frame(labelframe)
+        topframe.pack(side=tk.TOP, expand=True, fill=tk.X)
+        centerframe = tk.Frame(labelframe)
+        centerframe.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
         # Variables
         self._ip = tk.StringVar()
@@ -44,35 +46,35 @@ class ConfigClient:
         # Entrées de texte
 
         # IP
-        tk.Label(self._topframe, text='IP:', width=10).pack(side=tk.LEFT)
-        self._ip_entry = tk.Entry(self._topframe, textvariable=self._ip, width=15)
-        self._ip_entry.pack(side=tk.LEFT)
+        tk.Label(topframe, text='IP:', width=10).pack(side=tk.LEFT)
+        ip_entry = tk.Entry(topframe, textvariable=self._ip, width=15)
+        ip_entry.pack(side=tk.LEFT)
 
         # PORT
-        tk.Label(self._centerframe, text='PORT:', width=10).pack(side=tk.LEFT)
-        self._port_entry = tk.Entry(self._centerframe, textvariable=self._port, width=26)
-        self._port_entry.pack(side=tk.RIGHT)
+        tk.Label(centerframe, text='PORT:', width=10).pack(side=tk.LEFT)
+        port_entry = tk.Entry(centerframe, textvariable=self._port, width=26)
+        port_entry.pack(side=tk.RIGHT)
 
         # Bouton pour obtenir l'IP de la machine
-        self._current_ip_button = tk.Button(self._topframe, text='Current IP', command=self._set_to_current_ip)
-        self._current_ip_button.pack(side=tk.RIGHT)
+        current_ip_button = tk.Button(topframe, text='Current IP', command=self._set_to_current_ip)
+        current_ip_button.pack(side=tk.RIGHT)
 
         # Bouton pour rejoindre
 
-        self._join_button = tk.Button(self._buttonframe, text='Join', command=self._connection)
+        self._join_button = tk.Button(buttonframe, text='Join', command=self._connection)
         self._join_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
         # Bindings
-        
+
         # Pour gerer la touche Entree
         self._root.bind("<Return>", self._on_return_key)
-        
+
         # Pour gerer la fermeture de la fenetre
         self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
 
         self._root.mainloop()
 
-    
+
     # Bindings
 
     def _connection(self):
