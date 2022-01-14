@@ -1,4 +1,4 @@
-from ServerObject import SizedServerObject, get_new_id as get_new_index
+from ServerObject import SizedServerObject
 
 
 class ResourceServer(SizedServerObject):
@@ -9,14 +9,11 @@ class ResourceServer(SizedServerObject):
 
     __slots__ = ["index"]
 
-    INDEX_GEN = get_new_index()
+    INDEX_GEN = SizedServerObject.get_new_id()
 
     def __init__(self, coords_centre, size, color):
+        super().__init__(coords_centre, size, color)
         self.index = next(self.INDEX_GEN)
-
-        self.coords_centre = coords_centre
-        self.size = size
-        self.color = color
 
         self._init_zone()
 

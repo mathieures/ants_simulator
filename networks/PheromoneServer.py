@@ -23,9 +23,8 @@ class PheromoneServer(SizedServerObject):
         cls.pheromones.discard(pheromone)
 
     def __init__(self, coords_centre: tuple, direction: int):
-        self.coords_centre = coords_centre
+        super().__init__(coords_centre, size=1, color="")
         self.direction = direction
-        self.size = 1
 
         self._init_zone()
 

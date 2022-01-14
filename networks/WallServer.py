@@ -2,10 +2,9 @@ from ServerObject import SizedServerObject
 
 
 class WallServer(SizedServerObject):
+    """Mur côté serveur, dont la size correspond à la largeur (width)"""
 
     def __init__(self, coords_centre, size, color):
-        self.coords_centre = coords_centre
-        self.size = size # la width
-        self.color = color
+        super().__init__(coords_centre, size, color)
 
         self._init_zone()

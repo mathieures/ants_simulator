@@ -1,18 +1,27 @@
-def get_new_id():
-    """
-    Generatior d'id, utile pour donner un identifiant unique à
-    un objet d'une classe. N'est pas partagé entre deux classes.
-    """
-    current_id = 0
-    while True:
-        yield current_id
-        current_id += 1
-
-
 class ServerObject:
+    """Classe mère des objets côté serveur"""
     __slots__ = ["coords_centre", "color"]
 
+    @staticmethod
+    def get_new_id():
+        """
+        Generator d'id, utile pour donner un identifiant unique à
+        un objet d'une classe. N'est pas partagé entre deux classes.
+        """
+        current_id = 0
+        while True:
+            yield current_id
+            current_id += 1
+
+    def __init__(self, coords_centre, color):
+        self.coords_centre = coords_centre
+        self.color = color
+
     def to_tuple(self):
+        """
+        Retourne un tuple de certains attributs,
+        utiles pour le serveur et la simulation
+        """
         return (self.coords_centre, self.color)
 
 class SizedServerObject(ServerObject):
@@ -25,6 +34,10 @@ class SizedServerObject(ServerObject):
     OFFSETS = {(-1, -1), (-1, 0), (-1, 1), (0, -1),
                (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)}
 
+    def __init__(self, coords_centre, size, color):
+        super().__init__(coords_centre, color)
+        self.size = size
+        self.zone = set()
     def to_tuple(self):
         """Retourne une forme de l'objet exploitable par server.py"""
         # forme de l'ancien dico d'objets :
