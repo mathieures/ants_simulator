@@ -1,11 +1,9 @@
-import threading
-import tkinter as tk
-
-from interface.interface import Interface
-from networks.client import Client
-from networks.config_client import ConfigClient
-
+from threading import Thread
 from time import sleep
+
+from interface.Interface import Interface
+from networks.Client import Client
+from networks.ConfigClient import ConfigClient
 
 
 def main():
@@ -18,8 +16,9 @@ def main():
         client = Client(config_ip, config_port)
 
         app = Interface(client, 1050, 600)
-        t0 = threading.Thread(target=client.connect, daemon=True)
-        t0.start()
+
+        # On lance la connexion au serveur
+        Thread(target=client.connect, daemon=True).start()
 
         time_since_start = 0
         while not client.connected:
@@ -34,6 +33,7 @@ def main():
             app.root.mainloop()
         else:
             print("[Error] No connected server.")
+            app.quit_app()
 
 
 if __name__ == "__main__":
