@@ -23,8 +23,9 @@ class Resource(InterfaceObject):
 
     def shrink(self):
         """Rapetisse la ressource."""
-        shrinking_factor = 1 - 1 / self.size
-        self._canvas.scale(self._id, *self.origin_coords, shrinking_factor, shrinking_factor)
+        shrinking_factor = 1 - 1 / self.current_size
+        self._canvas.scale(self._id, *self.origin_coords,
+                           shrinking_factor, shrinking_factor)
         # scale(tagOrId, x, y, sx, sy) : deplacement de tous les
         # pts de l'obj par rapport a (x, y), d'un facteur de (sx, sy)
         self.current_size -= 1
