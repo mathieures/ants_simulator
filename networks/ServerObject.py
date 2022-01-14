@@ -38,6 +38,14 @@ class SizedServerObject(ServerObject):
         super().__init__(coords_centre, color)
         self.size = size
         self.zone = set()
+
+    def get_origin_coords(self):
+        """
+        Retourne les coordonnées d'origine de
+        l'objet, similaire à ce que fait tkinter
+        """
+        return [int(coord - self.size // 2) for coord in self.coords_centre]
+
     def to_tuple(self):
         """Retourne une forme de l'objet exploitable par server.py"""
         # forme de l'ancien dico d'objets :
@@ -48,11 +56,15 @@ class SizedServerObject(ServerObject):
         """
         Initialise la zone de l'objet grâce
         aux coordonnées et à la taille
+        Note : les hitboxes sont seulement des carrés
         """
-        self.zone = set()
-        x, y = self.coords_centre
-        # Pour chaque size et chaque offset, on ajoute a la zone le pixel decale
-        self.zone.update(
-            (x + i * off[0], y + i * off[1])
-            for off in self.OFFSETS
-            for i in range(self.size // 2 + 1))
+        # On remplit un carre de pixels en partant de l'origine
+        x, y = self.get_origin_coords()
+        self.zone.update((i, j) for j in range(y, y + self.size) for i in range(x, x + self.size))
+
+        # x, y = self.coords_centre
+        # # Pour chaque size et chaque offset, on ajoute a la zone le pixel decale
+        # self.zone.update(
+        #     (x + i * off[0], y + i * off[1])
+        #     for off in self.OFFSETS
+        #     for i in range(self.size // 2 + 1))

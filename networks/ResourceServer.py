@@ -18,10 +18,16 @@ class ResourceServer(SizedServerObject):
         self._init_zone()
 
     def shrink_resource(self):
+        """
+        Rétrécit la ressource et sa zone en enlevant les
+        pixels étant hors du champ de la nouvelle taille
+        """
+        x, y = self.get_origin_coords()
+        top = [(i, y) for i in range(x, x + self.size)]
+        bottom = [(i, y + self.size - 1) for i in range(x + self.size)]
+        left = [(x, j) for j in range(y + 1, y + self.size - 1)]
+        right = [(x + self.size - 1, j) for j in range(y + 1, y + self.size - 1)]
+
         self.size -= 1
-        # On supprime les pixels de la zone qui sont en dehors de la nouvelle size
-        x, y = self.coords_centre
-        self.zone.difference_update(
-            (x + self.size * off[0], y + self.size * off[1])
-            for off in self.OFFSETS)
-        # Je crois que ca ne supprime rien au 1er tour, mais pas sur d'ou cela vient
+
+        self.zone.difference_update(top, bottom, left, right)
