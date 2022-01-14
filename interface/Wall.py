@@ -2,7 +2,7 @@ from .InterfaceObject import InterfaceObject
 
 
 class Wall(InterfaceObject):
-    """ Objet Mur représenté graphiquement """ 
+    """Mur représenté graphiquement"""
 
     __slots__ = ["width"]
 
@@ -13,6 +13,7 @@ class Wall(InterfaceObject):
         """
         if size is None:
             size = width
+            raise ValueError("Size of Wall is None, I don't think that's normal")
         super().__init__(canvas, origin_coords, size, color="black")
 
         self.width = width
@@ -34,7 +35,7 @@ class Wall(InterfaceObject):
         self._id = self._canvas.create_line(self.drawn_coords,
                                             width=self.width, fill=self.color)
 
-    def expand(self, x, y):
+    def expand(self, to_x, to_y):
         """Étend le mur au point donné en paramètre"""
-        self.drawn_coords.extend((x, y))
+        self.drawn_coords.extend((to_x, to_y))
         self._canvas.coords(self._id, self.drawn_coords)

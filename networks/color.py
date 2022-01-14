@@ -1,9 +1,10 @@
-from random import randint
+from random import randrange
 
-def random_rgb():
+def random_color():
+    """Retourne une couleur aléatoire au format '#xxxxxx'"""
     color = "#"
-    for i in range(3):
-        c = hex(randint(0, 255))[2:]
-        # On rajoute un 0 s'il faut
-        color += '0' * (2 - len(c)) + c
+    for _ in range(3):
+        current_color = hex(randrange(0, 256))[2:]
+        # On rajoute un 0 avant s'il le faut
+        color += f"{current_color.rjust(2, '0')}"
     return color

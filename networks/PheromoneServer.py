@@ -2,6 +2,7 @@ from ServerObject import SizedServerObject
 
 
 class PheromoneServer(SizedServerObject):
+    """Une phéromone côté serveur"""
 
     __slots__ = ["direction"]
 

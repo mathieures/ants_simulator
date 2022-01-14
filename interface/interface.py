@@ -13,16 +13,13 @@ from .Resource import Resource
 from .Wall import Wall
 
 
-from networks import client
-
-
 class Interface:
     """ Classe qui comportera tous les éléments graphiques """
 
-    @staticmethod
-    def get_centre(p1, p2):
-        """Retourne un point au milieu des deux passés en paramètres"""
-        return ()
+    # @staticmethod
+    # def get_centre(p1, p2):
+    #     """Retourne un point au milieu des deux passés en paramètres"""
+    #     return ()
 
     @property
     def root(self):
@@ -42,6 +39,7 @@ class Interface:
 
     @property
     def local_color(self):
+        """Couleur locale de l'interface du client"""
         return self._local_color
 
     @local_color.setter
@@ -219,12 +217,10 @@ class Interface:
         """Crée ou fonce plusieurs phéromones à la fois"""
         # peut-être que ça va casser vu qu'on modifie le dico alors qu'on le traverse dans d'autres
         step = 20  # on cree ou fonce tel nombre de fourmis dans chaque thread
-        length = len(coords_list)
+        total_count = len(coords_list)
 
         def create_pheromones_in_thread(start, number):
-            end = start + number
-            if end > len(coords_list):
-                end = len(coords_list)
+            end = min(start + number, total_count)
 
             for i in range(start, end):
                 coords = coords_list[i]
@@ -233,11 +229,13 @@ class Interface:
                 else:
                     self._pheromones[coords] = Pheromone(self._canvas, coords)
 
-        for i in range(0, length, step):
+        for i in range(0, total_count, step):
             threading.Thread(target=create_pheromones_in_thread,
-                             args=(i, step)).start()
+                             args=(i, step),
+                             daemon=True).start()
 
     def shrink_resource(self, index):
+        """Rétrécit la ressource graphiquement"""
         if self._resources[index].current_size:
             self._resources[index].shrink()
         else:
@@ -259,14 +257,12 @@ class Interface:
     # def move_ant(self, index, delta_x, delta_y):
     #     """ Fonction pour déplacer une fourmi """
     #     self._ants[index].move(delta_x, delta_y)
-    
+
     # TODO: RÉUSSIR À TRANSFORMER _move_ants_in_thread EN MÉTHODE DÉTACHÉE DE move_ants
     # POUR ÉVITER DE REDÉFINIR LA FONCTION À CHAQUE APPEL DE move_ants
 
-    def _move_ants_in_thread(self, start, number, relative_coords):
-        end = start + number
-        if end > length:
-            end = length
+    def _move_ants_in_thread(self, total_count, start, number, relative_coords):
+        end = min(start + number, total_count)
 
         for i in range(start, end):
             ant = self._ants[i]
@@ -294,15 +290,17 @@ class Interface:
         Les coordonnées i sont pour la fourmi i.
         """
         step = 20  # on bouge tel nombre de fourmis dans chaque thread
-        length = len(relative_coords)
+        total_count = len(relative_coords)
 
-        for i in range(0, length, step):
+        for i in range(0, total_count, step):
             thread_move = threading.Thread(target=self._move_ants_in_thread,
-                                           args=(i, step, relative_coords), daemon=True)
+                                           args=(total_count, i, step, relative_coords),
+                                           daemon=True)
             thread_move.start()
-        thread_move.join(0.5)
+        # thread_move.join(0.5) # TODO : tenter de commenter pour voir
 
     def set_first_ant(self, color):
+        """Affiche la couleur de la première fourmi ayant touché une ressource"""
         w = int(self._canvas["width"])
         h = int(self._canvas["height"])
         self._canvas.create_text(
@@ -322,6 +320,7 @@ class Interface:
         self._client.disconnect()
 
     def show_admin_buttons(self):
+        """Affiche les boutons d'admin pour contrôler la simulation"""
         self._buttons.append(EasyButton(self,
                                         self._objects_frame, 50, 50, text="+",
                                         side=tk.RIGHT,
@@ -335,22 +334,27 @@ class Interface:
                                         toggle=False, hideable=False))
 
     def faster_sim(self):
+        """Demande à la simulation d'accélérer"""
         self._client.ask_faster_sim()
 
     def slower_sim(self):
+        """Demande à la simulation de ralentir"""
         self._client.ask_slower_sim()
 
     def countdown(self):
         """Affiche un compte a rebours au milieu de la fenetre"""
         # On cache tous les boutons ce coup-ci
         for button in self._buttons:
+            # TODO : peut-être faire une classe différente pour les hideable
             if button.hideable:
                 button.hide()
         # On affiche le compte a rebours
-        h = int(self._canvas["height"]) // 2
-        w = int(self._canvas["width"]) // 2
+        height = int(self._canvas["height"]) // 2
+        width = int(self._canvas["width"]) // 2
         text = self._canvas.create_text(
-            w, h, font="Corbel 20 bold", text="Starting in…")
+            width, height,
+            font="Corbel 20 bold",
+            text="Starting in…")
         sleep(1)
         for i in range(3, 0, -1):
             self._canvas.itemconfig(text, text=i)
@@ -360,9 +364,10 @@ class Interface:
         self._canvas.delete(self._root, text)
 
     def quit_app(self, force=False):
+        """Demande à l'utilisateur s'il veut vraiment quitter"""
         if force or messagebox.askyesno("Quit", "Are you sure to quit?"):
             self._root.quit()
 
 
-if __name__ == "__main__":
-    interface = Interface(1050, 750)
+# if __name__ == "__main__":
+#     interface = Interface(1050, 750)

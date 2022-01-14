@@ -2,7 +2,7 @@ from random import randint
 from math import degrees, radians, cos, sin, atan2
 # atan2 tient compte des signes
 
-from ServerObject import ServerObject, get_new_id
+from ServerObject import ServerObject
 from PheromoneServer import PheromoneServer
 
 
@@ -47,7 +47,7 @@ class AntServer(ServerObject):
     PHEROMONES = {}  # dictionnaire d'objets PheromoneServer, associes a une direction
     MAX_ENDURANCE = 512
     MAX_TRIES = 256  # nombre d'essais max pour contourner un mur par la gauche
-    ID_GEN = get_new_id()
+    ID_GEN = ServerObject.get_new_id()
 
     def __init__(self, pos_x, pos_y, color):
         self._id = next(self.ID_GEN)
@@ -74,7 +74,6 @@ class AntServer(ServerObject):
         chercher une ressource ou fait suivre une phéromone
         """
         # Si la fourmi atteint le bord de gauche ou le bord du haut, elle change de direction
-        x, y = self.coords_centre
         if self._x <= 0 or self._y <= 0:
             self._direction += 180
         else:
@@ -94,6 +93,7 @@ class AntServer(ServerObject):
         # on inverse pour le y : repere orthonorme indirect
         delta_y = self._y - self.nest[1]
 
+        # On arrondit au plus proche entier
         self._direction = round(degrees(atan2(delta_y, delta_x)), ndigits=0)
 
     def lay_pheromone(self):
@@ -114,7 +114,7 @@ class AntServer(ServerObject):
             # de direction (celles qui sont dans les deux)
             old_phero.zone -= new_phero.zone # old_phero.zone \ new_phero.zone
             # Si l'ancienne a ete completement repassee
-            if not len(old_phero.zone):
+            if len(old_phero.zone) == 0:
                 PheromoneServer.remove_pheromone(old_phero)
 
     def follow_direction_biaised(self, direction, proba=60):
