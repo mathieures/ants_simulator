@@ -16,6 +16,9 @@ from .Wall import Wall
 class Interface:
     """ Classe qui comportera tous les éléments graphiques """
 
+    READY_TEXT = "Ready"
+    NOT_READY_TEXT = "Not ready"
+
     # @staticmethod
     # def get_centre(p1, p2):
     #     """Retourne un point au milieu des deux passés en paramètres"""
@@ -86,10 +89,10 @@ class Interface:
                        object_type=Wall),
 
             EasyButton(self,
-                       self._objects_frame, 70, 50, text="Ready",
+                       self._objects_frame, 70, 50, text=type(self).READY_TEXT,
                        side=tk.RIGHT,
-                       command_select=self.send_ready,
-                       command_deselect=self.send_notready)
+                       command_select=self.set_ready,
+                       command_deselect=self.set_notready)
         ]
 
         # Evenements
@@ -146,23 +149,31 @@ class Interface:
             button.deselect(exec_command=False)
         self.current_object_type = None
 
-    def send_ready(self):
+    def set_ready(self):
+        """
+        Cache les boutons et informe le Client que
+        l'utilisateur a cliqué sur le bouton Ready
+        """
         for button in self._buttons:
-            if button.text != "Ready":
+            if button.text != type(self).READY_TEXT:
                 button.hide()
             else:
                 # On laisse le bouton Ready toujours actif
-                button.text = "Not ready"
-        self._client.set_ready()
+                button.text = type(self).NOT_READY_TEXT
+        self._client.ready_state = True
 
-    def send_notready(self):
+    def set_notready(self):
+        """
+        Montre les boutons et informe le Client que
+        l'utilisateur a cliqué sur le bouton Not ready
+        """
         for button in self._buttons:
-            if button.text != "Not ready":
+            if button.text != type(self).NOT_READY_TEXT:
                 button.show()
             else:
                 # Le bouton Ready est toujours actif
-                button.text = "Ready"
-        self._client.set_notready()
+                button.text = type(self).READY_TEXT
+        self._client.ready_state = False
 
     ## Demandes de confirmation pour creer les objets ##
 
@@ -182,7 +193,9 @@ class Interface:
 
     ## Creation d'objets ##
 
-    def create_object(self, str_type, coords, size=None, width=None, color=None):
+    # Test pour voir si enlever width ne provoque pas d'erreur
+    def create_object(self, str_type, coords, size=None, color=None):
+    # def create_object(self, str_type, coords, size=None, width=None, color=None):
         """Instancie l'objet du type reçu par le Client"""
         str_type = str_type.lower()
         if str_type == "resource":
@@ -324,22 +337,14 @@ class Interface:
         self._buttons.append(EasyButton(self,
                                         self._objects_frame, 50, 50, text="+",
                                         side=tk.RIGHT,
-                                        command_select=self.faster_sim,
+                                        command_select=self._client.ask_faster_sim,
                                         toggle=False, hideable=False))
 
         self._buttons.append(EasyButton(self,
                                         self._objects_frame, 50, 50, text="-",
                                         side=tk.RIGHT,
-                                        command_select=self.slower_sim,
+                                        command_select=self._client.ask_slower_sim,
                                         toggle=False, hideable=False))
-
-    def faster_sim(self):
-        """Demande à la simulation d'accélérer"""
-        self._client.ask_faster_sim()
-
-    def slower_sim(self):
-        """Demande à la simulation de ralentir"""
-        self._client.ask_slower_sim()
 
     def countdown(self):
         """Affiche un compte a rebours au milieu de la fenetre"""

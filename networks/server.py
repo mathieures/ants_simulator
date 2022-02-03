@@ -5,7 +5,11 @@ from threading import Thread
 from time import sleep
 from math import dist as distance
 
-from .utils import random_color
+from .utils import (
+    random_color,
+    ReadyState,
+    SpeedRequest
+)
 
 from .ServerWindow import ServerWindow
 from .Simulation import Simulation
@@ -157,45 +161,49 @@ class Server:
             except ConnectionResetError:
                 self._disconnect_client(receiving_client)
             else:
-                try:
-                    data = pickle.loads(recv_data)
-                except pickle.UnpicklingError:
-                    data = recv_data
-                # Si c'est une liste, on sait que la demande est effectuee pour
-                # creer un element, ou annuler un placement, ou supprimer une ressource
-                if isinstance(data, list):
-                    if data[0] == "undo":
-                        str_type = data[1]
-                        self._simulation.cancel_last_object()
-                    else:
-                        str_type, coords, size, color = data[:5]
-                        self._process_data(str_type, coords, size, color)
-                else:
-                    data = data.decode()
-                    if data == "ready":
-                        Server.clients[receiving_client]["ready"] = True
+                # Test pour voir s'il ne vaut pas mieux lever une exception quand ça ne fonctionne pas
+                data = pickle.loads(recv_data)
+                # try:
+                #     data = pickle.loads(recv_data)
+                # except pickle.UnpicklingError:
+                #     data = recv_data
+
+                if isinstance(data, ReadyState):
+                    ready_state = data.value
+                    Server.clients[receiving_client]["ready"] = ready_state
+                    if ready_state:
                         ready_clients = self._get_ready_clients()
                         self.window.ready_clients = ready_clients
                         if len(Server.clients) and ready_clients == len(Server.clients):
-                            print("Ready clients: {} / {}".format(ready_clients, len(Server.clients)))
+                            print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
                             self.send_to_all_clients("GO")
                             sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
                             # Lancement de la simulation
                             Thread(target=self._simulation.start, daemon=True).start()
                         else:
                             print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
-                    elif data == "not ready":
-                        Server.clients[receiving_client]["ready"] = False
+                    else:
                         ready_clients = self._get_ready_clients()
                         self.window.ready_clients = ready_clients
                         print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
 
-                    elif data == "faster":
+                # Si c'est une str on réagit juste en fonction de la valeur
+                elif isinstance(data, SpeedRequest):
+                    if data == "faster":
                         self._simulation.sleep_time /= 2
-                        # print("Faster simulation")
+                        print("Faster simulation")
                     elif data == "slower":
                         self._simulation.sleep_time *= 2
-                        # print("Slower simulation")
+                        print("Slower simulation")
+                # Si c'est une liste, c'est une création,
+                # modification ou suppression d'objet
+                else:
+                    if data[0] == "undo":
+                        # str_type = data[1] # test pour voir si ça sert…?
+                        self._simulation.cancel_last_object()
+                    else:
+                        str_type, coords, size, color = data[:5]
+                        self._process_data(str_type, coords, size, color)
 
         # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
         for client in tuple(Server.clients):

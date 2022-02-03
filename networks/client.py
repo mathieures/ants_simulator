@@ -6,6 +6,8 @@ from threading import Thread
 
 from time import perf_counter
 
+from .utils import ReadyState, SpeedRequest
+
 
 class Client:
     """
@@ -28,6 +30,16 @@ class Client:
     def is_admin(self):
         return self._is_admin
 
+    @property
+    def ready_state(self):
+        return self._ready_state
+
+    @ready_state.setter
+    def ready_state(self, new_state):
+        """Assigne l'état de préparation et informe le serveur."""
+        self._ready_state.value = new_state
+        self._send(self._ready_state)
+
     def __init__(self, ip, port):
         try:
             assert isinstance(ip, str), "[Error] the server IP is not a valid string"
@@ -46,6 +58,7 @@ class Client:
         self._interface = None
         self._is_admin = False
 
+        self._ready_state = ReadyState()
 
     def connect(self):
         """Connecte le client au serveur"""
@@ -57,13 +70,16 @@ class Client:
             print("[Error] No server found")
             sys.exit(1)
 
-    def set_ready(self):
-        """Informe le serveur que ce client est prêt"""
-        self._socket.send("ready".encode())
-
-    def set_notready(self):
-        """Informe le serveur que ce client n'est plus prêt (a faire)"""
-        self._socket.send("not ready".encode())
+    def _send(self, data):
+        """
+        Envoie les données converties. À utiliser
+        quand on veut envoyer quoi que ce soit.
+        """
+        try:
+            self._socket.send(pickle.dumps(data))
+        except BrokenPipeError:
+            print("[Error] fatal error while sending data. Exiting.")
+            sys.exit(1)
 
     def ask_object(self, object_type, position, size=None, color=None):
         """
@@ -72,29 +88,35 @@ class Client:
         à la position donnée.
         """
         str_type = object_type.__name__ # Nom de classe de l'objet
-        data = pickle.dumps([str_type, position, size, color])
-        try:
-            self._socket.send(data)
-        except BrokenPipeError:
-            print("[Error] fatal error while sending data. Exiting.")
-            sys.exit(1)
+        # data = pickle.dumps([str_type, position, size, color])
+        self._send((str_type, position, size, color))
+        # try:
+        #     self._socket.send(data)
+        # except BrokenPipeError:
+        #     print("[Error] fatal error while sending data. Exiting.")
+        #     sys.exit(1)
 
     def undo_object(self, str_type):
         """ Demande au serveur d'annuler le placement d'un objet """
-        data = pickle.dumps(["undo", str_type])
-        try:
-            self._socket.send(data)
-        except BrokenPipeError:
-            print("[Error] fatal error while sending data. Exiting.")
-            sys.exit(1)
+        # data = pickle.dumps(["undo", str_type])
+        self._send(("undo", self))
+        # try:
+        #     self._socket.send(data)
+        # except BrokenPipeError:
+        #     print("[Error] fatal error while sending data. Exiting.")
+        #     sys.exit(1)
 
     def ask_faster_sim(self):
+        """Demande à la simulation d'accélérer"""
         print("ask_faster_sim")
-        self._socket.send("faster".encode())
+        self._send(SpeedRequest("faster"))
+        # self._socket.send("faster".encode())
 
     def ask_slower_sim(self):
+        """Demande à la simulation de ralentir"""
         print("ask_slower_sim")
-        self._socket.send("slower".encode())
+        self._send(SpeedRequest("slower"))
+        # self._socket.send("slower".encode())
 
     def disconnect(self):
         self._socket.close()
@@ -106,7 +128,7 @@ class Client:
         Pour ne pas bloquer les actions avec l'interface, on
         appelle les méthodes de l'interface dans des threads.
         """
-        # Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
+        # Note : le client ne fait que recevoir, donc pas besoin de thread
         while True:
             try:
                 recv_data = self._socket.recv(102400)
@@ -135,7 +157,7 @@ class Client:
                 # Si on a les mouvements des fourmis et les pheromones en meme temps
                 if len(data) == 2 and data[0][0] == "move_ants":
                     # On bouge les fourmis
-                    temps_move_phero = perf_counter()
+                    # temps_move_phero = perf_counter()
 
                     thread_move = Thread(target=self._interface.move_ants,
                                          args=(data[0][1:],),
