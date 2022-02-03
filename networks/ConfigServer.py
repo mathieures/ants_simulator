@@ -1,5 +1,7 @@
 import tkinter as tk
-from ip import get_current_ip
+
+from .utils import get_current_ip
+
 
 class ConfigServer:
     """

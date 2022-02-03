@@ -1,5 +1,6 @@
 # Dossier cache python
 *__pycache__/
+*.pyc
 *~
 *.autosave
 

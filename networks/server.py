@@ -5,11 +5,11 @@ from threading import Thread
 from time import sleep
 from math import dist as distance
 
-from color import random_color
+from .utils import random_color
 
-from Simulation import Simulation
-from ConfigServer import ConfigServer
-from ServerWindow import ServerWindow
+from .ServerWindow import ServerWindow
+from .Simulation import Simulation
+
 
 class Server:
     """
@@ -304,37 +304,3 @@ class Server:
             self.window.quit_window()
         self._socket.close()
         sys.exit(0)
-
-
-def main():
-    # On regarde d'abord si l'utilisateur veut une fenetre
-    if "-nowindow" in sys.argv:
-        create_window = False
-        sys.argv.pop(sys.argv.index("-nowindow"))
-        # print("new args :", sys.argv)
-    else:
-        create_window = True
-
-    # S'il n'y a pas assez d'arguments, on ouvre la fenetre de config
-    if len(sys.argv) < 4:
-        config = ConfigServer() # bloquant
-
-        ip = config.ip
-        port = config.port
-        max_clients = config.max_clients
-        create_window = config.create_window
-
-    else:
-        try:
-            ip = int(sys.argv[1])
-            port = int(sys.argv[2])
-            max_clients = int(sys.argv[3])
-        except ValueError:
-            print("[Error] Arguments must be integers")
-            print("Syntax:\n\tpython3 server.py <IP> <PORT> <NB_MAX_CLIENTS> [-nowindow]")
-            sys.exit(1)
-
-    Server(ip, port, max_clients, create_window)
-
-if __name__ == "__main__":
-    main()

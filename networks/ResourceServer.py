@@ -1,4 +1,4 @@
-from ServerObject import SizedServerObject
+from .ServerObject import SizedServerObject
 
 
 class ResourceServer(SizedServerObject):

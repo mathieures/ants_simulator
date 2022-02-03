@@ -1,3 +1,5 @@
+import sys
+
 from threading import Thread
 from time import sleep
 
@@ -5,9 +7,11 @@ from interface.Interface import Interface
 from networks.Client import Client
 from networks.ConfigClient import ConfigClient
 
+from networks.ConfigServer import ConfigServer
+from networks.Server import Server
 
-def main():
 
+def start_client():
     config = ConfigClient() # bloquant
     config_ip, config_port = config.ip, config.port
 
@@ -35,6 +39,37 @@ def main():
             print("[Error] No connected server.")
             app.quit_app()
 
+def start_server():
+    # On regarde d'abord si l'utilisateur veut une fenetre
+    if "-nowindow" in sys.argv:
+        create_window = False
+        sys.argv.pop(sys.argv.index("-nowindow"))
+        # print("new args :", sys.argv)
+    else:
+        create_window = True
 
-if __name__ == "__main__":
-    main()
+    # S'il n'y a pas assez d'arguments, on ouvre la fenetre de config
+    if len(sys.argv) < 4:
+        config = ConfigServer() # bloquant
+
+        ip = config.ip
+        port = config.port
+        max_clients = config.max_clients
+        create_window = config.create_window
+
+    else:
+        try:
+            ip = int(sys.argv[1])
+            port = int(sys.argv[2])
+            max_clients = int(sys.argv[3])
+        except ValueError:
+            print("[Error] Arguments must be integers")
+            print("Syntax:\n\tpython3 server.py <IP> <PORT> <NB_MAX_CLIENTS> [-nowindow]")
+            sys.exit(1)
+
+    Server(ip, port, max_clients, create_window)
+
+if len(sys.argv) > 1 and sys.argv[1] == "server":
+    start_server()
+else:
+    start_client()

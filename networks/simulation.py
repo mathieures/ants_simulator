@@ -3,10 +3,10 @@ from time import sleep
 from time import perf_counter # Pour le debug
 from math import dist as distance
 
-from AntServer import AntServer
-from ResourceServer import ResourceServer
-from NestServer import NestServer
-from WallServer import WallServer
+from .AntServer import AntServer
+from .ResourceServer import ResourceServer
+from .NestServer import NestServer
+from .WallServer import WallServer
 
 
 def timer(func):

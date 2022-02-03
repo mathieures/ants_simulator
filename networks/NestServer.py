@@ -1,5 +1,5 @@
-from ServerObject import SizedServerObject
-from AntServer import AntServer
+from .ServerObject import SizedServerObject
+from .AntServer import AntServer
 
 
 class NestServer(SizedServerObject):

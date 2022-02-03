@@ -1,6 +1,7 @@
 import tkinter as tk
 import threading
 
+
 class ServerWindow(threading.Thread):
     """
     Interface permettant à l'utilisateur de connaître en tout

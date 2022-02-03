@@ -2,8 +2,8 @@ from random import randint
 from math import degrees, radians, cos, sin, atan2
 # atan2 tient compte des signes
 
-from ServerObject import ServerObject
-from PheromoneServer import PheromoneServer
+from .ServerObject import ServerObject
+from .PheromoneServer import PheromoneServer
 
 
 class AntServer(ServerObject):
