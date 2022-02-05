@@ -47,10 +47,10 @@ class AntServer(ServerObject):
     PHEROMONES = {}  # dictionnaire d'objets PheromoneServer, associes a une direction
     MAX_ENDURANCE = 512
     MAX_TRIES = 256  # nombre d'essais max pour contourner un mur par la gauche
-    ID_GEN = ServerObject.get_new_id()
+    ID_GEN = ServerObject.new_id_generator()
 
     def __init__(self, pos_x, pos_y, color):
-        self._id = next(self.ID_GEN)
+        self._id = next(type(self).ID_GEN)
 
         self._x = pos_x
         self._y = pos_y

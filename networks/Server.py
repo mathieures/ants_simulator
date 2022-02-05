@@ -8,7 +8,8 @@ from math import dist as distance
 from .utils import (
     random_color,
     ReadyState,
-    SpeedRequest
+    SpeedRequest,
+    id_generator as utils_id_generator
 )
 
 from .ServerWindow import ServerWindow
@@ -27,6 +28,17 @@ class Server:
     """
     clients = {} # dictionnaire qui associe un socket a un dict { "ready": bool, "thread": Thread }
     # Note : on est oblige de garder une trace de quel client est pret pour mettre a jour la window
+
+    id_generator = None
+
+    @classmethod
+    def get_new_id(cls):
+        """Méthode de classe qui permet de générer un identifiant"""
+        # S'il n'y en avait pas pour cette classe, on en crée un
+        if cls.id_generator is None:
+            cls.id_generator = utils_id_generator()
+        # Dans tous les cas on renvoit le prochain id
+        return next(cls.id_generator)
 
     @property
     def online(self):
@@ -202,6 +214,7 @@ class Server:
                         # str_type = data[1] # test pour voir si ça sert…?
                         self._simulation.cancel_last_object()
                     else:
+                        # TODO : refaire ça en POO
                         str_type, coords, size, color = data[:5]
                         self._process_data(str_type, coords, size, color)
 

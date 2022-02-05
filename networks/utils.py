@@ -43,3 +43,14 @@ def get_current_ip():
     s.connect(('8.8.8.8', 1))  # connect() for UDP doesn't send packets
     local_ip_address = s.getsockname()[0]
     return local_ip_address
+
+
+def id_generator():
+    """
+    Generator d'id, utile pour donner un identifiant unique à
+    un objet d'une classe. N'est pas partagé entre deux classes.
+    """
+    current_id = 0
+    while True:
+        yield current_id
+        current_id += 1

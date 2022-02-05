@@ -9,11 +9,11 @@ class ResourceServer(SizedServerObject):
 
     __slots__ = ["index"]
 
-    INDEX_GEN = SizedServerObject.get_new_id()
+    INDEX_GEN = SizedServerObject.new_id_generator()
 
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, size, color)
-        self.index = next(self.INDEX_GEN)
+        self.index = next(type(self).INDEX_GEN)
 
         self._init_zone()
 

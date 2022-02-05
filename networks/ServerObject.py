@@ -1,17 +1,14 @@
+from .utils import id_generator as id_generator
+
+
 class ServerObject:
     """Classe mère des objets côté serveur"""
     __slots__ = ["coords_centre", "color"]
 
-    @staticmethod
-    def get_new_id():
-        """
-        Generator d'id, utile pour donner un identifiant unique à
-        un objet d'une classe. N'est pas partagé entre deux classes.
-        """
-        current_id = 0
-        while True:
-            yield current_id
-            current_id += 1
+    @classmethod
+    def new_id_generator(cls):
+        """Renvoie un générateur d'identifiants"""
+        return id_generator()
 
     def __init__(self, coords_centre, color):
         self.coords_centre = coords_centre
