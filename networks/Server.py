@@ -177,7 +177,7 @@ class Server:
                         if len(Server.clients) and ready_clients == len(Server.clients):
                             print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
                             self.send_to_all_clients("GO")
-                            sleep(5) # On attend 5 secondes le temps que le compte a rebours de l'interface finisse
+                            sleep(5) # On attend la fin du compte à rebours de l'interface
                             # Lancement de la simulation
                             Thread(target=self._simulation.start, daemon=True).start()
                         else:
