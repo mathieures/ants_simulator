@@ -1,4 +1,4 @@
-from random import randint
+from random import randrange
 from math import degrees, radians, cos, sin, atan2
 # atan2 tient compte des signes
 
@@ -28,17 +28,23 @@ class AntServer(ServerObject):
     # property car on veut pouvoir appliquer le modulo a l'affectation
     @property
     def direction(self):
+        """La direction, en degrés, de la fourmi"""
         return self._direction
 
     @direction.setter
-    def direction(self, pdirection):
-        self._direction = pdirection % 360
+    def direction(self, new_direction):
+        self._direction = new_direction % 360
 
     # read only
     @property
     def nest(self):
         """Position du nid en un couple (x, y)"""
         return self._nest
+
+    @property
+    def is_tired(self):
+        """Booléen qui indique si la fourmi est fatiguée"""
+        return self.endurance < 1
 
     ###############################
 
@@ -49,43 +55,75 @@ class AntServer(ServerObject):
     MAX_TRIES = 256  # nombre d'essais max pour contourner un mur par la gauche
     ID_GEN = ServerObject.new_id_generator()
 
+
     def __init__(self, pos_x, pos_y, color):
         self._id = next(type(self).ID_GEN)
 
         self._x = pos_x
         self._y = pos_y
         self.color = color
-        self._direction = randint(0, 360)
+        self._direction = randrange(0, 360)
         self._nest = (pos_x, pos_y)  # Le nid est la position de depart
 
         self.has_resource = False  # Booleen pour indiquer si une fourmi possede une ressource
         self.endurance = AntServer.MAX_ENDURANCE
         self.tries = 0  # Nombre d'essais pour le contournement d'un mur
 
+
+    def simulate(self):
+        """Simule la fourmi car on sait qu'il n'y a pas de mur."""
+        # Si elle a une ressource, elle pose
+        # une phéromone et retourne au nid
+        if self.has_resource:
+            self.go_to_nest()
+            self.lay_pheromone()
+        # Si pas de ressource et fatiguée, elle retourne juste au nid
+        elif self.is_tired:
+            self.go_to_nest()
+        # Sinon elle cherche encore
+        else:
+            self.seek_resource()
+
+    def handle_wall(self):
+        """Gère la rencontre avec un mur"""
+        # Si elle a une ressource, elle essaie
+        # de rejoindre le nid en contournant
+        if self.has_resource:
+            self.get_around_wall()
+            self.lay_pheromone()
+        # Sinon elle peut faire demi-tour
+        else:
+            self.turn_around()
+
     def move(self):
         """ Méthode qui change la position de la fourmi en fonction de sa direction """
-        self._x += round(cos(radians(self._direction)), ndigits=0)
-        # -= car c'est un repere orthonorme indirect
-        self._y -= round(sin(radians(self._direction)), ndigits=0)
+        direction_radians = radians(self._direction)
+
+        delta_x = round(cos(direction_radians), ndigits=0)
+        delta_y = -round(sin(direction_radians), ndigits=0)
+        # - car c'est un repere orthonorme indirect
+        self._x += delta_x
+        self._y += delta_y
+
+        return delta_x, delta_y
 
     def seek_resource(self):
         """
         Fonction qui donne une direction aleatoire pour
         chercher une ressource ou fait suivre une phéromone
         """
+        self.endurance -= 1
         # Si la fourmi atteint le bord de gauche ou le bord du haut, elle change de direction
         if self._x <= 0 or self._y <= 0:
-            self._direction += 180
+            self.turn_around()
         else:
             current_phero = PheromoneServer.get_pheromone(self._x, self._y)
-            # S'il y a une pheromone
-            if current_phero is not None:
-                direction = current_phero.direction
-                self.follow_direction_biaised(direction)
-            # Sinon on prend une direction aleatoire
+            # S'il n'y a pas de pheromone on prend une direction aleatoire
+            if current_phero is None:
+                self.direction = randrange(self._direction - 30, self._direction + 30)
+            # Sinon on peut la suivre
             else:
-                rand_dir = randint(self._direction - 30, self._direction + 30)
-                self._direction = rand_dir % 360
+                self.follow_direction_biaised(current_phero.direction)
 
     def go_to_nest(self):
         """ La fourmi pointe vers le nid """
@@ -94,7 +132,7 @@ class AntServer(ServerObject):
         delta_y = self._y - self.nest[1]
 
         # On arrondit au plus proche entier
-        self._direction = round(degrees(atan2(delta_y, delta_x)), ndigits=0)
+        self.direction = round(degrees(atan2(delta_y, delta_x)), ndigits=0)
 
     def lay_pheromone(self):
         """
@@ -118,7 +156,33 @@ class AntServer(ServerObject):
                 PheromoneServer.remove_pheromone(old_phero)
 
     def follow_direction_biaised(self, direction, proba=60):
-        """Suit une direction ou pas, suivant une probabilité en pourcentage"""
-        # <=> proba % de chances de la suivre
-        if randint(0, 100) >= proba:
-            self._direction = direction
+        """
+        Suit une direction ou pas, suivant une probabilité
+        en pourcentage : `proba`% de chances de la suivre
+        """
+        if randrange(0, 101) > proba:
+            self.direction = direction
+
+    def get_around_wall(self):
+        """Essaie de contourner un mur"""
+        # Si la fourmi n'a pas fait trop d'essais
+        if self.tries < type(self).MAX_TRIES:
+            # Elle contourne le mur par la gauche
+            self.direction += 30
+            self.tries += 1
+        # Sinon elle essaie par la droite
+        else:
+            self.direction -= 30
+
+    def turn_around(self):
+        """Fait demi-tour"""
+        self.direction += 180
+
+    def handle_nest(self):
+        """
+        Remet les attributs à zéro pour que la
+        fourmi recommence à chercher comme au début
+        """
+        self.has_resource = False
+        self.endurance = AntServer.MAX_ENDURANCE
+        self.tries = 0

@@ -3,13 +3,22 @@ import socket
 import pickle
 from threading import Thread
 from time import sleep
-from math import dist as distance
+# from math import dist as distance
 
-from .utils import (
+from .network_utils import (
     random_color,
+    id_generator,
+
     ReadyState,
     SpeedRequest,
-    id_generator as utils_id_generator
+    UndoRequest,
+
+    GoSignal,
+    AdminSignal,
+    DestroySignal,
+
+    SentObject,
+    ColorInfo
 )
 
 from .ServerWindow import ServerWindow
@@ -26,19 +35,17 @@ class Server:
         ouverte pendant le fonctionnement du serveur, et l'utilisateur devra
         terminer le script par ses propres moyens.
     """
-    clients = {} # dictionnaire qui associe un socket a un dict { "ready": bool, "thread": Thread }
-    # Note : on est oblige de garder une trace de quel client est pret pour mettre a jour la window
+    clients = {}
+    """
+    Dictionnaire qui associe un id a un dict
+    {
+        "id": int,
+        "ready": bool,
+        "thread": Thread
+    }
+    """
 
-    id_generator = None
-
-    @classmethod
-    def get_new_id(cls):
-        """Méthode de classe qui permet de générer un identifiant"""
-        # S'il n'y en avait pas pour cette classe, on en crée un
-        if cls.id_generator is None:
-            cls.id_generator = utils_id_generator()
-        # Dans tous les cas on renvoit le prochain id
-        return next(cls.id_generator)
+    CLIENT_ID_GEN = id_generator()
 
     @property
     def online(self):
@@ -114,17 +121,20 @@ class Server:
                 # Exception levee quand la connexion est coupee pendant l'attente d'accept
                 pass
             else:
-                client_color = random_color()
-                self._send_to_client(client, ("color", client_color))
+                self._send_to_client(client, ColorInfo(random_color()))
                 # On lui reserve une entree dans le dictionnaire
-                Server.clients[client] = { "ready": False, "thread": None }
+                Server.clients[client] = {
+                    "id": next(type(self).CLIENT_ID_GEN),
+                    "ready": False,
+                    "thread": None
+                }
                 print("Accepted client. Total: {}".format(len(Server.clients)))
                 if self.window is not None:
                     self.window.clients += 1
 
                 # Si l'IP du client est celle du serveur, il est admin
                 if address[0] == self._ip:
-                    self._send_to_client(client, "admin")
+                    self._send_to_client(client, AdminSignal)
                 sleep(0.1)
                 self._sync_objects(client)
         else:
@@ -133,7 +143,7 @@ class Server:
     def _get_ready_clients(self):
         """
         Retourne le nombre de clients prêts en faisant la somme des booléens.
-        Utilise un generator, d'où les parenthèses
+        Utilise un generator, d'où le manque de parenthèses
         """
         return sum(client["ready"] for client in Server.clients.values())
 
@@ -143,27 +153,66 @@ class Server:
         Envoie tous les objets déjà
         posés au client en paramètre.
         """
-        data = ["create"]
-        if len(self._simulation.objects["nest"]) > 0:
-            data.append(("nest", [n.to_tuple() for n in self._simulation.objects["nest"]]))
-        if len(self._simulation.objects["resource"]) > 0:
-            data.append(("resource", [r.to_tuple() for r in self._simulation.objects["resource"]]))
 
-        if len(data) > 1:
+        # TODO : pour réparer : c'est embêtant parce que simulation.objects["wall"]
+        # contient que des petits tuples, avec des points. Je sais pas comment faire pour
+        # garder la même structure (parce que c'est dommmage de tout rechanger encore une fois)
+        # et réparer ça en même temps.
+
+        # idée : peut-être faire hériter WallServer de set() ou quoi ? ou
+        # surcharger __iter__ pour ne pas avoir à tout changer, en mode on
+        # peut check les coordonnées sans avoir à prendre la zone
+
+        data = []
+
+        for str_type in ("nest", "resource"):
+            if self._simulation.objects[str_type]:
+                for obj in self._simulation.objects[str_type]:
+                    data.append(SentObject(str_type, *obj.to_tuple()))
+
+        if data:
             self._send_to_client(client, data)
 
-        # On envoie les murs separement car ils sont gros
-        if len(self._simulation.objects["wall"]) > 0:
-            data.clear()
-            for wall in (w.to_tuple() for w in self._simulation.objects["wall"]):
-                data = ["create", ("wall", (wall,))]
-                # print("data du mur :", data)
-                self._send_to_client(client, data)
-            # print("envoyé murs")
+        data.clear()
+        # TODO : seules les 2 premières coords des murs sont envoyées
+
+        # On envoie les murs separement car ils sont plus lourds
+        if self._simulation.objects["wall"]:
+            # Deux boucles car un mur est un tuple de tuples
+            print(f"tous les walls : {self._simulation.objects['wall']=}")
+            for wall in self._simulation.objects["wall"]:
+                print("mur de base :", wall)
+                print(f"{wall.coords_centre=}")
+                print(f"{wall.to_tuple()=}")
+            # for wall_tuple in (w.to_tuple() for w in self._simulation.objects["wall"]):
+            #     print("mur :", wall_tuple)
+            #     self._send_to_client(client, SentObject("wall", *wall_tuple))
+
+
+    # def _sync_objects(self, client):
+    #     """
+    #     Envoie tous les objets déjà
+    #     posés au client en paramètre.
+    #     """
+    #     data = ["create"]
+    #     if self._simulation.objects["nest"]:
+    #         data.append(("nest", [n.to_tuple() for n in self._simulation.objects["nest"]]))
+    #     if self._simulation.objects["resource"]:
+    #         data.append(("resource", [r.to_tuple() for r in self._simulation.objects["resource"]]))
+
+    #     if len(data) > 1:
+    #         self._send_to_client(client, data)
+
+    #     # On envoie les murs separement car ils sont plus lourds
+    #     if self._simulation.objects["wall"]:
+    #         data.clear()
+    #         for wall in (w.to_tuple() for w in self._simulation.objects["wall"]):
+    #             data = ["create", ("wall", (wall,))]
+    #             self._send_to_client(client, data)
 
     def _receive(self):
         """
-        Fonction qui sert à réceptionner les données envoyées depuis
+        Méthode qui sert à réceptionner les données envoyées depuis
         chaque client. Utilise une sous-fonction 'receive_in_thread'
         qui va manipuler dans un thread les données reçues.
         """
@@ -173,50 +222,40 @@ class Server:
             except ConnectionResetError:
                 self._disconnect_client(receiving_client)
             else:
-                # Test pour voir s'il ne vaut pas mieux lever une exception quand ça ne fonctionne pas
                 data = pickle.loads(recv_data)
-                # try:
-                #     data = pickle.loads(recv_data)
-                # except pickle.UnpicklingError:
-                #     data = recv_data
 
                 if isinstance(data, ReadyState):
                     ready_state = data.value
                     Server.clients[receiving_client]["ready"] = ready_state
-                    if ready_state:
-                        ready_clients = self._get_ready_clients()
-                        self.window.ready_clients = ready_clients
-                        if len(Server.clients) and ready_clients == len(Server.clients):
-                            print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
-                            self.send_to_all_clients("GO")
-                            sleep(5) # On attend la fin du compte à rebours de l'interface
-                            # Lancement de la simulation
-                            Thread(target=self._simulation.start, daemon=True).start()
-                        else:
-                            print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
-                    else:
-                        ready_clients = self._get_ready_clients()
-                        self.window.ready_clients = ready_clients
-                        print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
+
+                    ready_clients = self._get_ready_clients()
+                    self.window.ready_clients = ready_clients
+                    print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
+
+                    if ready_state and ready_clients == len(Server.clients):
+                        self.send_to_all_clients(GoSignal)
+                        sleep(5) # On attend la fin du compte à rebours de l'interface
+                        # Lancement de la simulation
+                        Thread(target=self._simulation.start, daemon=True).start()
 
                 # Si c'est une str on réagit juste en fonction de la valeur
                 elif isinstance(data, SpeedRequest):
-                    if data == "faster":
+                    if data.faster:
                         self._simulation.sleep_time /= 2
                         print("Faster simulation")
-                    elif data == "slower":
+                    else:
                         self._simulation.sleep_time *= 2
                         print("Slower simulation")
                 # Si c'est une liste, c'est une création,
                 # modification ou suppression d'objet
                 else:
-                    if data[0] == "undo":
+                    client_id = Server.clients[receiving_client]["id"]
+                    if data is UndoRequest:
                         # str_type = data[1] # test pour voir si ça sert…?
-                        self._simulation.cancel_last_object()
+                        self._simulation.undo_object_from_client(client_id)
                     else:
-                        # TODO : refaire ça en POO
-                        str_type, coords, size, color = data[:5]
-                        self._process_data(str_type, coords, size, color)
+                        str_type, coords, size, color = data[:5] # TODO : refaire ça en POO
+                        self._process_data(client_id, str_type, coords, size, color)
 
         # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
         for client in tuple(Server.clients):
@@ -235,34 +274,18 @@ class Server:
                     daemon=True)
                 Server.clients[client]["thread"].start()
 
-    def _process_data(self, str_type, coords, size, color):
-        # print("process data : str_type :", str_type, "coords :", coords, "size :", size, "width :", width, "color :", color)
-        str_type = str_type.lower() # normalement, deja en minuscules, mais au cas ou
-
+    def _process_data(self, source_client_id, str_type, coords, size, color):
+        """Crée un objet en fonction du client et des caractéristiques de l'objet voulu."""
         if str_type == "wall":
-            # On nettoie le mur de ses points tres proches pour alleger les calculs
-            min_distance = 4 # Distance minimale a avoir entre deux points du mur
-
-            current_point = (coords[0], coords[1])
-            opti_coords = [*current_point]
-            for i in range(2, len(coords), 2):
-                # On compare un point avec le point actuel, et si c'est bon on l'ajoute
-                next_point = (coords[i], coords[i + 1])
-
-                current_distance = distance(current_point, next_point)
-
-                if current_distance > min_distance:
-                    opti_coords.extend(current_point)
-                    current_point = next_point
-            opti_coords.extend(current_point) # il faut rajouter le dernier
-            coords = opti_coords
+            coords = self._simulation.optimize_wall(coords)
 
         # Si l'endroit est libre
         if self._simulation.check_all_coords(coords, size):
-            self._simulation.add_to_objects(str_type, coords, size, color)
+            self._simulation.add_to_objects(source_client_id, str_type, coords, size, color)
 
-            data = (str_type, [[coords, size, color]]) # syntaxe de l'envoi de groupe
-            self.send_to_all_clients(("create", data))
+            # data = (str_type, [[coords, size, color]]) # syntaxe de l'envoi de groupe
+            self.send_to_all_clients(SentObject(str_type, coords, size, color))
+            # self.send_to_all_clients(("create", data))
         # else:
         #     print("[Warning] there is already an object here.")
 
@@ -317,6 +340,11 @@ class Server:
         """Envoie des informations à tous les clients"""
         for client in tuple(Server.clients):
             self._send_to_client(client, data)
+
+    def send_destroy_signal(self, obj):
+        """Envoie un signal de destruction de l'objet spécifié à tous les clients"""
+        self.send_to_all_clients(DestroySignal(SentObject.from_SizedServerObject(obj))) # TODO : mettre un truc là
+        # mais qu'est-ce qu'on envoie ? qu'est-ce que le Client doit avoir pour pouvoir supprimer un objet ?
 
     def quit(self):
         """Termine le programme proprement"""

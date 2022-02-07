@@ -8,7 +8,8 @@ class InterfaceObject:
     # read-only
     @property
     def id(self):
-        return self._id    
+        return self._id
+
 
     def __init__(self, canvas, origin_coords, size=10, color=""):
         """L'objet calcule son centre et se place au bon endroit tout seul"""
@@ -26,6 +27,7 @@ class InterfaceObject:
 
         self._id = None # Doit etre ecrase par les classes filles
 
+
     def draw(self):
         """
         Doit être réécrite dans les classes filles et
@@ -38,11 +40,3 @@ class InterfaceObject:
 
     def _get_centre_coords(self):
         return (self.drawn_coords[2] - self.drawn_coords[0], self.drawn_coords[3] - self.drawn_coords[1])
-
-    def _update_coords(self):
-        """
-        Utilisé pour mettre à jour les attributs
-        des objets, après un déplacement par exemple
-        """
-        self.coords_centre = self._get_centre_coords()
-        self.drawn_coords = self._get_drawn_coords()

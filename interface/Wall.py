@@ -6,13 +6,14 @@ class Wall(InterfaceObject):
 
     __slots__ = ["width"]
 
+
     def __init__(self, canvas, origin_coords, size=37.5, width=15):
         """
         Crée une ligne de taille size et de largeur width.
         (size est utile pour l'icône du bouton)
         """
         if size is None:
-            size = width
+            # size = width
             raise ValueError("Size of Wall is None, I don't think that's normal")
         super().__init__(canvas, origin_coords, size, color="black")
 
@@ -29,6 +30,7 @@ class Wall(InterfaceObject):
                                  self.origin_coords[0] + self.size,
                                  self.origin_coords[1]]
         self.draw()
+
 
     def draw(self):
         """Crée le tout premier mur, pouvant être étendu."""

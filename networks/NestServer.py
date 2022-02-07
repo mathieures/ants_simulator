@@ -6,6 +6,11 @@ class NestServer(SizedServerObject):
 
     __slots__ = ["ants"]
 
+    @property
+    def str_type(self):
+        return "nest"
+
+
     def __init__(self, coords_centre, size, color, ants_per_nest=20):
         super().__init__(coords_centre, size, color)
 
@@ -13,4 +18,4 @@ class NestServer(SizedServerObject):
         self.ants = [AntServer(*self.coords_centre, self.color)
                      for _ in range(ants_per_nest)]
 
-        self._init_zone()
+        # self._init_zone()

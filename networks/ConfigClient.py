@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from .utils import get_current_ip
+from .network_utils import get_current_ip
 
 
 class ConfigClient:

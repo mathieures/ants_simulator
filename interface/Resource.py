@@ -2,9 +2,10 @@ from .InterfaceObject import InterfaceObject
 
 
 class Resource(InterfaceObject):
-    """ Objet Ressource représenté graphiquement """ 
+    """Ressource représentée graphiquement"""
 
     __slots__ = ["current_size"]
+
 
     def __init__(self, canvas, origin_coords, size=20):
         """
@@ -15,6 +16,7 @@ class Resource(InterfaceObject):
         self.current_size = self.size
 
         self.draw()
+
 
     def draw(self):
         """Override la méthode d'origine"""

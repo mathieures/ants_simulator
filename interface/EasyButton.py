@@ -31,8 +31,8 @@ class EasyButton:
         
         self._interface = interface # utile pour changer l'objet courant
         
-        self._active_width = width
-        self._active_height = height
+        # self._active_width = width
+        # self._active_height = height
 
         self._canvas = tk.Canvas(parent, width=width, height=height)
         self._default_bg_color = self._canvas["bg"] # on sauvegarde la couleur par defaut
@@ -77,11 +77,12 @@ class EasyButton:
 
     def on_click(self, event):
         """Gère le clic sur le canvas qui sert de bouton"""
-        if self._enabled:
-            if not self._selected:
-                self.select()
-            else:
-                self.deselect()
+        if not self._enabled:
+            return
+        if not self._selected:
+            self.select()
+        else:
+            self.deselect()
 
     def select(self, exec_command=True):
         """
@@ -98,7 +99,7 @@ class EasyButton:
 
         if exec_command and self._command_select is not None:
             self._command_select()
-        
+
         self._selected = True
 
         if not self._toggle:
@@ -114,9 +115,9 @@ class EasyButton:
 
         if exec_command and self._command_deselect is not None:
             self._command_deselect()
-        
+
         self._selected = False
-        
+
         if self._interface.current_object_type is self._object_type:
             self._interface.current_object_type = None
 

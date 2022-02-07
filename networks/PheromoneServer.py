@@ -22,10 +22,11 @@ class PheromoneServer(SizedServerObject):
         """Supprime une phéromone de l'ensemble"""
         cls.pheromones.discard(pheromone)
 
+
     def __init__(self, coords_centre: tuple, direction: int):
         super().__init__(coords_centre, size=1, color="")
         self.direction = direction
 
-        self._init_zone()
+        # self._init_zone()
 
-        self.pheromones.add(self)
+        type(self).pheromones.add(self)

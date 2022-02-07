@@ -11,11 +11,17 @@ class ResourceServer(SizedServerObject):
 
     INDEX_GEN = SizedServerObject.new_id_generator()
 
+    @property
+    def str_type(self):
+        return "resource"
+
+
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, size, color)
         self.index = next(type(self).INDEX_GEN)
 
-        self._init_zone()
+        # self._init_zone()
+
 
     def shrink_resource(self):
         """

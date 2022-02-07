@@ -1,4 +1,4 @@
-from .utils import id_generator as id_generator
+from .network_utils import id_generator as id_generator
 
 
 class ServerObject:
@@ -10,9 +10,16 @@ class ServerObject:
         """Renvoie un générateur d'identifiants"""
         return id_generator()
 
+    @property
+    def str_type(self):
+        """À implémenter dans les classes filles"""
+        raise NotImplementedError
+
+
     def __init__(self, coords_centre, color):
         self.coords_centre = coords_centre
         self.color = color
+
 
     def to_tuple(self):
         """
@@ -21,6 +28,7 @@ class ServerObject:
         """
         return (self.coords_centre, self.color)
 
+
 class SizedServerObject(ServerObject):
     """
     Un objet côté serveur, mais avec une taille
@@ -28,13 +36,14 @@ class SizedServerObject(ServerObject):
     """
     __slots__ = ["size", "zone"]
 
-    OFFSETS = {(-1, -1), (-1, 0), (-1, 1), (0, -1),
-               (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)}
 
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, color)
         self.size = size
         self.zone = set()
+
+        self._init_zone()
+
 
     def get_origin_coords(self):
         """
@@ -57,11 +66,5 @@ class SizedServerObject(ServerObject):
         """
         # On remplit un carre de pixels en partant de l'origine
         x, y = self.get_origin_coords()
-        self.zone.update((i, j) for j in range(y, y + self.size) for i in range(x, x + self.size))
 
-        # x, y = self.coords_centre
-        # # Pour chaque size et chaque offset, on ajoute a la zone le pixel decale
-        # self.zone.update(
-        #     (x + i * off[0], y + i * off[1])
-        #     for off in self.OFFSETS
-        #     for i in range(self.size // 2 + 1))
+        self.zone.update((i, j) for j in range(y, y + self.size) for i in range(x, x + self.size))
