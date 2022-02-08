@@ -6,9 +6,7 @@ class NestServer(SizedServerObject):
 
     __slots__ = ["ants"]
 
-    @property
-    def str_type(self):
-        return "nest"
+    str_type = "nest"
 
 
     def __init__(self, coords_centre, size, color, ants_per_nest=20):

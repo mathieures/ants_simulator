@@ -244,23 +244,22 @@ class Simulation:
                 return False
         return True
 
-    def add_to_objects(self, source_client_id, str_type, coords, size, color):
+    def add_to_objects(self, source_client_id, sent_object):
         """Ajoute une entrée au dictionnaire d'objets de la simulation"""
-        # Note : Pour les objets 'wall', les coordonnees sont une liste de couples
-        new_obj = None
+        # Note : Pour les objets de str_type 'wall', les coordonnees sont une liste de couples
+
+        str_type = sent_object.str_type
 
         if str_type == "wall":
-            new_obj = WallServer(coords, size, color)
-            self.objects[str_type].add(new_obj)
+            new_obj = WallServer.from_SentObject(sent_object)
         elif str_type == "resource":
-            new_obj = ResourceServer(coords, size, color)
-            self.objects[str_type].add(new_obj)
+            new_obj = ResourceServer.from_SentObject(sent_object)
         elif str_type == "nest":
-            new_obj = NestServer(coords, size, color)
-            self.objects[str_type].add(new_obj)
+            new_obj = NestServer.from_SentObject(sent_object)
         else:
             raise TypeError(f"[Error] type {str_type} does not exist")
 
+        self.objects[new_obj.str_type].add(new_obj)
         self._timeline[source_client_id].append(new_obj) # KeyError évitée par defaultdict
 
     def undo_object_from_client(self, client_id):

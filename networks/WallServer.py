@@ -4,9 +4,7 @@ from .ServerObject import SizedServerObject
 class WallServer(SizedServerObject):
     """Mur côté serveur, dont la size correspond à la largeur (width)"""
 
-    @property
-    def str_type(self):
-        return "wall"
+    str_type = "wall"
 
 
     def __init__(self, coords_centre, size, color):

@@ -11,9 +11,7 @@ class ResourceServer(SizedServerObject):
 
     INDEX_GEN = SizedServerObject.new_id_generator()
 
-    @property
-    def str_type(self):
-        return "resource"
+    str_type = "resource"
 
 
     def __init__(self, coords_centre, size, color):

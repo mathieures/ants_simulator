@@ -221,9 +221,8 @@ class Server:
                     if data is UndoRequest:
                         # str_type = data[1] # test pour voir si ça sert…?
                         self._simulation.undo_object_from_client(client_id)
-                    else:
-                        str_type, coords, size, color = data[:5] # TODO : refaire ça en POO
-                        self._process_data(client_id, str_type, coords, size, color)
+                    elif isinstance(data, SentObject):
+                        self._process_data(client_id, data)
 
         # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
         for client in tuple(self.clients):
@@ -242,20 +241,16 @@ class Server:
                     daemon=True)
                 self.clients[client]["thread"].start()
 
-    def _process_data(self, source_client_id, str_type, coords, size, color):
+    def _process_data(self, source_client_id, sent_object):
         """Crée un objet en fonction du client et des caractéristiques de l'objet voulu."""
-        if str_type == "wall":
-            coords = self._simulation.optimize_wall(coords)
+        if sent_object.str_type == "wall":
+            sent_object.coords = self._simulation.optimize_wall(sent_object.coords)
 
         # Si l'endroit est libre
-        if self._simulation.check_all_coords(coords, size):
-            self._simulation.add_to_objects(source_client_id, str_type, coords, size, color)
+        if self._simulation.check_all_coords(sent_object.coords, sent_object.size):
+            self._simulation.add_to_objects(source_client_id, sent_object)
 
-            # data = (str_type, [[coords, size, color]]) # syntaxe de l'envoi de groupe
-            self.send_to_all_clients(SentObject(str_type, coords, size, color))
-            # self.send_to_all_clients(("create", data))
-        # else:
-        #     print("[Warning] there is already an object here.")
+            self.send_to_all_clients(sent_object)
 
     def _condition(self):
         """

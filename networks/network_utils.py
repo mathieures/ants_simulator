@@ -71,8 +71,8 @@ class PheromoneInfo(list):
 
 class SentObject:
     """
-    Un objet envoyé par le réseau à un ou
-    plusieurs clients (mur, nid ou resource)
+    Un objet envoyé sur le réseau par le serveur
+    ou un client (mur, nid ou resource)
     """
     @classmethod
     def from_SizedServerObject(cls, obj):

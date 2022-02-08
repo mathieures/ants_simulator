@@ -16,7 +16,9 @@ from .Wall import Wall
 
 from networks.network_utils import (
     ColorInfo,
-    FirstBloodSignal
+    FirstBloodSignal,
+
+    SentObject
 )
 
 
@@ -129,6 +131,7 @@ class Interface:
     ## Gestion d'evenements ##
 
     def on_click(self, event):
+        """Callback de l'appui du clic de souris"""
         # print("click ; current :", self.current_object_type)
         # Normalement c'est la bonne manière de tester, mais faut voir
         if self.current_object_type is Nest:
@@ -142,6 +145,7 @@ class Interface:
             self._init_wall(event.x, event.y)
 
     def on_release(self, event):
+        """Callback du relâchement du clic de souris"""
         if self._current_wall is None:
             return
         wall_coords = self._current_wall.drawn_coords
@@ -151,6 +155,7 @@ class Interface:
         self._delete_current_wall()
 
     def on_motion(self, event):
+        """Callback du mouvement de souris"""
         if self._current_wall is not None:
             self._current_wall.expand(event.x, event.y)
 
@@ -210,14 +215,18 @@ class Interface:
         Demande au serveur s'il peut créer un nid à l'endroit donné.
         La couleur est obligatoirement la couleur locale
         """
-        self._client.ask_object("nest", (x, y), size, color=self._local_color)
+        new_obj = SentObject("nest", (x, y), size, color=self._local_color)
+        self._client.ask_object(new_obj)
 
     def ask_resource(self, x, y, size=20):
-        self._client.ask_object("resource", (x, y), size)
+        """Demande une ressource au Server"""
+        new_obj = SentObject("resource", (x, y), size, color=None)
+        self._client.ask_object(new_obj)
 
     def ask_wall(self, coords_list, size=20):
         """Demande un mur. Appelé seulement à la fin d'un clic long."""
-        self._client.ask_object("wall", coords_list, size)
+        new_obj = SentObject("wall", coords_list, size, color=None)
+        self._client.ask_object(new_obj)
 
 
     ## Creation d'objets graphiques ##

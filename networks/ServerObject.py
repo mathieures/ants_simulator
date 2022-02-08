@@ -36,6 +36,18 @@ class SizedServerObject(ServerObject):
     """
     __slots__ = ["size", "zone"]
 
+    @classmethod
+    def from_SentObject(cls, sent_object):
+        """
+        Convertit un SentObject en SizedServerObject.
+        Dans les classes filles, créera un objet du bon type
+        """
+        return cls(
+            sent_object.coords,
+            sent_object.size,
+            sent_object.color
+        )
+
 
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, color)

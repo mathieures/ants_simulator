@@ -214,13 +214,13 @@ class Client:
 
     ## Demandes au serveur ##
 
-    def ask_object(self, str_type, position, size=None, color=None):
+    def ask_object(self, sent_object):
         """
         Demande au serveur si on peut placer
         un élément d'un type et d'une taille
-        donnés à la position donnée.
+        donnés aux coordonnées données.
         """
-        self._send((str_type, position, size, color))
+        self._send(sent_object)
 
     def ask_undo(self):
         """ Demande au serveur d'annuler le placement du dernier objet """
