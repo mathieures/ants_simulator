@@ -50,7 +50,6 @@ class AntServer(ServerObject):
 
     # Attributs de classe (read-only a cause des slots, sauf le dictionnaire)
 
-    PHEROMONES = {}  # dictionnaire d'objets PheromoneServer, associes a une direction
     MAX_ENDURANCE = 512
     MAX_TRIES = 256  # nombre d'essais max pour contourner un mur par la gauche
     ID_GEN = ServerObject.new_id_generator()

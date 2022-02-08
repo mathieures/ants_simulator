@@ -251,10 +251,6 @@ class Simulation:
 
         if str_type == "wall":
             new_obj = WallServer(coords, size, color)
-            # new_obj = []
-            # for i in range(0, len(coords), 2):
-            #     couple = coords[i], coords[i + 1]
-            #     new_obj.append(WallServer(couple, size, color))
             self.objects[str_type].add(new_obj)
         elif str_type == "resource":
             new_obj = ResourceServer(coords, size, color)
@@ -282,10 +278,6 @@ class Simulation:
         """
         # Met bout à bout les fourmis de chaque nid
         return list(chain.from_iterable(nest.ants for nest in self.objects["nest"]))
-        # all_ants = []
-        # for nest in self.objects["nest"]:
-        #     all_ants.extend(nest.ants)
-        # return all_ants
 
     def _get_resource(self, target_x, target_y):
         """Retourne l'objet ResourceServer à cette position ou None s'il n'y en a pas"""
