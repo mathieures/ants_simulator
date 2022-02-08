@@ -35,15 +35,6 @@ class Server:
         ouverte pendant le fonctionnement du serveur, et l'utilisateur devra
         terminer le script par ses propres moyens.
     """
-    clients = {}
-    """
-    Dictionnaire qui associe un id a un dict
-    {
-        "id": int,
-        "ready": bool,
-        "thread": Thread
-    }
-    """
 
     CLIENT_ID_GEN = id_generator()
 
@@ -73,6 +64,16 @@ class Server:
             sys.exit(1)
 
         # S'il n'y a pas eu d'erreur
+
+        self.clients = {}
+        """
+        Dictionnaire qui associe un id a un dict
+        {
+            "id": int,
+            "ready": bool,
+            "thread": Thread
+        }
+        """
         self._ip = ip
         self._port = port
         self._max_clients = max_clients
@@ -114,7 +115,7 @@ class Server:
         Fonction pour accepter quand un client se connecte au serveur
         Stocke le client dans l'attribut de classe 'clients'
         """
-        if len(Server.clients) <= self._max_clients:
+        if len(self.clients) <= self._max_clients:
             try:
                 client, address = self._socket.accept()
             except OSError:
@@ -123,12 +124,12 @@ class Server:
             else:
                 self._send_to_client(client, ColorInfo(random_color()))
                 # On lui reserve une entree dans le dictionnaire
-                Server.clients[client] = {
+                self.clients[client] = {
                     "id": next(type(self).CLIENT_ID_GEN),
                     "ready": False,
                     "thread": None
                 }
-                print("Accepted client. Total: {}".format(len(Server.clients)))
+                print("Accepted client. Total: {}".format(len(self.clients)))
                 if self.window is not None:
                     self.window.clients += 1
 
@@ -145,7 +146,7 @@ class Server:
         Retourne le nombre de clients prêts en faisant la somme des booléens.
         Utilise un generator, d'où le manque de parenthèses
         """
-        return sum(client["ready"] for client in Server.clients.values())
+        return sum(client["ready"] for client in self.clients.values())
 
     # À transformer en classmethod ? Ça veut dire mettre simulation en cls attr
     def _sync_objects(self, client):
@@ -226,13 +227,13 @@ class Server:
 
                 if isinstance(data, ReadyState):
                     ready_state = data.value
-                    Server.clients[receiving_client]["ready"] = ready_state
+                    self.clients[receiving_client]["ready"] = ready_state
 
                     ready_clients = self._get_ready_clients()
                     self.window.ready_clients = ready_clients
-                    print(f"Ready clients: {ready_clients} / {len(Server.clients)}")
+                    print(f"Ready clients: {ready_clients} / {len(self.clients)}")
 
-                    if ready_state and ready_clients == len(Server.clients):
+                    if ready_state and ready_clients == len(self.clients):
                         self.send_to_all_clients(GoSignal)
                         sleep(5) # On attend la fin du compte à rebours de l'interface
                         # Lancement de la simulation
@@ -249,7 +250,7 @@ class Server:
                 # Si c'est une liste, c'est une création,
                 # modification ou suppression d'objet
                 else:
-                    client_id = Server.clients[receiving_client]["id"]
+                    client_id = self.clients[receiving_client]["id"]
                     if data is UndoRequest:
                         # str_type = data[1] # test pour voir si ça sert…?
                         self._simulation.undo_object_from_client(client_id)
@@ -258,21 +259,21 @@ class Server:
                         self._process_data(client_id, str_type, coords, size, color)
 
         # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
-        for client in tuple(Server.clients):
+        for client in tuple(self.clients):
             # Si le client n'avait pas de thread associe, on en cree un
-            if Server.clients[client]["thread"] is None:
-                Server.clients[client]["thread"] = Thread(
+            if self.clients[client]["thread"] is None:
+                self.clients[client]["thread"] = Thread(
                     target=receive_in_thread,
                     args=(client,),
                     daemon=True)
-                Server.clients[client]["thread"].start()
+                self.clients[client]["thread"].start()
             # Si le thread associe a ce client est termine (on a recu de lui), on en refait un
-            if not Server.clients[client]["thread"].is_alive():
-                Server.clients[client]["thread"] = Thread(
+            if not self.clients[client]["thread"].is_alive():
+                self.clients[client]["thread"] = Thread(
                     target=receive_in_thread,
                     args=(client,),
                     daemon=True)
-                Server.clients[client]["thread"].start()
+                self.clients[client]["thread"].start()
 
     def _process_data(self, source_client_id, str_type, coords, size, color):
         """Crée un objet en fonction du client et des caractéristiques de l'objet voulu."""
@@ -329,7 +330,7 @@ class Server:
         print("[Warning] Client disconnected. Closing associated connection.")
         client.close()
         try:
-            del Server.clients[client]
+            del self.clients[client]
         except KeyError:
             pass
         if self.window is not None:
@@ -338,7 +339,7 @@ class Server:
 
     def send_to_all_clients(self, data):
         """Envoie des informations à tous les clients"""
-        for client in tuple(Server.clients):
+        for client in tuple(self.clients):
             self._send_to_client(client, data)
 
     def send_destroy_signal(self, obj):
