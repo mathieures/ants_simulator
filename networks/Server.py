@@ -2,6 +2,7 @@ import sys
 import socket
 import pickle
 from threading import Thread
+import concurrent.futures as cf
 from time import sleep
 # from math import dist as distance
 
@@ -137,7 +138,11 @@ class Server:
                 if address[0] == self._ip:
                     self._send_to_client(client, AdminSignal)
                 sleep(0.1)
-                self._sync_objects(client)
+
+                # Envoie les objets au Client dans un thread
+                with cf.ThreadPoolExecutor(max_workers=1) as executor:
+                    executor.submit(self._sync_objects, client)
+
         else:
             print("[Warning] Denied access to a client (max number reached)")
 
@@ -148,22 +153,11 @@ class Server:
         """
         return sum(client["ready"] for client in self.clients.values())
 
-    # À transformer en classmethod ? Ça veut dire mettre simulation en cls attr
     def _sync_objects(self, client):
         """
         Envoie tous les objets déjà
         posés au client en paramètre.
         """
-
-        # TODO : pour réparer : c'est embêtant parce que simulation.objects["wall"]
-        # contient que des petits tuples, avec des points. Je sais pas comment faire pour
-        # garder la même structure (parce que c'est dommmage de tout rechanger encore une fois)
-        # et réparer ça en même temps.
-
-        # idée : peut-être faire hériter WallServer de set() ou quoi ? ou
-        # surcharger __iter__ pour ne pas avoir à tout changer, en mode on
-        # peut check les coordonnées sans avoir à prendre la zone
-
         data = []
 
         for str_type in ("nest", "resource"):
@@ -174,42 +168,13 @@ class Server:
         if data:
             self._send_to_client(client, data)
 
-        data.clear()
-        # TODO : seules les 2 premières coords des murs sont envoyées
+        del data
 
         # On envoie les murs separement car ils sont plus lourds
         if self._simulation.objects["wall"]:
-            # Deux boucles car un mur est un tuple de tuples
-            print(f"tous les walls : {self._simulation.objects['wall']=}")
             for wall in self._simulation.objects["wall"]:
-                print("mur de base :", wall)
-                print(f"{wall.coords_centre=}")
-                print(f"{wall.to_tuple()=}")
-            # for wall_tuple in (w.to_tuple() for w in self._simulation.objects["wall"]):
-            #     print("mur :", wall_tuple)
-            #     self._send_to_client(client, SentObject("wall", *wall_tuple))
-
-
-    # def _sync_objects(self, client):
-    #     """
-    #     Envoie tous les objets déjà
-    #     posés au client en paramètre.
-    #     """
-    #     data = ["create"]
-    #     if self._simulation.objects["nest"]:
-    #         data.append(("nest", [n.to_tuple() for n in self._simulation.objects["nest"]]))
-    #     if self._simulation.objects["resource"]:
-    #         data.append(("resource", [r.to_tuple() for r in self._simulation.objects["resource"]]))
-
-    #     if len(data) > 1:
-    #         self._send_to_client(client, data)
-
-    #     # On envoie les murs separement car ils sont plus lourds
-    #     if self._simulation.objects["wall"]:
-    #         data.clear()
-    #         for wall in (w.to_tuple() for w in self._simulation.objects["wall"]):
-    #             data = ["create", ("wall", (wall,))]
-    #             self._send_to_client(client, data)
+                self._send_to_client(client, SentObject("wall", *wall.to_tuple()))
+                sleep(0.001) # La latence permet au Client de tout recevoir
 
     def _receive(self):
         """
@@ -236,8 +201,10 @@ class Server:
                     if ready_state and ready_clients == len(self.clients):
                         self.send_to_all_clients(GoSignal)
                         sleep(5) # On attend la fin du compte à rebours de l'interface
-                        # Lancement de la simulation
-                        Thread(target=self._simulation.start, daemon=True).start()
+
+                        # Lancement de la simulation dans un thread
+                        with cf.ThreadPoolExecutor(max_workers=1) as executor:
+                            executor.submit(self._simulation.start)
 
                 # Si c'est une str on réagit juste en fonction de la valeur
                 elif isinstance(data, SpeedRequest):
