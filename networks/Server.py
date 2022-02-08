@@ -307,8 +307,7 @@ class Server:
 
     def send_destroy_signal(self, obj):
         """Envoie un signal de destruction de l'objet spécifié à tous les clients"""
-        self.send_to_all_clients(DestroySignal(SentObject.from_SizedServerObject(obj))) # TODO : mettre un truc là
-        # mais qu'est-ce qu'on envoie ? qu'est-ce que le Client doit avoir pour pouvoir supprimer un objet ?
+        self.send_to_all_clients(DestroySignal(SentObject.from_SizedServerObject(obj)))
 
     def quit(self):
         """Termine le programme proprement"""

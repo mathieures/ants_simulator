@@ -48,7 +48,7 @@ class Client:
 
     @property
     def ready_state(self):
-        return self._ready_state
+        return self._ready_state.value
 
     @ready_state.setter
     def ready_state(self, new_state):
@@ -122,10 +122,14 @@ class Client:
                 print("[Error] server disconnected.")
                 self._interface.quit_app(force=True)
                 sys.exit(1)
-            try:
-                data = pickle.loads(recv_data)
-            except pickle.UnpicklingError:
-                data = recv_data
+
+            # test pour voir s'il y a encore des problèmes de pickling
+            # try:
+            data = pickle.loads(recv_data)
+            # except pickle.UnpicklingError:
+            #     data = recv_data
+
+            print(f"received : {data}")
 
             if data is GoSignal:
                 self._interface.countdown()
@@ -143,7 +147,7 @@ class Client:
                                                               data.coords,
                                                               data.size,
                                                               data.color)
-                # On ne l'ajoute pas s'il n'est pas important
+                # On l'ajoute seulement s'il est important
                 if new_object_id is not None:
                     self.sent_to_interface[data] = new_object_id
 
@@ -151,18 +155,10 @@ class Client:
             elif isinstance(data, ColorInfo):
                 self._interface.local_color = data
 
+            # Si on doit bouger les fourmis
             elif isinstance(data, MoveInfo):
-                # temps_move = perf_counter()
-
                 with cf.ThreadPoolExecutor() as executor:
                     executor.map(self.interface.move_ant, self.interface.ants, data)
-
-                # thread_move = Thread(target=self._interface.move_ants,
-                #                      args=(data,),
-                #                      daemon=True)
-                # thread_move.start()
-                # thread_move.join(0.5)
-                # print("temps move_ants :", perf_counter() - temps_move)
 
             elif isinstance(data, list):
                 # Si ce sont des SentObject, c'est la synchronisation alors on crée tout
@@ -174,34 +170,11 @@ class Client:
                                                                       sent_object.color)
                         self.sent_to_interface[sent_object] = new_object_id
 
-                # Si on doit bouger des fourmis
-
-                # data est de la forme : ["move_ants", [deltax_fourmi1, deltay_fourmi1], [deltax_fourmi2, deltay_fourmi2]...]
-                # ou alors : [["move_ants", [deltax...]], ["pheromones", (fourmi1x, fourmi1y)...]]
-                # Note : les listes internes peuvent contenir un autre élément, la couleur de la fourmi.
-
                 # Si on a les mouvements des fourmis et les pheromones en meme temps
                 elif len(data) == 2 and isinstance(data[0], MoveInfo) and isinstance(data[1], PheromoneInfo):
-                    # On bouge les fourmis
-                    # temps_move_phero = perf_counter()
-
                     with cf.ThreadPoolExecutor() as executor:
                         executor.map(self.interface.move_ant, self.interface.ants, data[0])
                         executor.map(self.interface.create_pheromone, data[1])
-
-                    # thread_move = Thread(target=self._interface.move_ants,
-                    #                      args=(data[0],),
-                    #                      daemon=True)
-                    # thread_move.start()
-                    # thread_move.join(0.5)
-
-                    # # On cree ou fonce les pheromones
-                    # thread_phero = Thread(target=self._interface.create_pheromones,
-                    #                       args=(data[1],),
-                    #                       daemon=True)
-                    # thread_phero.start()
-                    # thread_phero.join(0.5)
-                    # print("temps move_ants + phero :", perf_counter() - temps_move_phero)
 
                 # Si on doit creer des fourmis
                 elif isinstance(data, AntsInfo):
@@ -209,7 +182,7 @@ class Client:
 
                 else:
                     # Si on arrive ici c'est qu'il manque le type de data qu'il faut analyser
-                    raise TypeError("[Error] Cannot process received data: operation string is missing")
+                    raise TypeError(f"[Error] Cannot process received data: {data}")
 
 
     ## Demandes au serveur ##
@@ -230,10 +203,8 @@ class Client:
         """Demande à la simulation d'accélérer"""
         self._send(SpeedRequest(faster=True))
         print("Asked faster simulation")
-        # self._socket.send("faster".encode())
 
     def ask_slower_sim(self):
         """Demande à la simulation de ralentir"""
         self._send(SpeedRequest(faster=False))
         print("Asked slower simulation")
-        # self._socket.send("slower".encode())
