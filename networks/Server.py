@@ -167,6 +167,7 @@ class Server:
 
         if data:
             self._send_to_client(client, data)
+            sleep(0.001)
 
         del data
 
