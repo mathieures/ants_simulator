@@ -8,6 +8,7 @@ class InterfaceObject:
     # read-only
     @property
     def id(self):
+        """Identifiant donné par tkinter"""
         return self._id
 
 
@@ -27,6 +28,9 @@ class InterfaceObject:
 
         self._id = None # Doit etre ecrase par les classes filles
 
+
+    def __repr__(self):
+        return f"{type(self).__name__}: {self.origin_coords}, {self.size}, {self.color}"
 
     def draw(self):
         """

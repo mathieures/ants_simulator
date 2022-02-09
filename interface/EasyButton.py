@@ -1,5 +1,6 @@
 import tkinter as tk
 from math import sqrt
+from .Wall import WallInAButton
 
 
 class EasyButton:
@@ -11,10 +12,8 @@ class EasyButton:
 
     @property
     def text(self):
-        if self._text_id is not None:
-            return self._canvas.itemcget(self._text_id, "text")
-        else:
-            return ""
+        """Retourne le texte du bouton"""
+        return "" if self._text_id is None else self._canvas.itemcget(self._text_id, "text")
     
     @text.setter
     def text(self, new_text):
@@ -22,15 +21,15 @@ class EasyButton:
 
     @property
     def hideable(self):
+        """Définit si le bouton est cachable"""
         return self._hideable
 
     def __init__(self, interface, parent, width, height, toggle=True,
-                 text=None, object_type=None, no_icon=False, large=False,
-                 side=tk.LEFT, command_select=None, command_deselect=None,
-                 hideable=True):
-        
+                 text=None, object_type=None, no_icon=False, side=tk.LEFT,
+                 command_select=None, command_deselect=None, hideable=True):
+
         self._interface = interface # utile pour changer l'objet courant
-        
+
         # self._active_width = width
         # self._active_height = height
 
@@ -46,12 +45,12 @@ class EasyButton:
             try:
                 self._icon_object = self._object_type(self._canvas,
                                                       [size / 2 + 1, size],
-                                                      size=size,
-                                                      width=size * 0.8)
+                                                      size=size * 0.8,
+                                                      length=size)
             except TypeError:
-                # S'il n'y a pas de parametre "width"
+                # S'il n'y a pas de parametre "length"
                 self._icon_object = self._object_type(self._canvas,
-                                                      [sqrt(size**2)] * 2,
+                                                      [size] * 2,
                                                       size=size)
         else:
             self._icon_object = None

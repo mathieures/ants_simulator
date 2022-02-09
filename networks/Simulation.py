@@ -36,7 +36,7 @@ from .network_utils import (
 
 
 class Simulation:
-    """Classe gère toute la simulation de fourmis"""
+    """Classe qui gère toute la simulation de fourmis"""
 
     __slots__ = ["objects", "_sleep_time", "_first_blood_happened", "_server", "_timeline"]
 

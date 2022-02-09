@@ -167,7 +167,7 @@ class Server:
 
         if data:
             self._send_to_client(client, data)
-            sleep(0.001)
+            sleep(0.01)
 
         del data
 
@@ -175,7 +175,7 @@ class Server:
         if self._simulation.objects["wall"]:
             for wall in self._simulation.objects["wall"]:
                 self._send_to_client(client, SentObject("wall", *wall.to_tuple()))
-                sleep(0.001) # La latence permet au Client de tout recevoir
+                sleep(0.01) # La latence permet au Client de tout recevoir
 
     def _receive(self):
         """

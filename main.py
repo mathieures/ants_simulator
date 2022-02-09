@@ -64,12 +64,13 @@ def start_server():
             max_clients = int(sys.argv[3])
         except ValueError:
             print("[Error] Arguments must be integers")
-            print("Syntax:\n\tpython3 server.py <IP> <PORT> <NB_MAX_CLIENTS> [-nowindow]")
+            print("Syntax:\n\tpython3 main.py [server [IP PORT NB_MAX_CLIENTS] [-nowindow]]")
             sys.exit(1)
 
     Server(ip, port, max_clients, create_window)
 
 if len(sys.argv) > 1 and sys.argv[1] == "server":
+    sys.argv.pop(sys.argv.index("server"))
     start_server()
 else:
     start_client()

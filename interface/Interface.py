@@ -12,7 +12,7 @@ from .Ant import Ant
 from .Nest import Nest
 from .Pheromone import Pheromone
 from .Resource import Resource
-from .Wall import Wall
+from .Wall import Wall, WallInAButton
 
 from networks.network_utils import (
     ColorInfo,
@@ -28,11 +28,6 @@ class Interface:
     READY_TEXT = "Ready"
     NOT_READY_TEXT = "Not ready"
 
-    # @staticmethod
-    # def get_centre(p1, p2):
-    #     """Retourne un point au milieu des deux passés en paramètres"""
-    #     return ()
-
     @property
     def root(self):
         return self._root
@@ -40,14 +35,6 @@ class Interface:
     @property
     def canvas(self):
         return self._canvas
-
-    # @property
-    # def current_object_type(self):
-    #     return self._current_object_type
-
-    # @current_object_type.setter
-    # def current_object_type(self, new_object_type):
-    #     self._current_object_type = new_object_type
 
     @property
     def local_color(self):
@@ -74,11 +61,11 @@ class Interface:
         self._menu_frame = tk.Frame(self._root)
         self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
-        menu_file = EasyMenu(self._menu_frame, "Network",
-                             [("Disconnect", self._disconnect_client)], width=8)
+        EasyMenu(self._menu_frame, "Network",
+                 [("Disconnect", self._disconnect_client)], width=8)
 
-        menu_edit = EasyMenu(self._menu_frame, "Edit",
-                             [("Undo (Ctrl+Z)", self._undo)])
+        EasyMenu(self._menu_frame, "Edit",
+                 [("Undo (Ctrl+Z)", self._undo)])
 
         # Barre de selection de l'objet
         self._objects_frame = tk.Frame(self._root)
@@ -86,18 +73,22 @@ class Interface:
             side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
         self._buttons = [
+            # Bouton Nid
             EasyButton(self,
                        self._objects_frame, 50, 50,
                        object_type=Nest),
 
+            # Bouton Ressource
             EasyButton(self,
                        self._objects_frame, 50, 50,
                        object_type=Resource),
 
+            # Bouton Mur
             EasyButton(self,
                        self._objects_frame, 50, 50,
-                       object_type=Wall),
+                       object_type=WallInAButton),
 
+            # Bouton Ready
             EasyButton(self,
                        self._objects_frame, 70, 50, text=type(self).READY_TEXT,
                        side=tk.RIGHT,
@@ -133,25 +124,31 @@ class Interface:
     def on_click(self, event):
         """Callback de l'appui du clic de souris"""
         # print("click ; current :", self.current_object_type)
-        # Normalement c'est la bonne manière de tester, mais faut voir
+        if self.current_object_type is None:
+            return
+
         if self.current_object_type is Nest:
             self.ask_nest(event.x, event.y)
 
         elif self.current_object_type is Resource:
             self.ask_resource(event.x, event.y)
 
-        elif self.current_object_type is Wall:
+        # La classe contenue dans le bouton n'est pas Wall
+        elif self.current_object_type is WallInAButton:
             # On le cree directement, pour avoir un visuel
             self._init_wall(event.x, event.y)
+        else:
+            current_type = self.current_object_type.__name__
+            raise TypeError(f"The current object type ({current_type}) is not configured.")
 
     def on_release(self, event):
         """Callback du relâchement du clic de souris"""
         if self._current_wall is None:
             return
         wall_coords = self._current_wall.drawn_coords
-        wall_width = self._current_wall.width
+        wall_size = self._current_wall.size
 
-        self.ask_wall(wall_coords, wall_width)
+        self.ask_wall(wall_coords, wall_size)
         self._delete_current_wall()
 
     def on_motion(self, event):
@@ -236,10 +233,6 @@ class Interface:
         if str_type == "pheromone":
             Pheromone(self._canvas, coords)
             return None
-        if str_type == "ant":
-            raise ValueError("This is weird")
-            Ant(self._canvas, coords, size, color)
-            return None
 
         if str_type == "nest":
             obj = Nest(self._canvas, coords, size=size, color=color)
@@ -249,15 +242,15 @@ class Interface:
             obj = Resource(self._canvas, coords, size=size)
             self._resources.append(obj)
         elif str_type == "wall":
-            obj = Wall(self._canvas, coords, size=0, width=size) # TODO : la width est une bizarrerie ; à revoir
+            obj = Wall(self._canvas, coords, size)
         else:
             raise TypeError(f"The type {str_type} does not exist")
         self._last_objects.append(obj.id)
         return obj.id # Pour l'ajouter au dictionnaire tenu dans le Client
 
-    def _init_wall(self, x, y, width=10):
+    def _init_wall(self, x, y):
         """On crée un objet Wall, qu'on étendra"""
-        self._current_wall = Wall(self._canvas, (x, y), size=0, width=width)
+        self._current_wall = Wall(self._canvas, (x, y))
 
     def create_pheromone(self, coords):
         """Crée ou fonce une seule phéromone"""

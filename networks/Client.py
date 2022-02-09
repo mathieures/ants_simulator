@@ -112,7 +112,7 @@ class Client:
         """
         Reçoit les signaux envoyés par les clients pour les objets créés.
         Pour ne pas bloquer les actions avec l'interface, on
-        appelle les méthodes de l'interface dans des threads.
+        appelle certaines méthodes de l'interface dans des threads.
         """
         # Note : le client ne fait que recevoir, donc pas besoin de thread
         while True:
@@ -123,13 +123,7 @@ class Client:
                 self._interface.quit_app(force=True)
                 sys.exit(1)
 
-            # test pour voir s'il y a encore des problèmes de pickling
-            # try:
             data = pickle.loads(recv_data)
-            # except pickle.UnpicklingError:
-            #     data = recv_data
-
-            print(f"received : {data}")
 
             if data is GoSignal:
                 self._interface.countdown()
@@ -147,7 +141,7 @@ class Client:
                                                               data.coords,
                                                               data.size,
                                                               data.color)
-                # On l'ajoute seulement s'il est important
+                # On l'ajoute seulement s'il est important (ex : pas une phéromone)
                 if new_object_id is not None:
                     self.sent_to_interface[data] = new_object_id
 
