@@ -89,10 +89,14 @@ class Client:
         except ConnectionRefusedError:
             print("[Error] No server found")
             sys.exit(1)
+        finally:
+            self.disconnect()
 
     def disconnect(self):
+        """Déconnecte le client"""
         self._socket.close()
-        sys.exit(1)
+        self._interface.quit_app(force=True)
+        sys.exit(0)
 
 
     ## Envoi et réception ##
