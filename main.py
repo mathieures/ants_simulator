@@ -12,6 +12,7 @@ from networks.Server import Server
 
 
 def start_client():
+    """Lance le client"""
     config = ConfigClient() # bloquant
     config_ip, config_port = config.ip, config.port
 
@@ -40,6 +41,7 @@ def start_client():
             app.quit_app()
 
 def start_server():
+    """Lance le serveur"""
     # On regarde d'abord si l'utilisateur veut une fenetre
     if "-nowindow" in sys.argv:
         create_window = False
