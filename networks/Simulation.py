@@ -37,7 +37,7 @@ from .network_utils import (
 class Simulation:
     """Classe qui gère toute la simulation de fourmis"""
 
-    __slots__ = ["objects", "_sleep_time", "_first_blood_happened", "_server", "_timeline"]
+    __slots__ = ["objects", "_sleep_time", "_first_blood_happened", "_server", "_timeline", "_tired_ants"]
 
     @staticmethod
     def optimize_wall(wall_coords):
@@ -80,6 +80,7 @@ class Simulation:
         self._timeline = defaultdict(list) # Associe un id client à une liste d'objets
 
         self._first_blood_happened = False
+        self._tired_ants = set()
 
         self._sleep_time = 0.05
 
@@ -148,36 +149,43 @@ class Simulation:
             # les fourmis sont toujours dans le meme ordre
             move_info[index] = [delta_x, delta_y]
 
+            # Si la fourmi est sur son nid
+            if ant.coords_centre == ant.nest:
+                ant.handle_nest()
+                # Reprendre la couleur d'origine
+                move_info[index].append(ColorInfo("base"))
+                self._tired_ants.remove(ant)
+
+            # Si la fourmi est fatiguée, on l'ajoute à celles qui le sont
+            elif ant.is_tired:
+                if ant not in self._tired_ants:
+                    move_info[index].append(ColorInfo("black"))
+                    self._tired_ants.add(ant)
+                # On retourne caron ne veut pas qu'elle ramasse de ressource une fois fatiguée
+                return
+
             spotted_resource = self._get_resource(*ant.coords_centre)
 
             # Si la fourmi n'a pas déjà de ressource
             if not ant.has_resource:
-                if ant.is_tired:
-                    # print(f"ajouté black à la fourmi {index}")
-                    move_info[index].append(ColorInfo("black"))
-                    return
                 if spotted_resource is None:
                     return
                 if spotted_resource.size == 0:
                     self.objects["resource"].remove(spotted_resource)
                     return
                 # Sinon la fourmi a touche une ressource
+                ant.handle_resource()
                 spotted_resource.shrink_resource() # On reduit la ressource
-                ant.has_resource = True
+
                 # On donne aux clients l'index de la ressource touchee
+                # Si ce n'est pas la première, on l'ajoute simplement à la liste
                 if self._first_blood_happened:
                     move_info[index].append(spotted_resource.index)
+                # Sinon on ajoute un FirstBloodSignal
                 else:
                     move_info[index].append(FirstBloodSignal(spotted_resource.index))
-                    self._first_blood_happened = True
                     print("First ant to find resource was color:", ant.color)
-
-            # Si la fourmi est sur son nid
-            elif ant.coords_centre == ant.nest:
-                ant.handle_nest()
-                # Reprendre la couleur d'origine
-                move_info[index].append(ColorInfo("base"))
-
+                    self._first_blood_happened = True
 
         while self._server.online:
             # temps_sim = perf_counter()

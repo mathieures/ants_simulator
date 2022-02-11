@@ -171,6 +171,13 @@ class AntServer(ServerObject):
         """Fait demi-tour"""
         self.direction += 180
 
+    def handle_resource(self):
+        """
+        Méthode simple qui permet de laisser la
+        fourmi gérer la découverte d'une ressource
+        """
+        self.has_resource = True
+
     def handle_nest(self):
         """
         Remet les attributs à zéro pour que la
