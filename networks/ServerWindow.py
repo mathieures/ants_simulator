@@ -93,7 +93,7 @@ class ServerWindow(threading.Thread):
         tk.Label(self._cc_frame, textvariable=self._clients, width=2).pack(side=tk.LEFT)
 
         tk.Label(self._cc_frame, text='(max: {})'.format(self._max_clients)).pack(side=tk.LEFT)
-        
+
         # Pour gerer la fermeture de la fenetre
         self._root.protocol("WM_DELETE_WINDOW", self._quit_server)
 
@@ -108,5 +108,5 @@ class ServerWindow(threading.Thread):
         self._server.quit()
 
 
-if __name__ == '__main__':
-    c = ServerWindow('127.0.1.1', 15555, 5)
+# if __name__ == '__main__':
+#     c = ServerWindow('127.0.1.1', 15555, 5)
