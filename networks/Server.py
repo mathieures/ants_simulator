@@ -72,7 +72,8 @@ class Server:
         {
             "id": int,
             "ready": bool,
-            "thread": Thread
+            # "thread": Thread
+            "future": Future
         }
         """
         self._ip = ip
@@ -128,7 +129,8 @@ class Server:
                 self.clients[client] = {
                     "id": next(type(self).CLIENT_ID_GEN),
                     "ready": False,
-                    "thread": None
+                    "future": None
+                    # "thread": None
                 }
                 print("Accepted client. Total: {}".format(len(self.clients)))
                 if self.window is not None:
@@ -180,20 +182,20 @@ class Server:
     def _receive(self):
         """
         Méthode qui sert à réceptionner les données envoyées depuis
-        chaque client. Utilise une sous-fonction 'receive_in_thread'
+        chaque client. Utilise une sous-fonction 'receive_in_thread_from'
         qui va manipuler dans un thread les données reçues.
         """
-        def receive_in_thread(receiving_client):
+        def receive_in_thread_from(source_client):
             try:
-                recv_data = receiving_client.recv(10240)
+                recv_data = source_client.recv(10240)
             except ConnectionResetError:
-                self._disconnect_client(receiving_client)
+                self._disconnect_client(source_client)
             else:
                 data = pickle.loads(recv_data)
 
                 if isinstance(data, ReadyState):
                     ready_state = data.value
-                    self.clients[receiving_client]["ready"] = ready_state
+                    self.clients[source_client]["ready"] = ready_state
 
                     ready_clients = self._get_ready_clients()
                     self.window.ready_clients = ready_clients
@@ -204,8 +206,8 @@ class Server:
                         sleep(5) # On attend la fin du compte à rebours de l'interface
 
                         # Lancement de la simulation dans un thread
-                        with cf.ThreadPoolExecutor(max_workers=1) as executor:
-                            executor.submit(self._simulation.start)
+                        executor = cf.ThreadPoolExecutor(max_workers=1)
+                        executor.submit(self._simulation.start)
 
                 # Si c'est une str on réagit juste en fonction de la valeur
                 elif isinstance(data, SpeedRequest):
@@ -218,29 +220,38 @@ class Server:
                 # Si c'est une liste, c'est une création,
                 # modification ou suppression d'objet
                 else:
-                    client_id = self.clients[receiving_client]["id"]
+                    client_id = self.clients[source_client]["id"]
                     if data is UndoRequest:
-                        # str_type = data[1] # test pour voir si ça sert…?
                         self._simulation.undo_object_from_client(client_id)
                     elif isinstance(data, SentObject):
                         self._process_data(client_id, data)
 
+
+        executor = cf.ThreadPoolExecutor()
         # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
         for client in tuple(self.clients):
-            # Si le client n'avait pas de thread associe, on en cree un
-            if self.clients[client]["thread"] is None:
-                self.clients[client]["thread"] = Thread(
-                    target=receive_in_thread,
-                    args=(client,),
-                    daemon=True)
-                self.clients[client]["thread"].start()
-            # Si le thread associe a ce client est termine (on a recu de lui), on en refait un
-            if not self.clients[client]["thread"].is_alive():
-                self.clients[client]["thread"] = Thread(
-                    target=receive_in_thread,
-                    args=(client,),
-                    daemon=True)
-                self.clients[client]["thread"].start()
+            # S'il n'y a pas encore de thread associé au client ou
+            # s'il est terminé (on a reçu de lui), on en cree un
+            if self.clients[client]["future"] is None or self.clients[client]["future"].done():
+                self.clients[client]["future"] = executor.submit(receive_in_thread_from, client)
+
+
+        # # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
+        # for client in tuple(self.clients):
+        #     # Si le client n'avait pas de thread associe, on en cree un
+        #     if self.clients[client]["thread"] is None:
+        #         self.clients[client]["thread"] = Thread(
+        #             target=receive_in_thread_from,
+        #             args=(client,),
+        #             daemon=True)
+        #         self.clients[client]["thread"].start()
+        #     # Si le thread associe a ce client est termine (on a recu de lui), on en refait un
+        #     if not self.clients[client]["thread"].is_alive():
+        #         self.clients[client]["thread"] = Thread(
+        #             target=receive_in_thread_from,
+        #             args=(client,),
+        #             daemon=True)
+        #         self.clients[client]["thread"].start()
 
     def _process_data(self, source_client_id, sent_object):
         """Crée un objet en fonction du client et des caractéristiques de l'objet voulu."""
@@ -258,6 +269,8 @@ class Server:
         Fonction indispensable, elle permet au serveur d'accepter
         des connexions et de recevoir des données en même temps.
         """
+        # TODO : refaire ça avec un ThreadPoolExecutor
+
         accepting_thread = Thread(target=self._accept, daemon=True)
         accepting_thread.start()
         # accepting_thread.join(0.2)

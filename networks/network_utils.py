@@ -27,6 +27,9 @@ class SpeedRequest:
     def __init__(self, faster):
         self.faster = faster
 
+    def __repr__(self):
+        return f"{type(self)}, faster is {self.faster}"
+
 class UndoRequest:
     """Une requête d'annulation, simple objet"""
 
