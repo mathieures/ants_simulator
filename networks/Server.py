@@ -73,7 +73,7 @@ class Server:
             "id": int,
             "ready": bool,
             # "thread": Thread
-            "future": Future
+            "thread": Future
         }
         """
         self._ip = ip
@@ -129,10 +129,12 @@ class Server:
                 self.clients[client] = {
                     "id": next(type(self).CLIENT_ID_GEN),
                     "ready": False,
-                    "future": None
+                    "thread": None
                     # "thread": None
                 }
-                print("Accepted client. Total: {}".format(len(self.clients)))
+
+                print(f"Accepted client. Total: {len(self.clients)}")
+
                 if self.window is not None:
                     self.window.clients += 1
 
@@ -142,8 +144,7 @@ class Server:
                 sleep(0.1)
 
                 # Envoie les objets au Client dans un thread
-                with cf.ThreadPoolExecutor(max_workers=1) as executor:
-                    executor.submit(self._sync_objects, client)
+                Thread(target=self._sync_objects, args=(client,)).start()
 
         else:
             print("[Warning] Denied access to a client (max number reached)")
@@ -206,8 +207,7 @@ class Server:
                         sleep(5) # On attend la fin du compte à rebours de l'interface
 
                         # Lancement de la simulation dans un thread
-                        executor = cf.ThreadPoolExecutor(max_workers=1)
-                        executor.submit(self._simulation.start)
+                        Thread(target=self._simulation.start).start()
 
                 # Si c'est une str on réagit juste en fonction de la valeur
                 elif isinstance(data, SpeedRequest):
@@ -227,31 +227,23 @@ class Server:
                         self._process_data(client_id, data)
 
 
-        executor = cf.ThreadPoolExecutor()
         # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
         for client in tuple(self.clients):
             # S'il n'y a pas encore de thread associé au client ou
             # s'il est terminé (on a reçu de lui), on en cree un
-            if self.clients[client]["future"] is None or self.clients[client]["future"].done():
-                self.clients[client]["future"] = executor.submit(receive_in_thread_from, client)
+            client_thread = self.clients[client]["thread"]
+            if client_thread is None or not client_thread.is_alive():
+                self.clients[client]["thread"] = Thread(target=receive_in_thread_from,
+                                                        args=(client,), daemon=True)
+                self.clients[client]["thread"].start()
 
-
+        # executor = cf.ThreadPoolExecutor()
         # # Note : le transtypage copie les cles et permet d'enlever un client sans RuntimeError
         # for client in tuple(self.clients):
-        #     # Si le client n'avait pas de thread associe, on en cree un
-        #     if self.clients[client]["thread"] is None:
-        #         self.clients[client]["thread"] = Thread(
-        #             target=receive_in_thread_from,
-        #             args=(client,),
-        #             daemon=True)
-        #         self.clients[client]["thread"].start()
-        #     # Si le thread associe a ce client est termine (on a recu de lui), on en refait un
-        #     if not self.clients[client]["thread"].is_alive():
-        #         self.clients[client]["thread"] = Thread(
-        #             target=receive_in_thread_from,
-        #             args=(client,),
-        #             daemon=True)
-        #         self.clients[client]["thread"].start()
+        #     # S'il n'y a pas encore de thread associé au client ou
+        #     # s'il est terminé (on a reçu de lui), on en cree un
+        #     if self.clients[client]["thread"] is None or self.clients[client]["thread"].done():
+        #         self.clients[client]["thread"] = executor.submit(receive_in_thread_from, client)
 
     def _process_data(self, source_client_id, sent_object):
         """Crée un objet en fonction du client et des caractéristiques de l'objet voulu."""
@@ -269,7 +261,7 @@ class Server:
         Fonction indispensable, elle permet au serveur d'accepter
         des connexions et de recevoir des données en même temps.
         """
-        # TODO : refaire ça avec un ThreadPoolExecutor
+        # TODO : peut-être refaire ça avec un ThreadPoolExecutor
 
         accepting_thread = Thread(target=self._accept, daemon=True)
         accepting_thread.start()
@@ -325,7 +317,7 @@ class Server:
     def quit(self):
         """Termine le programme proprement"""
         self._online = False
-        if self.window is not None:
-            self.window.quit_window()
+        # if self.window is not None:
+        #     self.window.quit_window()
         self._socket.close()
         sys.exit(0)

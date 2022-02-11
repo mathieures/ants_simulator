@@ -62,7 +62,7 @@ class Interface:
         self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
         EasyMenu(self._menu_frame, "Network",
-                 [("Disconnect", self._disconnect_client)], width=8)
+                 [("Disconnect", self._disconnect)], width=8)
 
         EasyMenu(self._menu_frame, "Edit",
                  [("Undo (Ctrl+Z)", self._undo)])
@@ -196,7 +196,7 @@ class Interface:
             self._last_objects.pop()
             # La destruction graphique se fait avec la réponse du Serveur
 
-    def _disconnect_client(self):
+    def _disconnect(self):
         self._client.disconnect()
 
     def quit_app(self, force=False):

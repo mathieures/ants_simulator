@@ -60,6 +60,7 @@ class Simulation:
 
     @property
     def sleep_time(self):
+        """Temps d'attente entre deux étapes de la simulation"""
         return self._sleep_time
 
     @sleep_time.setter

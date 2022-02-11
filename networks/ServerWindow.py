@@ -19,14 +19,17 @@ class ServerWindow(threading.Thread):
 
     @property
     def port(self):
+        """Le port choisi pour le serveur"""
         return self._port
 
     @property
     def max_clients(self):
+        """Le nombre de clients maximum"""
         return self._max_clients
 
     @property
     def clients(self):
+        """Le nombre de clients actuellement connectés"""
         return self._clients.get()
 
     @clients.setter
@@ -35,12 +38,13 @@ class ServerWindow(threading.Thread):
 
     @property
     def ready_clients(self):
+        """Le nombre de clients prêts"""
         return self._ready_clients.get()
 
     @ready_clients.setter
     def ready_clients(self, new_number):
         self._ready_clients.set(new_number)
-    
+
 
     def __init__(self, server, daemon):
         """Le daemon permet de tuer le thread quand on tue les autres fils"""
@@ -49,9 +53,15 @@ class ServerWindow(threading.Thread):
         self._ip = server.ip
         self._port = str(server.port)
         self._max_clients = str(server.max_clients)
-        
+
         self._server = server # on le garde pour pouvoir le quitter
         self._server.window = self
+
+        self._root = None
+        self._clients = None
+        self._ready_clients = None
+        self._labelframe = None
+        self._cc_frame = None
 
 
     def run(self):
@@ -99,9 +109,9 @@ class ServerWindow(threading.Thread):
 
         self._root.mainloop()
 
-    def quit_window(self):
-        """Ferme la fenêtre. Méthode utilisée par le serveur."""
-        self._root.destroy()
+    # def quit_window(self):
+    #     """Ferme la fenêtre. Méthode utilisée par le serveur."""
+    #     self._root.destroy()
 
     def _quit_server(self):
         """Notifie au serveur qu'il doit s'arrêter"""
