@@ -1,4 +1,3 @@
-import threading
 import concurrent.futures as cf
 
 from time import sleep
@@ -153,6 +152,10 @@ class Simulation:
 
             # Si la fourmi n'a pas déjà de ressource
             if not ant.has_resource:
+                if ant.is_tired:
+                    # print(f"ajouté black à la fourmi {index}")
+                    move_info[index].append(ColorInfo("black"))
+                    return
                 if spotted_resource is None:
                     return
                 if spotted_resource.size == 0:
@@ -174,8 +177,6 @@ class Simulation:
                 ant.handle_nest()
                 # Reprendre la couleur d'origine
                 move_info[index].append(ColorInfo("base"))
-            elif ant.is_tired:
-                move_info[index].append(ColorInfo("black"))
 
 
         while self._server.online:

@@ -13,19 +13,11 @@ class AntServer(ServerObject):
                  "_id",
                  "has_resource",
                  "_nest",
-                 "tries",
-                 "_x",
-                 "_y"]
+                 "tries"]
 
     # Accesseurs et mutateurs
     #########################
 
-    # property pour ne pas qu'elle puisse etre modifiee (read only)
-    @property
-    def coords_centre(self):
-        return (self._x, self._y)
-
-    # property car on veut pouvoir appliquer le modulo a l'affectation
     @property
     def direction(self):
         """La direction, en degrés, de la fourmi"""
@@ -56,13 +48,12 @@ class AntServer(ServerObject):
 
 
     def __init__(self, pos_x, pos_y, color):
+        super().__init__([pos_x, pos_y], color)
+
         self._id = next(type(self).ID_GEN)
 
-        self._x = pos_x
-        self._y = pos_y
-        self.color = color
         self._direction = randrange(0, 360)
-        self._nest = (pos_x, pos_y)  # Le nid est la position de depart
+        self._nest = self.coords_centre.copy()  # Le nid est la position de depart
 
         self.has_resource = False  # Booleen pour indiquer si une fourmi possede une ressource
         self.endurance = AntServer.MAX_ENDURANCE
@@ -101,8 +92,8 @@ class AntServer(ServerObject):
         delta_x = round(cos(direction_radians), ndigits=0)
         delta_y = -round(sin(direction_radians), ndigits=0)
         # - car c'est un repere orthonorme indirect
-        self._x += delta_x
-        self._y += delta_y
+        self.coords_centre[0] += delta_x
+        self.coords_centre[1] += delta_y
 
         return delta_x, delta_y
 
@@ -112,11 +103,13 @@ class AntServer(ServerObject):
         chercher une ressource ou fait suivre une phéromone
         """
         self.endurance -= 1
+
+        x, y = self.coords_centre
         # Si la fourmi atteint le bord de gauche ou le bord du haut, elle change de direction
-        if self._x <= 0 or self._y <= 0:
+        if x <= 0 or y <= 0:
             self.turn_around()
         else:
-            current_phero = PheromoneServer.get_pheromone(self._x, self._y)
+            current_phero = PheromoneServer.get_pheromone(x, y)
             # S'il n'y a pas de pheromone on prend une direction aleatoire
             if current_phero is None:
                 self.direction = randrange(self._direction - 30, self._direction + 30)
@@ -126,9 +119,10 @@ class AntServer(ServerObject):
 
     def go_to_nest(self):
         """ La fourmi pointe vers le nid """
-        delta_x = self.nest[0] - self._x
+        x, y = self.coords_centre
+        delta_x = self.nest[0] - x
         # on inverse pour le y : repere orthonorme indirect
-        delta_y = self._y - self.nest[1]
+        delta_y = y - self.nest[1]
 
         # On arrondit au plus proche entier
         self.direction = round(degrees(atan2(delta_y, delta_x)), ndigits=0)
@@ -141,10 +135,10 @@ class AntServer(ServerObject):
         """
         dir_to_resource = (self._direction - 180) % 360  # vers la ressource
 
-        new_phero = PheromoneServer(coords_centre=(self._x, self._y),
+        new_phero = PheromoneServer(coords_centre=tuple(self.coords_centre),
                                     direction=dir_to_resource)
 
-        old_phero = PheromoneServer.get_pheromone(self._x, self._y)
+        old_phero = PheromoneServer.get_pheromone(*self.coords_centre)
         # S'il y a deja au moins un pixel de pheromone a cet endroit
         if old_phero is not None:
             # On supprime de l'ancien les coordonnees qui changent
