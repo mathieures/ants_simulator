@@ -7,7 +7,7 @@ class Pheromone(InterfaceObject):
     """
 
     __slots__ = ["_tints", "_tint_index"]
-    
+
     # Teintes roses du clair au fonce
     TINTS = ["#FFDFDB", "#FBBFB8", "#F79F95", "#F38071", "#F0604D"]
 
@@ -21,7 +21,7 @@ class Pheromone(InterfaceObject):
 
     def draw(self):
         """ Cree la premiere pheromone, override la methode d'origine """
-        self._id = self._canvas.create_rectangle(self.drawn_coords, 
+        self._id = self._canvas.create_rectangle(self.drawn_coords,
                                                  fill=self.color, outline="")
         self._canvas.tag_lower(self._id) # On met les pheromones en arriere-plan
 

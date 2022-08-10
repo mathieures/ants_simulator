@@ -1,25 +1,26 @@
-import tkinter as tk
+# import tkinter as tk
 from tkinter import messagebox
 import threading
 from time import sleep
 
+import dearpygui.dearpygui as dpg
 # import concurrent.futures as cf
 
-from .EasyMenu import EasyMenu
-from .EasyButton import EasyButton
+# from .EasyMenu import EasyMenu
+# from .EasyButton import EasyButton
 
-from .Ant import Ant
-from .Nest import Nest
-from .Pheromone import Pheromone
-from .Resource import Resource
-from .Wall import Wall, WallInAButton
+# from .Ant import Ant
+# from .Nest import Nest
+# from .Pheromone import Pheromone
+# from .Resource import Resource
+# from .Wall import Wall, WallInAButton
 
-from networks.network_utils import (
-    ColorInfo,
-    FirstBloodSignal,
+# from networks.network_utils import (
+#     ColorInfo,
+#     FirstBloodSignal,
 
-    SentObject
-)
+#     SentObject
+# )
 
 
 class Interface:
@@ -48,64 +49,213 @@ class Interface:
 
 
     def __init__(self, client, width, height):
-        self._root = tk.Tk()
-        self._root.title("Ant Simulator")
+        # self._root = tk.Tk()
+        # self._root.title("Ant Simulator")
+
+        # self._canvas = tk.Canvas(self._root, width=width, height=height)
+        # self._canvas.pack(side=tk.BOTTOM)
+
+        # # Menus deroulants
+        # self._menu_frame = tk.Frame(self._root)
+        # self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
+
+        # EasyMenu(self._menu_frame, "Network",
+        #          [("Disconnect", self._disconnect)], width=8)
+
+        # EasyMenu(self._menu_frame, "Edit",
+        #          [("Undo (Ctrl+Z)", self._undo)])
 
         self._client = client
         self._client.interface = self
 
-        self._canvas = tk.Canvas(self._root, width=width, height=height)
-        self._canvas.pack(side=tk.BOTTOM)
+        self._buttons = []
 
-        # Menus deroulants
-        self._menu_frame = tk.Frame(self._root)
-        self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
+        self._object_buttons = []
+        self._menu_bar_buttons = []
 
-        EasyMenu(self._menu_frame, "Network",
-                 [("Disconnect", self._disconnect)], width=8)
+        dpg.create_context()
 
-        EasyMenu(self._menu_frame, "Edit",
-                 [("Undo (Ctrl+Z)", self._undo)])
+        def disable_window_callback():
+            """
+            Désactive le callback de la window pour éviter que les clics
+            soient perçus. Faut voir s'il y a une meilleure technique
+            Je pense pas que get le callback, le set à None ou
+            autre puis le reset fonctionne, parce que y'a un
+            handler pas un item_handler, mais j'ai pas essayé
+            """
+            dpg.disable_item("root")
 
-        # Barre de selection de l'objet
-        self._objects_frame = tk.Frame(self._root)
-        self._objects_frame.pack(
-            side=tk.TOP, expand=True, fill=tk.X, anchor="n")
+        def enable_window_callback():
+            """Réactive le callback des clics dans la window"""
+            dpg.enable_item("root")
 
-        self._buttons = [
-            # Bouton Nid
-            EasyButton(self,
-                       self._objects_frame, 50, 50,
-                       object_type=Nest),
 
-            # Bouton Ressource
-            EasyButton(self,
-                       self._objects_frame, 50, 50,
-                       object_type=Resource),
+        def disconnect():
+            print("Disconnect")
+            queue = dpg.get_callback_queue()
+            print(f"  {queue=}")
+            dpg.run_callbacks(queue)
+            # enable_window_callback()
 
-            # Bouton Mur
-            EasyButton(self,
-                       self._objects_frame, 50, 50,
-                       object_type=WallInAButton),
+        def undo():
+            if dpg.is_key_down(dpg.mvKey_Z):
+                print("ctrl z")
+                # enable_window_callback()
+            queue = dpg.get_callback_queue()
+            print(f"  {queue=}")
+            dpg.run_callbacks(queue)
 
-            # Bouton Ready
-            EasyButton(self,
-                       self._objects_frame, 70, 50, text=type(self).READY_TEXT,
-                       side=tk.RIGHT,
-                       command_select=self.set_ready,
-                       command_deselect=self.set_notready)
-        ]
+        def esc():
+            print("escape")
+
+        def croix():
+            print("appuyé sur la croix")
+
+        def clic():
+            for button in self._object_buttons:
+                if dpg.is_item_hovered(button):
+                    print(f"on a cliqué sur la window {button}")
+                    break
+            # # Si c'est en dehors de la window, on ignore
+            # if any(coord < 0 for coord in dpg.get_mouse_pos(local=True)):
+            #     print("clic en dehors de la window, on la désac")
+            #     # disable_window_callback()
+            #     return
+            # print(f"clic par {sender} en {dpg.get_mouse_pos()}, {dpg.get_mouse_pos(local=True)}")
+
+        # Constantes
+        object_types = (Nest, Resource, WallInAButton) # peut-être qu'on n'aura plus besoin de la sous-classe
+        menu_bar_height = 19
+        button_size = 50
+        menu_window_width = len(object_types) * button_size
+        menu_window_height = 69 # 69 est en fonction de 50
+
+        # Fenêtre qui contient la menu_bar
+        with dpg.window(tag="menu_bar_window", min_size=(menu_window_width, menu_window_height),
+                        no_title_bar=True, no_bring_to_front_on_focus=True):
+            with dpg.menu_bar():
+                with dpg.menu(label="Network"):
+                    dpg.add_menu_item(label="Disconnect", callback=disconnect)
+
+                with dpg.menu(label="Edit"):
+                    dpg.add_menu_item(label="Undo (Ctrl+Z)", callback=undo)
+
+                def ready():
+                    # changer le texte et set la valeur, peut-être avec une Value d'ailleurs
+                    print("ready")
+
+                dpg.add_menu_item(label="Ready ?", callback=ready)
+
+            # Pour l'instant on fait des boutons avec du texte
+            # self._object_buttons.append(dpg.add_button(label="Nest"))
+            # self._object_buttons.append(dpg.add_button(label="Resource"))
+            # self._object_buttons.append(dpg.add_button(label="Wall"))
+
+
+            # Liste des boutons pour les objets
+            self._object_buttons = []
+
+            # On dessine un carré pour chaque bouton
+            for i, current_type in enumerate(object_types):
+                current_x = i * button_size
+                # Boucle à sûrement changer une fois que les objets vont devoir apparaître à l'intérieur
+                with dpg.window(pos=(current_x, menu_bar_height),
+                                min_size=(button_size, button_size),
+                                no_title_bar=True, no_move=True,
+                                no_resize=True) as button_window:
+                    # On dessine un carré dans chaque bouton pour bien les voir
+                    dpg.draw_quad(
+                        (-3, -5),
+                        (button_size / 1.35, -5),
+                        (button_size / 1.35, button_size / 1.29),
+                        (-3, button_size / 1.29),
+                    )
+
+                    # Temporaire : on écrit le contenu du bouton
+                    dpg.add_text(current_type.placeholder_text)
+                self._object_buttons.append(button_window)
+
+        # TODO : je pense que la prochaine chose à faire est de recoder les objets, puis faire en sorte de les poser, puis les sélectionner avec les boutons
+
+        # Fenêtre qui contient la zone de jeu
+        with dpg.window(tag="root", pos=(0, menu_window_height),
+                        no_title_bar=True, no_move=True, no_resize=True) as game_window:
+            dpg.draw_circle((20, 20), 20)
+
+        def resize_game_window():
+            """
+            Redimensionne la viewport contenant les éléments
+            du jeu grâce à la viewport et des constantes.
+            """
+            dpg.set_item_width(game_window, dpg.get_viewport_width() - 16)
+            dpg.set_item_height(game_window, dpg.get_viewport_height() - menu_window_height - 39)
+
+        # Gestionnaire de callbacks globaux
+        with dpg.handler_registry():
+
+            dpg.add_mouse_click_handler(button=0, callback=clic)
+
+            dpg.add_key_press_handler(key=dpg.mvKey_Control, callback=undo)
+
+            dpg.add_key_press_handler(key=dpg.mvKey_Escape, callback=esc)
+
+        # Autres callbacks
+        dpg.set_viewport_resize_callback(resize_game_window)
+
+        dpg.set_exit_callback(callback=croix)
+
+            # def release(sender):
+            #     print("release")
+            # dpg.add_mouse_release_handler(button=0, callback=release)
+
+            # def drag():
+            #     print("drag")
+            # dpg.add_mouse_drag_handler(button=0, callback=drag)
+
+        # dpg.set_primary_window("root", True)
+        # dpg.bind_item_handler_registry("root", "root_handler") # je pense pas que ça serve encore
+
+
+
+        # # Barre de selection de l'objet
+        # self._objects_frame = tk.Frame(self._root)
+        # self._objects_frame.pack(
+        #     side=tk.TOP, expand=True, fill=tk.X, anchor="n")
+
+        # self._buttons = [
+        #     # Bouton Nid
+        #     EasyButton(self,
+        #                self._objects_frame, 50, 50,
+        #                object_type=Nest),
+
+        #     # Bouton Ressource
+        #     EasyButton(self,
+        #                self._objects_frame, 50, 50,
+        #                object_type=Resource),
+
+        #     # Bouton Mur
+        #     EasyButton(self,
+        #                self._objects_frame, 50, 50,
+        #                object_type=WallInAButton),
+
+        #     # Bouton Ready
+        #     EasyButton(self,
+        #                self._objects_frame, 70, 50, text=type(self).READY_TEXT,
+        #                side=tk.RIGHT,
+        #                command_select=self.set_ready,
+        #                command_deselect=self.set_notready)
+        # ]
 
         # Evenements
-        self._canvas.bind("<Button-1>", self.on_click)
-        self._canvas.bind("<ButtonRelease-1>", self.on_release)
-        self._canvas.bind("<B1-Motion>", self.on_motion)
+        # self._canvas.bind("<Button-1>", self.on_click)
+        # self._canvas.bind("<ButtonRelease-1>", self.on_release)
+        # self._canvas.bind("<B1-Motion>", self.on_motion)
 
-        self._root.bind("<Control-z>", self._undo)
-        self._root.bind("<Escape>", self.deselect_buttons)
-        self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
+        # self._root.bind("<Control-z>", self._undo)
+        # self._root.bind("<Escape>", self.deselect_buttons)
+        # self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-        self._local_color = ""  # par defaut, mais sera change
+        self._local_color = ""  # par defaut, mais sera changé
 
         self.current_object_type = None
         self._current_wall = None
@@ -115,6 +265,17 @@ class Interface:
         self.ants = []  # liste d'objets Ant
         self._resources = []  # liste d'objets Resource, pour pouvoir les rétrécir
         self.pheromones = {}  # dictionnaire de coordonnees, associees a des objets Pheromone
+
+
+        # Crée la fenêtre
+        dpg.create_viewport(title="Ant Simulator", width=width, height=height)
+        dpg.setup_dearpygui()
+        # Affiche la fenêtre
+        dpg.show_viewport()
+        resize_game_window()
+        # Loop (sûrement à décaler dans une méthode et l'appeler dans le main ou server ou quoi, comme avec tkinter), et même utiliser la render loop custom je pense (jsp)
+        dpg.start_dearpygui()
+        dpg.destroy_context() # ça aussi, en cas on peut le mettre juste après
 
         # Note : la mainloop est lancee dans un thread, par le main
 
@@ -259,27 +420,6 @@ class Interface:
         else:
             self.pheromones[coords] = Pheromone(self._canvas, coords)
 
-    # def create_pheromones(self, coords_list):
-    #     """Crée ou fonce plusieurs phéromones à la fois"""
-    #     # peut-être que ça va casser vu qu'on modifie le dico alors qu'on le traverse dans d'autres
-    #     step = 20  # on cree ou fonce tel nombre de fourmis dans chaque thread
-    #     total_count = len(coords_list)
-
-    #     def create_pheromones_in_thread(start, number):
-    #         end = min(start + number, total_count)
-
-    #         for i in range(start, end):
-    #             coords = coords_list[i]
-    #             if coords in self.pheromones:
-    #                 self.pheromones[coords].darken()
-    #             else:
-    #                 self.pheromones[coords] = Pheromone(self._canvas, coords)
-
-    #     for i in range(0, total_count, step):
-    #         threading.Thread(target=create_pheromones_in_thread,
-    #                          args=(i, step),
-    #                          daemon=True).start()
-
     def create_ants(self, ants_list):
         """
         Crée toutes les fourmis en fonction
@@ -291,9 +431,6 @@ class Interface:
                 color=ant[1]
             ) for ant in ants_list
         ]
-
-        # for ant in ants_list:
-        #   self.ants.append(Ant(self._canvas, ant[0], ant[1])) # coords, couleur
 
 
     ## Modification/suppression d'objets graphiques ##
@@ -432,5 +569,15 @@ class Interface:
                                         toggle=False, hideable=False))
 
 
-# if __name__ == "__main__":
-#     interface = Interface(1050, 750)
+if __name__ == "__main__":
+    class DummyClient:
+        pass
+    class Nest:
+        placeholder_text = "Nest"
+    class Resource:
+        placeholder_text = "Resou"
+    class WallInAButton:
+        placeholder_text = "Wall"
+
+    dummy_client = DummyClient()
+    interface = Interface(dummy_client, 1050, 720)

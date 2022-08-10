@@ -33,9 +33,6 @@ class Ant(InterfaceObject):
         """
         self._canvas.move(self._id, delta_x, delta_y)
 
-        self.coords_centre = self._get_centre_coords()
-        self.drawn_coords = self._get_drawn_coords()
-
     def change_color(self, new_color):
         """
         Change la couleur de la fourmi. Si la couleur donnée en

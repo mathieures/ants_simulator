@@ -40,12 +40,13 @@ def start_client():
             print("[Error] No connected server.")
             app.quit_app()
 
+
 def start_server():
     """Lance le serveur"""
     # On regarde d'abord si l'utilisateur veut une fenetre
     if "-nowindow" in sys.argv:
         create_window = False
-        sys.argv.pop(sys.argv.index("-nowindow"))
+        sys.argv.remove("-nowindow")
         # print("new args :", sys.argv)
     else:
         create_window = True
@@ -71,8 +72,15 @@ def start_server():
 
     Server(ip, port, max_clients, create_window)
 
-if len(sys.argv) > 1 and sys.argv[1] == "server":
-    sys.argv.pop(sys.argv.index("server"))
-    start_server()
-else:
-    start_client()
+
+def main():
+    """Fonction main"""
+    if len(sys.argv) > 1 and sys.argv[1] == "server":
+        sys.argv.remove("server")
+        start_server()
+    else:
+        start_client()
+
+
+if __name__ == '__main__':
+    main()

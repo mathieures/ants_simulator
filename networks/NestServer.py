@@ -3,11 +3,10 @@ from .AntServer import AntServer
 
 
 class NestServer(SizedServerObject):
-
+    """Nid côté serveur"""
     __slots__ = ["ants"]
 
     str_type = "nest"
-
 
     def __init__(self, coords_centre, size, color, ants_per_nest=20):
         super().__init__(coords_centre, size, color)

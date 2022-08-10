@@ -193,6 +193,7 @@ class Simulation:
 
             # temps_ants = perf_counter() # assez rapide
 
+            # TODO : peut-être bouger ça en dehors de la boucle
             with cf.ThreadPoolExecutor() as executor:
                 executor.map(_simulate_ant, all_ants, range(len(all_ants)))
 

@@ -2,11 +2,10 @@ from .ServerObject import SizedServerObject
 
 
 class PheromoneServer(SizedServerObject):
-    """Une phéromone côté serveur"""
-
+    """Phéromone côté serveur"""
     __slots__ = ["direction"]
 
-    pheromones = set() # Ensemble d'objets PheromoneServer
+    pheromones = set() # Ensemble contenant toutes les PheromoneServer de la map
 
     @classmethod
     def get_pheromone(cls, x, y):
@@ -21,7 +20,6 @@ class PheromoneServer(SizedServerObject):
     def remove_pheromone(cls, pheromone):
         """Supprime une phéromone de l'ensemble"""
         cls.pheromones.discard(pheromone)
-
 
     def __init__(self, coords_centre: tuple, direction: int):
         super().__init__(coords_centre, size=1, color="")

@@ -7,13 +7,13 @@ from .PheromoneServer import PheromoneServer
 
 
 class AntServer(ServerObject):
-
+    """Fourmi côté serveur"""
     __slots__ = ["_direction",
                  "endurance",
                  "_id",
-                 "has_resource",
-                 "_nest",
-                 "tries"]
+                 "has_resource", # Booleen pour indiquer si une fourmi possede une ressource
+                 "_nest", # Le nid est la position de depart
+                 "tries"] # Nombre d'essais pour le contournement d'un mur
 
     # Accesseurs et mutateurs
     #########################
@@ -46,19 +46,17 @@ class AntServer(ServerObject):
     MAX_TRIES = 256  # nombre d'essais max pour contourner un mur par la gauche
     ID_GEN = ServerObject.new_id_generator()
 
-
     def __init__(self, pos_x, pos_y, color):
         super().__init__([pos_x, pos_y], color)
 
         self._id = next(type(self).ID_GEN)
 
         self._direction = randrange(0, 360)
-        self._nest = self.coords_centre.copy()  # Le nid est la position de depart
+        self._nest = self.coords_centre.copy()
 
-        self.has_resource = False  # Booleen pour indiquer si une fourmi possede une ressource
-        self.endurance = AntServer.MAX_ENDURANCE
-        self.tries = 0  # Nombre d'essais pour le contournement d'un mur
-
+        self.has_resource = False
+        self.endurance = type(self).MAX_ENDURANCE
+        self.tries = 0
 
     def simulate(self):
         """Simule la fourmi car on sait qu'il n'y a pas de mur."""
@@ -135,17 +133,17 @@ class AntServer(ServerObject):
         """
         dir_to_resource = (self._direction - 180) % 360  # vers la ressource
 
+        old_phero = PheromoneServer.get_pheromone(*self.coords_centre)
+
         new_phero = PheromoneServer(coords_centre=tuple(self.coords_centre),
                                     direction=dir_to_resource)
-
-        old_phero = PheromoneServer.get_pheromone(*self.coords_centre)
         # S'il y a deja au moins un pixel de pheromone a cet endroit
-        if old_phero is not None:
+        if old_phero:
             # On supprime de l'ancien les coordonnees qui changent
             # de direction (celles qui sont dans les deux)
             old_phero.zone -= new_phero.zone # old_phero.zone \ new_phero.zone
             # Si l'ancienne a ete completement repassee
-            if len(old_phero.zone) == 0:
+            if not old_phero.zone:
                 PheromoneServer.remove_pheromone(old_phero)
 
     def follow_direction_biaised(self, direction, proba=60):
@@ -184,5 +182,5 @@ class AntServer(ServerObject):
         fourmi recommence à chercher comme au début
         """
         self.has_resource = False
-        self.endurance = AntServer.MAX_ENDURANCE
+        self.endurance = type(self).MAX_ENDURANCE
         self.tries = 0

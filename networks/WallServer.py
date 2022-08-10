@@ -6,12 +6,10 @@ class WallServer(SizedServerObject):
 
     str_type = "wall"
 
+    # def __init__(self, coords_centre, size, color):
+    #     super().__init__(coords_centre, size, color)
 
-    def __init__(self, coords_centre, size, color):
-        super().__init__(coords_centre, size, color)
-
-        # self._init_zone()
-
+    #     # self._init_zone()
 
     def _init_zone(self):
         """Surcharge la méthode de base"""

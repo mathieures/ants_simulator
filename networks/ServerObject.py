@@ -15,11 +15,9 @@ class ServerObject:
         """À implémenter dans les classes filles"""
         raise NotImplementedError
 
-
     def __init__(self, coords_centre, color):
         self.coords_centre = coords_centre
         self.color = color
-
 
     def to_tuple(self):
         """
@@ -48,14 +46,12 @@ class SizedServerObject(ServerObject):
             sent_object.color
         )
 
-
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, color)
         self.size = size
         self.zone = set()
 
         self._init_zone()
-
 
     def get_origin_coords(self):
         """

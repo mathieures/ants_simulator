@@ -12,24 +12,22 @@ class Wall(InterfaceObject):
         Crée une ligne de taille size et de largeur length.
         (size est utile pour l'icône du bouton)
         """
-        super().__init__(canvas, origin_coords, size, color="black")
-
         self.length = length
 
-        # On ecrase les coordonnees de dessin, car
-        # les murs fonctionnent d'une autre maniere
-
-        # Si on n'a pas deux points, alors on ne crée qu'un rectangle
-        if len(origin_coords) < 4:
-            # test avec une array
-            self.drawn_coords = [self.origin_coords[0],
-                                 self.origin_coords[1],
-                                 self.origin_coords[0] + self.length,
-                                 self.origin_coords[1]]
-        else:
-            self.drawn_coords = self.origin_coords
+        super().__init__(canvas, origin_coords, size, color="black")
 
         self.draw()
+
+    def _init_drawn_coords(self):
+        """Les murs fonctionnent d'une manière différente des autres InterfaceObject"""
+
+        # Si on n'a pas deux points, alors on ne crée qu'un rectangle
+        if len(self.origin_coords) < 4:
+            return [self.origin_coords[0],
+                    self.origin_coords[1],
+                    self.origin_coords[0] + self.length,
+                    self.origin_coords[1]]
+        return self.origin_coords
 
 
     def draw(self):
@@ -48,8 +46,3 @@ class WallInAButton(Wall):
     def __init__(self, canvas, origin_coords, size, length):
 
         super().__init__(canvas, origin_coords, size, length)
-
-        self.drawn_coords = [self.origin_coords[0],
-                             self.origin_coords[1],
-                             self.origin_coords[0] + self.size,
-                             self.origin_coords[1]]

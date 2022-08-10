@@ -2,7 +2,7 @@ from .ServerObject import SizedServerObject
 
 
 class ResourceServer(SizedServerObject):
-    """Classe utilisée dans Simulation._objects["resource"]"""
+    """Ressource côté serveur. Classe utilisée dans Simulation._objects["resource"]"""
 
     # forme de l'ancien dico d'objets :
     # self._objects[str_type].append((coords, size, width, color))
@@ -13,13 +13,11 @@ class ResourceServer(SizedServerObject):
 
     str_type = "resource"
 
-
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, size, color)
         self.index = next(type(self).INDEX_GEN)
 
         # self._init_zone()
-
 
     def shrink_resource(self):
         """
