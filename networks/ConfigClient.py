@@ -66,10 +66,10 @@ class ConfigClient:
 
         # Bindings
 
-        # Pour gerer la touche Entree
+        # Pour gérer la touche Entree
         self._root.bind("<Return>", self._on_return_key)
 
-        # Pour gerer la fermeture de la fenetre
+        # Pour gérer la fermeture de la fenêtre
         self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
 
         self._root.mainloop()
@@ -81,7 +81,7 @@ class ConfigClient:
         if len(self._ip.get()) > 0 and self._port.get() > 0:
             self._root.destroy()
 
-    def _on_return_key(self, event):
+    def _on_return_key(self, _):
         self._join_button.invoke()
 
     def _set_to_current_ip(self):

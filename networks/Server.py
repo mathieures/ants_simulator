@@ -127,7 +127,7 @@ class Server:
                 self._send_to_client(client, ColorInfo(random_color()))
                 # On lui reserve une entree dans le dictionnaire
                 self.clients[client] = {
-                    "id": next(type(self).CLIENT_ID_GEN),
+                    "id": next(self.__class__.CLIENT_ID_GEN),
                     "ready": False,
                     "thread": None
                     # "thread": None

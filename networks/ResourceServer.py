@@ -16,7 +16,7 @@ class ResourceServer(SizedServerObject):
 
     def __init__(self, coords_centre, size, color):
         super().__init__(coords_centre, size, color)
-        self.index = next(type(self).INDEX_GEN)
+        self.index = next(self.__class__.INDEX_GEN)
 
         # self._init_zone()
 

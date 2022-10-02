@@ -28,7 +28,7 @@ class SpeedRequest:
         self.faster = faster
 
     def __repr__(self):
-        return f"{type(self)}, faster is {self.faster}"
+        return f"{self.__class__}, faster is {self.faster}"
 
 class UndoRequest:
     """Une requête d'annulation, simple objet"""
@@ -94,14 +94,14 @@ class SentObject:
 
 
     def __repr__(self):
-        return f"{type(self).__name__}: {self.str_type}, {self.coords}, {self.size}, {self.color}"
+        return f"{self.__class__.__name__}: {self.str_type}, {self.coords}, {self.size}, {self.color}"
 
     def __eq__(self, other):
         """
         Permet de déterminer si deux SentObject sont équivalents.
         Utilisé avec self.__hash__ par les clients pour l'undo
         """
-        if isinstance(other, type(self)):
+        if isinstance(other, self.__class__):
             return (self.str_type == other.str_type) and (
                     self.coords == other.coords) and (
                     self.size == other.size) and (

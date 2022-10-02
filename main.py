@@ -42,7 +42,7 @@ def start_client():
 
 def start_server():
     """Lance le serveur"""
-    # On regarde d'abord si l'utilisateur veut une fenetre
+    # On regarde d'abord si l'utilisateur veut une fenêtre
     if "-nowindow" in sys.argv:
         create_window = False
         sys.argv.pop(sys.argv.index("-nowindow"))
@@ -50,7 +50,7 @@ def start_server():
     else:
         create_window = True
 
-    # S'il n'y a pas assez d'arguments, on ouvre la fenetre de config
+    # S'il n'y a pas assez d'arguments, on ouvre la fenêtre de config
     if len(sys.argv) < 4:
         config = ConfigServer() # bloquant
 

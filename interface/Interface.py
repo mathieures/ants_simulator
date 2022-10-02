@@ -1,23 +1,39 @@
+"""Module gérant l'interface pour un client."""
+
 import tkinter as tk
 from tkinter import messagebox
-import threading
+# import threading
 from time import sleep
 
 # import concurrent.futures as cf
 
-from .EasyMenu import EasyMenu
-from .EasyButton import EasyButton
+from .interface_elements import (
+    EasyMenu,
+    EasyButton
+)
+# from .EasyMenu import EasyMenu
+# from .EasyButton import EasyButton
 
-from .Ant import Ant
-from .Nest import Nest
-from .Pheromone import Pheromone
-from .Resource import Resource
-from .Wall import Wall, WallInAButton
+from .interface_objects import (
+    Ant,
+    Nest,
+    Pheromone,
+    Resource,
+    Wall, WallInAButton
+)
+# from .Ant import Ant
+# from .Nest import Nest
+# from .Pheromone import Pheromone
+# from .Resource import Resource
+# from .Wall import Wall, WallInAButton
+
+if __name__ == "__main__":
+    from sys import path
+    path.append("..")
 
 from networks.network_utils import (
     ColorInfo,
     FirstBloodSignal,
-
     SentObject
 )
 
@@ -57,7 +73,7 @@ class Interface:
         self._canvas = tk.Canvas(self._root, width=width, height=height)
         self._canvas.pack(side=tk.BOTTOM)
 
-        # Menus deroulants
+        # Menus déroulants
         self._menu_frame = tk.Frame(self._root)
         self._menu_frame.pack(side=tk.TOP, expand=True, fill=tk.X, anchor="n")
 
@@ -90,13 +106,13 @@ class Interface:
 
             # Bouton Ready
             EasyButton(self,
-                       self._objects_frame, 70, 50, text=type(self).READY_TEXT,
+                       self._objects_frame, 70, 50, text=self.__class__.READY_TEXT,
                        side=tk.RIGHT,
                        command_select=self.set_ready,
                        command_deselect=self.set_notready)
         ]
 
-        # Evenements
+        # Évènements
         self._canvas.bind("<Button-1>", self.on_click)
         self._canvas.bind("<ButtonRelease-1>", self.on_release)
         self._canvas.bind("<B1-Motion>", self.on_motion)
@@ -105,7 +121,7 @@ class Interface:
         self._root.bind("<Escape>", self.deselect_buttons)
         self._root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-        self._local_color = ""  # par defaut, mais sera change
+        self._local_color = ""  # par défaut, mais sera change
 
         self.current_object_type = None
         self._current_wall = None
@@ -114,12 +130,12 @@ class Interface:
         self._last_objects = []
         self.ants = []  # liste d'objets Ant
         self._resources = []  # liste d'objets Resource, pour pouvoir les rétrécir
-        self.pheromones = {}  # dictionnaire de coordonnees, associees a des objets Pheromone
+        self.pheromones = {}  # dictionnaire de coordonnées, associées a des objets Pheromone
 
-        # Note : la mainloop est lancee dans un thread, par le main
+        # Note : la mainloop est lancée dans un thread, par le main
 
 
-    ## Gestion d'evenements ##
+    ## Gestion d’évènements ##
 
     def on_click(self, event):
         """Callback de l'appui du clic de souris"""
@@ -135,13 +151,13 @@ class Interface:
 
         # La classe contenue dans le bouton n'est pas Wall
         elif self.current_object_type is WallInAButton:
-            # On le cree directement, pour avoir un visuel
+            # On le crée directement, pour avoir un visuel
             self._init_wall(event.x, event.y)
         else:
             current_type = self.current_object_type.__name__
             raise TypeError(f"The current object type ({current_type}) is not configured.")
 
-    def on_release(self, event):
+    def on_release(self, _):
         """Callback du relâchement du clic de souris"""
         if self._current_wall is None:
             return
@@ -156,7 +172,7 @@ class Interface:
         if self._current_wall is not None:
             self._current_wall.expand(event.x, event.y)
 
-    def deselect_buttons(self, event=None):
+    def deselect_buttons(self, _=None):
         """Désélectionne tous les boutons des objets, pour libérer le clic"""
         for button in self._buttons:
             button.deselect(exec_command=False)
@@ -168,11 +184,11 @@ class Interface:
         l'utilisateur a cliqué sur le bouton Ready
         """
         for button in self._buttons:
-            if button.text != type(self).READY_TEXT:
+            if button.text != self.__class__.READY_TEXT:
                 button.hide()
             else:
                 # On laisse le bouton Ready toujours actif
-                button.text = type(self).NOT_READY_TEXT
+                button.text = self.__class__.NOT_READY_TEXT
         self._client.ready_state = True
 
     def set_notready(self):
@@ -181,14 +197,14 @@ class Interface:
         l'utilisateur a cliqué sur le bouton Not ready
         """
         for button in self._buttons:
-            if button.text != type(self).NOT_READY_TEXT:
+            if button.text != self.__class__.NOT_READY_TEXT:
                 button.show()
             else:
                 # Le bouton Ready est toujours actif
-                button.text = type(self).READY_TEXT
+                button.text = self.__class__.READY_TEXT
         self._client.ready_state = False
 
-    def _undo(self, event=None):
+    def _undo(self, _=None):
         """ Fonction pour annuler un placement """
         # last_object est de la forme : [id, str_type]
         if self._last_objects:
@@ -262,7 +278,7 @@ class Interface:
     # def create_pheromones(self, coords_list):
     #     """Crée ou fonce plusieurs phéromones à la fois"""
     #     # peut-être que ça va casser vu qu'on modifie le dico alors qu'on le traverse dans d'autres
-    #     step = 20  # on cree ou fonce tel nombre de fourmis dans chaque thread
+    #     step = 20  # on crée ou fonce tel nombre de fourmis dans chaque thread
     #     total_count = len(coords_list)
 
     #     def create_pheromones_in_thread(start, number):
@@ -396,7 +412,7 @@ class Interface:
             w - 50, h - 30, w - 30, h - 10, fill=color)
 
     def countdown(self):
-        """Affiche un compte a rebours au milieu de la fenetre"""
+        """Affiche un compte a rebours au milieu de la fenêtre"""
         # On cache tous les boutons ce coup-ci
         for button in self._buttons:
             # TODO : peut-être faire une classe différente pour les hideable

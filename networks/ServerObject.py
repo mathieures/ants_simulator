@@ -10,10 +10,10 @@ class ServerObject:
         """Renvoie un générateur d'identifiants"""
         return id_generator()
 
-    @property
-    def str_type(self):
-        """À implémenter dans les classes filles"""
-        raise NotImplementedError
+    # @property
+    # def str_type(self):
+    #     """À implémenter dans les classes filles"""
+    #     raise NotImplementedError
 
 
     def __init__(self, coords_centre, color):
@@ -34,7 +34,7 @@ class SizedServerObject(ServerObject):
     Un objet côté serveur, mais avec une taille
     définie, qui résulte en une zone de pixels occupés.
     """
-    __slots__ = ["size", "zone"]
+    __slots__ = ["size", "zone", "str_type"]
 
     @classmethod
     def from_SentObject(cls, sent_object):

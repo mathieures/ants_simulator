@@ -50,7 +50,7 @@ class AntServer(ServerObject):
     def __init__(self, pos_x, pos_y, color):
         super().__init__([pos_x, pos_y], color)
 
-        self._id = next(type(self).ID_GEN)
+        self._id = next(self.__class__.ID_GEN)
 
         self._direction = randrange(0, 360)
         self._nest = self.coords_centre.copy()  # Le nid est la position de depart
@@ -159,7 +159,7 @@ class AntServer(ServerObject):
     def get_around_wall(self):
         """Essaie de contourner un mur"""
         # Si la fourmi n'a pas fait trop d'essais
-        if self.tries < type(self).MAX_TRIES:
+        if self.tries < self.__class__.MAX_TRIES:
             # Elle contourne le mur par la gauche
             self.direction += 30
             self.tries += 1

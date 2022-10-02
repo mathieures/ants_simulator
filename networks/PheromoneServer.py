@@ -29,4 +29,4 @@ class PheromoneServer(SizedServerObject):
 
         # self._init_zone()
 
-        type(self).pheromones.add(self)
+        self.__class__.pheromones.add(self)
