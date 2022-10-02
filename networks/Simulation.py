@@ -6,10 +6,16 @@ from math import dist as distance
 from collections import defaultdict
 from itertools import chain
 
-from .ServerObject import SizedServerObject
-from .ResourceServer import ResourceServer
-from .NestServer import NestServer
-from .WallServer import WallServer
+from .server_objects import (
+    SizedServerObject,
+    ResourceServer,
+    NestServer,
+    WallServer
+)
+# from .ServerObject import SizedServerObject
+# from .ResourceServer import ResourceServer
+# from .NestServer import NestServer
+# from .WallServer import WallServer
 
 from .network_utils import (
     AntsInfo,
