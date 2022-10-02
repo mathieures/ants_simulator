@@ -4,34 +4,53 @@ Un module qui définit des classes et fonctions utiles
 
 from random import randrange
 import socket
+import enum
+
+
+class NetworkMessage(enum.Enum):
+    """
+    Classe représentant un message/signal sur le réseau, qui
+    ne possède pas de valeur particulière si ce n'est son nom.
+    """
+    STATE_READY = enum.auto()
+    STATE_NOT_READY = enum.auto()
+    REQUEST_FASTER = enum.auto()
+    REQUEST_SLOWER = enum.auto()
+    REQUEST_UNDO = enum.auto()
+    SIGNAL_GO = enum.auto()
+    SIGNAL_ADMIN = enum.auto()
+
+    # Possèdent des infos, donc pas la même chose
+    # SIGNAL_DESTROY
+    # SIGNAL_FIRST_BLOOD
 
 
 ## Classes utiles ##
 
-class ReadyState:
-    """
-    Une classe simple qui représente
-    l'état d'un client : prêt ou non.
-    Note 1 : False par défaut.
-    Note 2 : on ne peut pas hériter de bool.
-    """
-    def __init__(self):
-        self.value = False
+# class ReadyState:
+#     """
+#     Une classe simple qui représente
+#     l'état d'un client : prêt ou non.
+#     Note 1 : False par défaut.
+#     Note 2 : on ne peut pas hériter de bool.
+#     """
+#     def __init__(self):
+#         self.value = False
 
-class SpeedRequest:
-    """
-    Une classe simple qui représente une demande
-    d'accélération/décélération de la simulation.
-    La valeur de `faster` détermine le type de demande.
-    """
-    def __init__(self, faster):
-        self.faster = faster
+# class SpeedRequest:
+#     """
+#     Une classe simple qui représente une demande
+#     d'accélération/décélération de la simulation.
+#     La valeur de `faster` détermine le type de demande.
+#     """
+#     def __init__(self, faster):
+#         self.faster = faster
 
-    def __repr__(self):
-        return f"{self.__class__}, faster is {self.faster}"
+#     def __repr__(self):
+#         return f"{self.__class__}, faster is {self.faster}"
 
-class UndoRequest:
-    """Une requête d'annulation, simple objet"""
+# class UndoRequest:
+#     """Une requête d'annulation, simple objet"""
 
 class GoSignal:
     """Le signal de départ à envoyer aux clients, simple objet"""

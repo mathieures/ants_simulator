@@ -7,21 +7,40 @@ import concurrent.futures as cf
 
 from time import perf_counter
 
-from .network_utils import (
-    ReadyState,
-    SpeedRequest,
-    UndoRequest,
+try:
+    from network_utils import (
+        NetworkMessage,
+        # ReadyState,
+        # SpeedRequest,
+        # UndoRequest,
 
-    GoSignal,
-    AdminSignal,
-    DestroySignal,
+        # GoSignal,
+        # AdminSignal,
+        DestroySignal,
 
-    SentObject,
-    ColorInfo,
-    AntsInfo,
-    MoveInfo,
-    PheromoneInfo
-)
+        SentObject,
+        ColorInfo,
+        AntsInfo,
+        MoveInfo,
+        PheromoneInfo
+    )
+except ImportError:
+    from .network_utils import (
+        NetworkMessage,
+        # ReadyState,
+        # SpeedRequest,
+        # UndoRequest,
+
+        # GoSignal,
+        # AdminSignal,
+        DestroySignal,
+
+        SentObject,
+        ColorInfo,
+        AntsInfo,
+        MoveInfo,
+        PheromoneInfo
+    )
 
 
 class Client:
@@ -53,7 +72,7 @@ class Client:
     @ready_state.setter
     def ready_state(self, new_state):
         """Assigne l'état de préparation et informe le serveur."""
-        self._ready_state.value = new_state
+        self._ready_state = new_state
         self._send(self._ready_state)
 
 
@@ -75,7 +94,7 @@ class Client:
         self._interface = None
         self._is_admin = False
 
-        self._ready_state = ReadyState()
+        self._ready_state = NetworkMessage.STATE_NOT_READY
 
         self.sent_to_interface = {} # Associe un SentObject reçu à un InterfaceObject
 
@@ -129,9 +148,9 @@ class Client:
 
             data = pickle.loads(recv_data)
 
-            if data is GoSignal:
+            if data is NetworkMessage.SIGNAL_GO:
                 self._interface.countdown()
-            elif data is AdminSignal:
+            elif data is NetworkMessage.SIGNAL_ADMIN:
                 self._is_admin = True
                 self._interface.show_admin_buttons()
 
@@ -139,7 +158,7 @@ class Client:
                 interface_obj = self.sent_to_interface[data.object_to_destroy]
                 self._interface.destroy_object(interface_obj)
 
-            # Si c'est un objet cree par un client
+            # Si c'est un objet créé par un client
             elif isinstance(data, SentObject):
                 new_object_id = self._interface.create_object(data.str_type,
                                                               data.coords,
@@ -195,14 +214,14 @@ class Client:
 
     def ask_undo(self):
         """ Demande au serveur d'annuler le placement du dernier objet """
-        self._send(UndoRequest)
+        self._send(NetworkMessage.REQUEST_UNDO)
 
     def ask_faster_sim(self):
         """Demande à la simulation d'accélérer"""
-        self._send(SpeedRequest(faster=True))
+        self._send(NetworkMessage.REQUEST_FASTER)
         print("Asked faster simulation")
 
     def ask_slower_sim(self):
         """Demande à la simulation de ralentir"""
-        self._send(SpeedRequest(faster=False))
+        self._send(NetworkMessage.REQUEST_SLOWER)
         print("Asked slower simulation")

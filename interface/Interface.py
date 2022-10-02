@@ -7,35 +7,55 @@ from time import sleep
 
 # import concurrent.futures as cf
 
-from .interface_elements import (
-    EasyMenu,
-    EasyButton
-)
+try:
+    from interface_elements import (
+        EasyMenu,
+        EasyButton
+    )
+    from interface_objects import (
+        Ant,
+        Nest,
+        Pheromone,
+        Resource,
+        Wall, WallInAButton
+    )
+    
+    from sys import path
+    path.append("..")
+
+    from networks.network_utils import (
+        NetworkMessage,
+        ColorInfo,
+        FirstBloodSignal,
+        SentObject
+    )
+except (ImportError, ModuleNotFoundError):
+    from .interface_elements import (
+        EasyMenu,
+        EasyButton
+    )
+    from .interface_objects import (
+        Ant,
+        Nest,
+        Pheromone,
+        Resource,
+        Wall, WallInAButton
+    )
+
+    from networks.network_utils import (
+        NetworkMessage,
+        ColorInfo,
+        FirstBloodSignal,
+        SentObject
+    )
 # from .EasyMenu import EasyMenu
 # from .EasyButton import EasyButton
 
-from .interface_objects import (
-    Ant,
-    Nest,
-    Pheromone,
-    Resource,
-    Wall, WallInAButton
-)
 # from .Ant import Ant
 # from .Nest import Nest
 # from .Pheromone import Pheromone
 # from .Resource import Resource
 # from .Wall import Wall, WallInAButton
-
-if __name__ == "__main__":
-    from sys import path
-    path.append("..")
-
-from networks.network_utils import (
-    ColorInfo,
-    FirstBloodSignal,
-    SentObject
-)
 
 
 class Interface:
@@ -189,7 +209,7 @@ class Interface:
             else:
                 # On laisse le bouton Ready toujours actif
                 button.text = self.__class__.NOT_READY_TEXT
-        self._client.ready_state = True
+        self._client.ready_state = NetworkMessage.STATE_READY
 
     def set_notready(self):
         """
@@ -202,7 +222,7 @@ class Interface:
             else:
                 # Le bouton Ready est toujours actif
                 button.text = self.__class__.READY_TEXT
-        self._client.ready_state = False
+        self._client.ready_state = NetworkMessage.STATE_NOT_READY
 
     def _undo(self, _=None):
         """ Fonction pour annuler un placement """

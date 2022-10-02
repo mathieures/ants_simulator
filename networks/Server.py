@@ -9,13 +9,14 @@ from time import sleep
 from .network_utils import (
     random_color,
     id_generator,
+    NetworkMessage,
 
-    ReadyState,
-    SpeedRequest,
-    UndoRequest,
+    # ReadyState,
+    # SpeedRequest,
+    # UndoRequest,
 
-    GoSignal,
-    AdminSignal,
+    # GoSignal,
+    # AdminSignal,
     DestroySignal,
 
     SentObject,
@@ -140,7 +141,7 @@ class Server:
 
                 # Si l'IP du client est celle du serveur, il est admin
                 if address[0] == self._ip:
-                    self._send_to_client(client, AdminSignal)
+                    self._send_to_client(client, NetworkMessage.SIGNAL_ADMIN)
                 sleep(0.1)
 
                 # Envoie les objets au Client dans un thread
@@ -194,8 +195,8 @@ class Server:
             else:
                 data = pickle.loads(recv_data)
 
-                if isinstance(data, ReadyState):
-                    ready_state = data.value
+                if data is NetworkMessage.STATE_READY or data is NetworkMessage.STATE_NOT_READY:
+                    ready_state = data is NetworkMessage.STATE_READY
                     self.clients[source_client]["ready"] = ready_state
 
                     ready_clients = self._get_ready_clients()
@@ -203,25 +204,24 @@ class Server:
                     print(f"Ready clients: {ready_clients} / {len(self.clients)}")
 
                     if ready_state and ready_clients == len(self.clients):
-                        self.send_to_all_clients(GoSignal)
+                        self.send_to_all_clients(NetworkMessage.SIGNAL_GO)
                         sleep(5) # On attend la fin du compte à rebours de l'interface
 
                         # Lancement de la simulation dans un thread
                         Thread(target=self._simulation.start).start()
 
-                # Si c'est une str on réagit juste en fonction de la valeur
-                elif isinstance(data, SpeedRequest):
-                    if data.faster:
-                        self._simulation.sleep_time /= 2
-                        print("Faster simulation")
-                    else:
-                        self._simulation.sleep_time *= 2
-                        print("Slower simulation")
+                # Si on demande une simulation plus rapide ou plus lente
+                elif data is NetworkMessage.REQUEST_FASTER:
+                    self._simulation.sleep_time /= 2
+                    print("Faster simulation")
+                elif data is NetworkMessage.REQUEST_SLOWER:
+                    self._simulation.sleep_time *= 2
+                    print("Slower simulation")
                 # Si c'est une liste, c'est une création,
                 # modification ou suppression d'objet
                 else:
                     client_id = self.clients[source_client]["id"]
-                    if data is UndoRequest:
+                    if data is NetworkMessage.REQUEST_UNDO:
                         self._simulation.undo_object_from_client(client_id)
                     elif isinstance(data, SentObject):
                         self._process_data(client_id, data)
