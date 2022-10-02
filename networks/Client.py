@@ -227,5 +227,10 @@ class Client:
         print("Asked slower simulation")
 
 
-if __name__ == "__main__":
+def main():
+    """Fonction de test"""
     client = Client("127.0.0.1", 1234)
+
+
+if __name__ == "__main__":
+    main()

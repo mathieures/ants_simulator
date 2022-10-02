@@ -4,11 +4,13 @@ from threading import Thread
 from time import sleep
 
 from interface.Interface import Interface
-from networks.Client import Client
-from networks.ConfigClient import ConfigClient
 
-from networks.ConfigServer import ConfigServer
+from networks.Client import Client
 from networks.Server import Server
+from networks.config_windows import (
+    ConfigServer,
+    ConfigClient
+)
 
 
 def start_client():
