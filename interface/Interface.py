@@ -152,7 +152,12 @@ class Interface:
         self._resources = []  # liste d'objets Resource, pour pouvoir les rétrécir
         self.pheromones = {}  # dictionnaire de coordonnées, associées a des objets Pheromone
 
-        # Note : la mainloop est lancée dans un thread, par le main
+        # Note : la mainloop est lancée dans un thread dans main.py
+
+
+    def start(self):
+        """Lance l'application"""
+        self._root.mainloop()
 
 
     ## Gestion d’évènements ##
@@ -468,5 +473,35 @@ class Interface:
                                         toggle=False, hideable=False))
 
 
-# if __name__ == "__main__":
-#     interface = Interface(1050, 750)
+if __name__ == "__main__":
+    class DummyClient:
+        """Un client factice"""
+        def __init__(self):
+            self.interface = None
+            self.sent_to_interface = {}  # Associe un SentObject reçu à un InterfaceObject
+
+        def ask_object(self, obj):
+            self._send(obj)
+        
+        def ask_undo(self):
+            pass
+
+        def _send(self, data):
+            # On receive directement pour ne pas avoir besoin de Server
+            self._receive(data)
+
+        def _receive(self, data):
+            # Si c'est un objet créé par un client
+            if isinstance(data, SentObject):
+                self.interface.create_object(data.str_type,
+                                             data.coords,
+                                             data.size,
+                                             data.color)
+
+        def disconnect(self):
+            # Quitte l'application
+            self.interface.quit_app()
+
+    dummy_client = DummyClient()
+    interface = Interface(dummy_client, 1050, 720)
+    interface.start()

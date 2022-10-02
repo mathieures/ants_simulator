@@ -35,7 +35,7 @@ def start_client():
 
         if client.connected:
             print("Connected.")
-            app.root.mainloop()
+            app.start()
         else:
             print("[Error] No connected server.")
             app.quit_app()

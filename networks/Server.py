@@ -102,7 +102,7 @@ class Server:
             self._socket.listen(self._max_clients)
 
         except OSError:
-            print("[Error] Port {} not available".format(self._port))
+            print(f"[Error] Port {self._port} not available")
             self.quit()
 
         else:

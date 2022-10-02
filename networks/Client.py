@@ -127,7 +127,7 @@ class Client:
         """
         try:
             self._socket.send(pickle.dumps(data))
-        except BrokenPipeError:
+        except (BrokenPipeError, OSError):
             print("[Error] fatal error while sending data. Exiting.")
             sys.exit(1)
 
@@ -225,3 +225,7 @@ class Client:
         """Demande à la simulation de ralentir"""
         self._send(NetworkMessage.REQUEST_SLOWER)
         print("Asked slower simulation")
+
+
+if __name__ == "__main__":
+    client = Client("127.0.0.1", 1234)
