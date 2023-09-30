@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 
 from .ip import get_current_ip
@@ -19,8 +20,7 @@ class ConfigServer:
         mode = self._current_mode.get()
         if mode == self._modes[0]:
             return '127.0.0.1'
-        else:
-            return get_current_ip()
+        return get_current_ip()
 
     @property
     def port(self):
@@ -33,7 +33,6 @@ class ConfigServer:
     @property
     def create_window(self):
         return bool(self._create_window.get())
-    
 
 
     def __init__(self):
@@ -85,11 +84,9 @@ class ConfigServer:
                                           width=18, textvariable=self._max_clients)
         self._max_clients_sb.pack(side=tk.RIGHT)
 
-        
 
         self._create_window_cb = tk.Checkbutton(self._buttonframe, text="Create window?", variable=self._create_window)
         self._create_window_cb.pack(side=tk.TOP)
-
 
 
         # Bouton pour creer le serveur
@@ -100,16 +97,16 @@ class ConfigServer:
 
         # Pour gerer la touche Entree
         self._root.bind("<Return>", self._on_return_key)
-        
+
         # Pour gerer la fermeture de la fenetre
         self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
-        
+
         self._root.mainloop()
 
 
     # Bindings
 
-    def _create_server(self, event=None):
+    def _create_server(self, _=None):
         try:
             if self._max_clients.get() > 0 and self._port.get() > 0:
                 print("Attempting connection…")
@@ -118,11 +115,11 @@ class ConfigServer:
         except tk._tkinter.TclError:
             print("[Error] Wrong port or max clients' number")
 
-    def _on_return_key(self, event):
+    def _on_return_key(self, _):
         self._create_server_button.invoke()
 
     def _quit_config(self):
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == '__main__':

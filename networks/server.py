@@ -73,7 +73,7 @@ class Server:
             self._socket.listen(self._max_clients)
 
         except OSError:
-            print("[Error] Port {} not available".format(self._port))
+            print(f"[Error] Port {self._port} not available")
             self.quit()
 
         else:
@@ -100,7 +100,7 @@ class Server:
                 self._send_to_client(client, ("color", random_color))
                 # On lui reserve une entree dans le dictionnaire
                 Server.clients[client] = { "ready": False, "thread": None }
-                print("Accepted client. Total: {}".format(len(Server.clients)))
+                print(f"Accepted client. Total: {len(Server.clients)}")
                 if self.window is not None:
                     self.window.clients += 1
 
@@ -117,7 +117,7 @@ class Server:
         Retourne le nombre de clients prêts en faisant la somme des booléens.
         Utilise un generator, d'où les parenthèses
         """
-        return sum( ( Server.clients[client]["ready"] for client in Server.clients ))
+        return sum(Server.clients[client]["ready"] for client in Server.clients)
 
     # À transformer en classmethod ? Ça veut dire mettre simulation en cls attr
     def _sync_objects(self, client):

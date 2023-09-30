@@ -1,5 +1,8 @@
+import sys
 import tkinter as tk
-from .ip import get_current_ip # on a une fonction ip deja
+
+from .ip import get_current_ip
+
 
 class ConfigClient:
     """
@@ -9,12 +12,10 @@ class ConfigClient:
 
     @property
     def ip(self):
-        # print("type de ip :", type(self._ip.get()))
         return self._ip.get()
 
     @property
     def port(self):
-        # print("type de port :", type(self._port.get()))
         return self._port.get()
 
 
@@ -54,39 +55,41 @@ class ConfigClient:
         self._port_entry.pack(side=tk.RIGHT)
 
         # Bouton pour obtenir l'IP de la machine
-        self._current_ip_button = tk.Button(self._topframe, text='Current IP', command=self._set_to_current_ip)
+        self._current_ip_button = tk.Button(self._topframe, text='Current IP',
+                                            command=self._set_to_current_ip)
         self._current_ip_button.pack(side=tk.RIGHT)
 
         # Bouton pour rejoindre
 
-        self._join_button = tk.Button(self._buttonframe, text='Join', command=self._connection)
+        self._join_button = tk.Button(self._buttonframe, text='Join',
+                                      command=self._connection)
         self._join_button.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
 
         # Bindings
-        
+
         # Pour gerer la touche Entree
         self._root.bind("<Return>", self._on_return_key)
-        
+
         # Pour gerer la fermeture de la fenetre
         self._root.protocol("WM_DELETE_WINDOW", self._quit_config)
 
         self._root.mainloop()
 
-    
+
     # Bindings
 
     def _connection(self):
         if len(self._ip.get()) > 0 and self._port.get() > 0:
             self._root.destroy()
 
-    def _on_return_key(self, event):
+    def _on_return_key(self, _):
         self._join_button.invoke()
 
     def _set_to_current_ip(self):
         self._ip.set(get_current_ip())
 
     def _quit_config(self):
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == '__main__':

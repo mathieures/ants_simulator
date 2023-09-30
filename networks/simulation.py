@@ -1,6 +1,5 @@
 import threading
 import tracemalloc
-from collections import namedtuple
 from math import sqrt
 from time import perf_counter, sleep
 
@@ -25,7 +24,10 @@ def timer(func):
 
 
 class Simulation:
-    """ Classe qui lance toute la simulation de fourmis a partir du dico d'objets defini par le serveur """
+    """
+    Classe qui lance toute la simulation de fourmis
+    a partir du dico d'objets defini par le serveur.
+    """
 
     __slots__ = ["objects", "sleep_time", "_first_ant", "_server", "_timeline"]
 
@@ -210,8 +212,10 @@ class Simulation:
             # S'il y a au moins un objet
             if len(self.objects[str_type]):
                 # On associe une distance au carre a un objet
-                dist_to_obj = {self.squared_distance(
-                    (x, y), obj.coords_centre): obj for obj in self.objects[str_type]}
+                dist_to_obj = {
+                    self.squared_distance((x, y), obj.coords_centre): obj
+                    for obj in self.objects[str_type]
+                }
 
                 min_dist_squared = min(dist_to_obj)
                 closest_obj = dist_to_obj[min_dist_squared]
@@ -249,7 +253,7 @@ class Simulation:
             self.objects[str_type].add(new_obj)
         else:
            raise TypeError(f"[Erreur] le type '{str_type}' n'existe pas")
-            
+
 
         self._timeline.append(new_obj)
 

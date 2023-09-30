@@ -1,8 +1,7 @@
+import pickle
+import socket
 import sys
 
-import socket
-import pickle
-import threading
 
 class Client:
     """
@@ -65,11 +64,11 @@ class Client:
 
     def set_ready(self):
         """Informe le serveur que ce client est prêt"""
-        self._socket.send("ready".encode())
+        self._socket.send(b"ready")
 
     def set_notready(self):
         """Informe le serveur que ce client n'est plus prêt (a faire)"""
-        self._socket.send("not ready".encode())
+        self._socket.send(b"not ready")
 
     def ask_object(self, object_type, position, size=None, color=None):
         """
@@ -96,11 +95,11 @@ class Client:
 
     def ask_faster_sim(self):
         print("ask_faster_sim")
-        self._socket.send("faster".encode())
-    
+        self._socket.send(b"faster")
+
     def ask_slower_sim(self):
         print("ask_slower_sim")
-        self._socket.send("slower".encode())
+        self._socket.send(b"slower")
 
     def disconnect(self):
         self._socket.close()
@@ -108,7 +107,7 @@ class Client:
 
     def receive(self):
         """Reçoit les signaux envoyés par les clients pour les objets créés"""
-        # Note : on peut ne pas le mettre dans un thread car le client ne fait que recevoir
+        # Note : un thread n'est pas nécessaire, le client ne fait que recevoir
         while True:
             try:
                 recv_data = self._socket.recv(102400)
@@ -180,4 +179,3 @@ class Client:
                 else:
                     # Si on arrive ici c'est qu'il manque le type de data qu'il faut analyser
                     raise TypeError("[Error] Cannot process received data: parsing hint is missing")
-                

@@ -1,5 +1,6 @@
-import tkinter as tk
 import threading
+import tkinter as tk
+
 
 class ServerWindow(threading.Thread):
     """
@@ -39,7 +40,7 @@ class ServerWindow(threading.Thread):
     @ready_clients.setter
     def ready_clients(self, new_number):
         self._ready_clients.set(new_number)
-    
+
 
     def __init__(self, server, daemon):
         """Le daemon permet de tuer le thread quand on tue les autres fils"""
@@ -48,7 +49,7 @@ class ServerWindow(threading.Thread):
         self._ip = server.ip
         self._port = str(server.port)
         self._max_clients = str(server.max_clients)
-        
+
         self._server = server # on le garde pour pouvoir le quitter
         self._server.window = self
 
@@ -91,7 +92,7 @@ class ServerWindow(threading.Thread):
 
         tk.Label(self._cc_frame, textvariable=self._clients, width=2).pack(side=tk.LEFT)
 
-        tk.Label(self._cc_frame, text='(max: {})'.format(self._max_clients)).pack(side=tk.LEFT)
+        tk.Label(self._cc_frame, text=f'(max: {self._max_clients})').pack(side=tk.LEFT)
         
         # Pour gerer la fermeture de la fenetre
         self._root.protocol("WM_DELETE_WINDOW", self._quit_server)
