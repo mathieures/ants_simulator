@@ -1,16 +1,13 @@
 import threading
-from time import sleep
-from math import sqrt
-from collections import namedtuple
-
-from AntServer import AntServer
-from ResourceServer import ResourceServer
-from NestServer import NestServer
-from WallServer import WallServer
-
-
 import tracemalloc
-from time import perf_counter
+from collections import namedtuple
+from math import sqrt
+from time import perf_counter, sleep
+
+from .AntServer import AntServer
+from .NestServer import NestServer
+from .ResourceServer import ResourceServer
+from .WallServer import WallServer
 
 # Pour le debug
 

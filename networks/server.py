@@ -1,15 +1,13 @@
-import sys
-import socket
 import pickle
+import socket
+import sys
 import threading
 from time import sleep
 
-import simulation
+from .color import random_rgb
+from .server_window import ServerWindow
+from .simulation import Simulation
 
-import color
-
-from config_server import ConfigServer
-from server_window import ServerWindow
 
 class Server:
     """
@@ -40,7 +38,7 @@ class Server:
     def max_clients(self):
         return self._max_clients
 
-    def __init__(self, ip, port, max_clients):
+    def __init__(self, ip, port, max_clients, create_window):
         try:
             assert isinstance(ip, str), "[Error] IP is not a valid string"
             assert isinstance(port, int), "[Error] PORT is not a valid integer"
@@ -48,7 +46,7 @@ class Server:
         except AssertionError as e:
             print("[Error]", e)
             sys.exit(1)
-        
+
         # S'il n'y a pas eu d'erreur
         self._ip = ip
         self._port = port
@@ -56,7 +54,7 @@ class Server:
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self._simulation = simulation.Simulation(self) # on lui passe une reference au serveur
+        self._simulation = Simulation(self) # on lui passe une reference au serveur
 
         if create_window:
             self.window = ServerWindow(self, daemon=True) # daemon precise pour lisibilite
@@ -98,7 +96,7 @@ class Server:
                 # Exception levee quand la connexion est coupee pendant l'attente d'accept
                 pass
             else:
-                random_color = color.random_rgb()
+                random_color = random_rgb()
                 self._send_to_client(client, ("color", random_color))
                 # On lui reserve une entree dans le dictionnaire
                 Server.clients[client] = { "ready": False, "thread": None }
@@ -295,34 +293,3 @@ class Server:
             self.window.quit_window()
         self._socket.close()
         sys.exit(0)
-
-
-if __name__ == "__main__":
-    # On regarde d'abord si l'utilisateur veut une fenetre
-    if "-nowindow" in sys.argv:
-        create_window = False
-        sys.argv.pop(sys.argv.index("-nowindow"))
-        # print("new args :", sys.argv)
-    else:
-        create_window = True
-
-    # S'il n'y a pas assez d'arguments, on ouvre la fenetre de config
-    if len(sys.argv) < 4:
-        config = ConfigServer() # bloquant
-
-        ip = config.ip
-        port = config.port
-        max_clients = config.max_clients
-        create_window = config.create_window
-
-    else:
-        try:
-            ip = int(sys.argv[1])
-            port = int(sys.argv[2])
-            max_clients = int(sys.argv[3])
-        except ValueError:
-            print("[Error] Arguments must be integers")
-            print("Syntax:\n\tpython3 server.py <IP> <PORT> <NB_MAX_CLIENTS> [-nowindow]")
-            sys.exit(1)
-
-    server = Server(ip, port, max_clients)

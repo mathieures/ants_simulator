@@ -1,4 +1,5 @@
-from ServerObject import SizedServerObject, get_new_id as get_new_index
+from .ServerObject import SizedServerObject
+from .ServerObject import get_new_id as get_new_index
 
 
 class ResourceServer(SizedServerObject):

@@ -1,9 +1,9 @@
-from random import randint
-from math import degrees, radians, cos, sin, atan2
 # atan2 tient compte des signes
+from math import atan2, cos, degrees, radians, sin
+from random import randint
 
-from ServerObject import ServerObject, get_new_id
-from PheromoneServer import PheromoneServer
+from .PheromoneServer import PheromoneServer
+from .ServerObject import ServerObject, get_new_id
 
 
 class AntServer(ServerObject):
