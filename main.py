@@ -1,11 +1,9 @@
 import threading
-import tkinter as tk
+from time import sleep
 
 from interface.interface import Interface
 from networks.client import Client
 from networks.config_client import ConfigClient
-
-from time import sleep
 
 
 def main():
