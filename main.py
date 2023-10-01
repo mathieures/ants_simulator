@@ -36,7 +36,7 @@ def init_args(parser: argparse.ArgumentParser):
     group_server.add_argument(
         "-i", "--ip",
         help="IP to use for the server",
-        type=int
+        type=str
     )
     group_server.add_argument(
         "-p", "--port",
@@ -58,7 +58,7 @@ def init_args(parser: argparse.ArgumentParser):
     )
 
 
-def start_server(ip: int, port: int, max_clients: int, create_window: bool):
+def start_server(ip: str, port: int, max_clients: int, create_window: bool):
     Server(ip, port, max_clients, create_window)
 
 
